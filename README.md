@@ -12,7 +12,7 @@
 
 ### 组织结构
 
-![QQ截图20170216145251](C:\Users\Administrator\Desktop\QQ截图20170216145251.png)
+![image](https://github.com/FutunnOpen/OpenQuant/raw/master/ProfileStructure.png)
 
 ---
 
