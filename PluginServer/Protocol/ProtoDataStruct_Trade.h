@@ -207,7 +207,7 @@ struct QueryHKAccInfoAckBody
 {	
 	int		nEnvType;
 	int		nCookie;
-
+	
 	//以下与 Trade_AccInfo 同步
 	INT64 nPower; //购买力
 	INT64 nZcjz; //资产净值
@@ -424,110 +424,14 @@ struct QueryPositionAckBody
 	VT_Position  vtPosition;
 };
 
-struct QueryPosition_Req
+struct	QueryPosition_Req
 {
 	ProtoHead				head;
 	QueryPositionReqBody	body;
 };
 
-struct QueryPosition_Ack
+struct	QueryPosition_Ack
 {
 	ProtoHead				head;
 	QueryPositionAckBody	body;
-};
-//////////////////////////////////////////////////////////////////////////
-//查询所有港股成交记录
-struct QueryHKDealReqBody
-{
-	int		nEnvType;
-	int		nCookie;
-};
-
-//与 Trade_DealItem 同步
-struct QueryHKDealAckItem
-{
-	//特别提醒！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！
-	//交易API中价格、金额类的数据若为浮点型，即是原始数据没有被放大；若是整型，则是浮点值×1000，即最小单位是0.001元
-
-	UINT64 nOrderID; //订单号，服务器产生的订单真正的ID
-	UINT64 nDealID; //成交号
-
-	int enSide; //方向
-
-	std::wstring strStockCode;
-	std::wstring strStockName;	
-	UINT64 nPrice; //成交价格
-	UINT64 nQty; //成交数量
-
-	UINT64 nTime;	//成交时间
-};
-
-typedef std::vector<QueryHKDealAckItem>	VT_HK_Deal;
-
-struct QueryHKDealAckBody
-{	
-	int		nEnvType;
-	int		nCookie;
-	VT_HK_Deal vtDeal;
-};
-
-struct QueryHKDeal_Req
-{
-	ProtoHead			head;
-	QueryHKDealReqBody	body;
-};
-
-struct QueryHKDeal_Ack
-{
-	ProtoHead			head;
-	QueryHKDealAckBody	body;
-};
-
-//////////////////////////////////////////////////////////////////////////
-//查询所有美股成交记录
-struct QueryUSDealReqBody
-{
-	int		nEnvType;
-	int		nCookie;
-};
-
-//与 Trade_DealItem 同步
-struct QueryUSDealAckItem
-{
-	//特别提醒！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！
-	//交易API中价格、金额类的数据若为浮点型，即是原始数据没有被放大；若是整型，则是浮点值×1000，即最小单位是0.001元
-
-	UINT64 nOrderID; //订单号，服务器产生的订单真正的ID
-	UINT64 nDealID; //成交号
-
-	int enSide; //方向
-
-	std::wstring strStockCode;
-	std::wstring strStockName;	
-
-	UINT64 nPrice; //成交价格
-	UINT64 nQty; //成交数量
-
-	UINT64 nTime;	//成交时间
-};
-
-typedef std::vector<QueryUSDealAckItem>	VT_US_Deal;
-
-struct QueryUSDealAckBody
-{	
-	int		nEnvType;
-	int		nCookie;
-	VT_US_Deal vtDeal;
-};
-
-struct QueryUSDeal_Req
-{
-	ProtoHead			head;
-	QueryUSDealReqBody	body;
-};
-
-struct QueryUSDeal_Ack
-{
-	ProtoHead			head;
-	QueryUSDealAckBody	body;
 };

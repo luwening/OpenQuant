@@ -10,7 +10,6 @@
 #include "PluginQueryUSOrder.h"
 #include "PluginQueryUSAccInfo.h"
 #include "PluginQueryUSPosition.h"
-#include "PluginQueryUSDeal.h"
 
 class CPluginNetwork;
 
@@ -36,7 +35,6 @@ protected:
 
 	//virtual void OnOrderErrNotify(Trade_Env enEnv, UINT64 nOrderID, Trade_OrderErrNotify_HK enErrNotify, UINT16 nErrCode);
 	virtual void OnQueryOrderList(UINT32 nCookie, INT32 nCount, const Trade_OrderItem* pArrOrder);
-	virtual void OnQueryDealList(UINT32 nCookie, INT32 nCount, const Trade_DealItem* pArrOrder);
 	virtual void OnQueryAccInfo(UINT32 nCookie, const Trade_AccInfo& accInfo);
 	virtual void OnQueryPositionList(UINT32 nCookie, INT32 nCount, const Trade_PositionItem* pArrPosition);
 
@@ -50,5 +48,4 @@ protected:
 	CPluginQueryUSOrder		m_QueryUSOrder;
 	CPluginQueryUSAccInfo	m_QueryUSAcc;
 	CPluginQueryUSPosition	m_QueryPos;
-	CPluginQueryUSDeal		m_QueryUSDeal;
 };

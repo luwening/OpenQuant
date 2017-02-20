@@ -462,22 +462,6 @@
 					RelativePath=".\Protocol\ProtoGearPrice.h"
 					>
 				</File>
-				<File
-					RelativePath=".\Protocol\ProtoKLData.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\Protocol\ProtoKLData.h"
-					>
-				</File>
-				<File
-					RelativePath=".\Protocol\ProtoRTData.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\Protocol\ProtoRTData.h"
-					>
-				</File>
 			</Filter>
 			<Filter
 				Name="trade"
@@ -523,14 +507,6 @@
 					>
 				</File>
 				<File
-					RelativePath=".\Protocol\ProtoQueryHKDeal.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\Protocol\ProtoQueryHKDeal.h"
-					>
-				</File>
-				<File
 					RelativePath=".\Protocol\ProtoQueryHKOrder.cpp"
 					>
 				</File>
@@ -552,14 +528,6 @@
 				</File>
 				<File
 					RelativePath=".\Protocol\ProtoQueryUSAccInfo.h"
-					>
-				</File>
-				<File
-					RelativePath=".\Protocol\ProtoQueryUSDeal.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\Protocol\ProtoQueryUSDeal.h"
 					>
 				</File>
 				<File
@@ -651,27 +619,11 @@
 					>
 				</File>
 				<File
-					RelativePath=".\PluginKLData.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\PluginKLData.h"
-					>
-				</File>
-				<File
 					RelativePath=".\PluginQuoteServer.cpp"
 					>
 				</File>
 				<File
 					RelativePath=".\PluginQuoteServer.h"
-					>
-				</File>
-				<File
-					RelativePath=".\PluginRTData.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\PluginRTData.h"
 					>
 				</File>
 			</Filter>
@@ -700,14 +652,6 @@
 				</File>
 				<File
 					RelativePath=".\PluginQueryUSAccInfo.h"
-					>
-				</File>
-				<File
-					RelativePath=".\PluginQueryUSDeal.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\PluginQueryUSDeal.h"
 					>
 				</File>
 				<File
@@ -776,14 +720,6 @@
 				</File>
 				<File
 					RelativePath=".\PluginQueryHKAccInfo.h"
-					>
-				</File>
-				<File
-					RelativePath=".\PluginQueryHKDeal.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\PluginQueryHKDeal.h"
 					>
 				</File>
 				<File

@@ -19,7 +19,7 @@ static const GUID IID_IFTTrade_US =
 /**
 * 该插件接口要求的FTCore匹配版本号
 */
-#define  FTCore_Support_Ver  107
+#define  FTCore_Support_Ver  106
 
 interface IFTPluginCore 
 { 
@@ -61,7 +61,6 @@ interface IFTPluginMoudle
 	* 主程序事件通知时， 从Plugin得到回调接口 
 	*/
 	virtual void  GetPluginCallback_Quote(IQuoteInfoCallback** pCallback) = 0; 
-	virtual void  GetPluginCallback_QuoteKL(IQuoteKLCallback** pCallback) = 0; 
 	virtual void  GetPluginCallback_TradeHK(ITradeCallBack_HK** pCallback) = 0; 
 	virtual void  GetPluginCallback_TradeUS(ITradeCallBack_US** pCallback) = 0; 
 }; 

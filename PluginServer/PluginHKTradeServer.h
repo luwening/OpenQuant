@@ -11,7 +11,6 @@
 #include "PluginQueryHKAccInfo.h"
 #include "PluginQueryHKOrder.h"
 #include "PluginQueryHKPosition.h"
-#include "PluginQueryHKDeal.h"
 
 class CPluginNetwork;
 
@@ -38,7 +37,6 @@ protected:
 	virtual void OnOrderErrNotify(Trade_Env enEnv, UINT64 nOrderID, Trade_OrderErrNotify_HK enErrNotify, UINT16 nErrCode);
 
 	virtual void OnQueryOrderList(Trade_Env enEnv, UINT32 nCookie, INT32 nCount, const Trade_OrderItem* pArrOrder);
-	virtual void OnQueryDealList(Trade_Env enEnv, UINT32 nCookie, INT32 nCount, const Trade_DealItem* pArrOrder);
 	virtual void OnQueryAccInfo(Trade_Env enEnv, UINT32 nCookie, const Trade_AccInfo& accInfo);
 	virtual void OnQueryPositionList(Trade_Env enEnv, UINT32 nCookie, INT32 nCount, const Trade_PositionItem* pArrPosition);
 
@@ -53,5 +51,4 @@ protected:
 	CPluginQueryHKAccInfo	m_QueryAccInfo;
 	CPluginQueryHKOrder		m_QueryHKOrder;
 	CPluginQueryHKPosition	m_QueryHKPos;
-	CPluginQueryHKDeal		m_QueryHKDeal;
 };

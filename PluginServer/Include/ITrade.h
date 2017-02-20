@@ -107,7 +107,7 @@ enum Trade_OrderType_US
 	Trade_OrderType_US_PostMarket = 52 //盘后交易，限价
 };
 
-//订单、成交记录、账户、持仓数据结构
+//订单、账户、持仓数据结构
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 struct Trade_OrderItem
 {
@@ -133,24 +133,6 @@ struct Trade_OrderItem
 	//只支持港股调用GetErrDesc传nErrCode来得到错误描述，后续请都调用GetErrDescV2传nErrCode或nErrDescStrHash
 	UINT16 nErrCode; //错误码，仅支持港股
 	INT64 nErrDescStrHash; //错误描述字符串的hash
-};
-
-struct Trade_DealItem
-{
-	//特别提醒！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！
-	//交易API中价格、金额类的数据若为浮点型，即是原始数据没有被放大；若是整型，则是浮点值×1000，即最小单位是0.001元
-
-	UINT64 nOrderID; //订单号，服务器产生的订单真正的ID
-	UINT64 nDealID; //成交号
-
-	Trade_OrderSide enSide; //方向
-
-	WCHAR szCode[16]; //代码
-	WCHAR szName[128]; //名称
-	UINT64 nPrice; //成交价格
-	UINT64 nQty; //成交数量
-
-	UINT64 nTime;	//成交时间
 };
 
 struct Trade_AccInfo
@@ -286,16 +268,6 @@ interface ITrade_HK
 	virtual bool QueryOrderList(Trade_Env enEnv, UINT32* pCookie) = 0;
 
 	/**
-	* 查询成交记录列表
-
-	* @param enEnv 交易环境(实盘交易或仿真交易).
-	* @param pCookie 接收本次调用对应的Cookie值，用于查询结果回调时做对应关系判断.
-
-	* @return true查询成功，false查询失败.
-	*/
-	virtual bool QueryDealList(Trade_Env enEnv, UINT32* pCookie) = 0;
-
-	/**
 	* 查询账户信息
 
 	* @param enEnv 交易环境(实盘交易或仿真交易).
@@ -403,16 +375,6 @@ interface ITradeCallBack_HK
 	virtual void OnQueryOrderList(Trade_Env enEnv, UINT32 nCookie, INT32 nCount, const Trade_OrderItem* pArrOrder) = 0;
 
 	/**
-	* 查询成交记录列表回调
-
-	* @param enEnv 交易环境(实盘交易或仿真交易).
-	* @param nCookie 请求时的Cookie.
-	* @param nCount 成交记录个数.
-	* @param pArrDeal 成交记录数组指针.
-	*/
-	virtual void OnQueryDealList(Trade_Env enEnv, UINT32 nCookie, INT32 nCount, const Trade_DealItem* pArrDeal) = 0;
-
-	/**
 	* 查询账户信息回调
 
 	* @param enEnv 交易环境(实盘交易或仿真交易).
@@ -495,15 +457,6 @@ interface ITrade_US
 	virtual bool QueryOrderList(UINT32* pCookie) = 0;
 
 	/**
-	* 查询成交记录列表
-
-	* @param pCookie 接收本次调用对应的Cookie值，用于查询结果回调时做对应关系判断.
-
-	* @return true查询成功，false查询失败.
-	*/
-	virtual bool QueryDealList(UINT32* pCookie) = 0;
-
-	/**
 	* 查询账户信息
 
 	* @param pCookie 接收本次调用对应的Cookie值，用于查询结果回调时做对应关系判断.
@@ -581,15 +534,6 @@ interface ITradeCallBack_US
 	* @param pArrOrder 订单数组指针.
 	*/
 	virtual void OnQueryOrderList(UINT32 nCookie, INT32 nCount, const Trade_OrderItem* pArrOrder) = 0;
-
-	/**
-	* 查询交易记录列表回调
-
-	* @param nCookie 请求时的Cookie.
-	* @param nCount 交易记录个数.
-	* @param pArrDeal 交易记录数组指针.
-	*/
-	virtual void OnQueryDealList(UINT32 nCookie, INT32 nCount, const Trade_DealItem* pArrDeal) = 0;
 
 	/**
 	* 查询账户信息回调

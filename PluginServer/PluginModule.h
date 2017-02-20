@@ -31,9 +31,8 @@ protected:
 	virtual void 	ShowPlugin(bool bShow);
 	virtual void  GetPluginCallback_Quote(IQuoteInfoCallback** pCallback); 
 	virtual void  GetPluginCallback_TradeHK(ITradeCallBack_HK** pCallback); 
-	virtual void  GetPluginCallback_TradeUS(ITradeCallBack_US** pCallback);
-	virtual void  GetPluginCallback_QuoteKL(IQuoteKLCallback** pCallback);
 
+	virtual void  GetPluginCallback_TradeUS(ITradeCallBack_US** pCallback);
 	//IPluginNetEvent
 	virtual void OnReceive(SOCKET sock);
 	virtual void OnSend(SOCKET sock);

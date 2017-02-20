@@ -3,7 +3,6 @@
 #include "PluginNetwork.h"
 #include "Protocol/ProtoOrderErrorPush.h"
 #include "Protocol/ProtoOrderUpdatePush.h"
-#include "Protocol/ProtoBasicPrice.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -55,7 +54,6 @@ void CPluginUSTradeServer::InitTradeSvr(IFTPluginCore* pPluginCore, CPluginNetwo
 	m_PlaceOrder.Init(this, m_pTradeOp);
 	m_ChangeOrder.Init(this, m_pTradeOp);
 	m_SetOrderStatus.Init(this, m_pTradeOp);
-	m_QueryUSDeal.Init(this, m_pTradeOp);
 }
 
 void CPluginUSTradeServer::UninitTradeSvr()
@@ -68,7 +66,6 @@ void CPluginUSTradeServer::UninitTradeSvr()
 		m_PlaceOrder.Uninit();
 		m_ChangeOrder.Uninit();
 		m_SetOrderStatus.Uninit();
-		m_QueryUSDeal.Uninit();
 
 		m_pTradeOp = NULL;
 		m_pPluginCore = NULL;
@@ -104,26 +101,8 @@ void CPluginUSTradeServer::SetTradeReqData(int nCmdID, const Json::Value &jsnVal
 		m_QueryPos.SetTradeReqData(nCmdID, jsnVal, sock);
 		break;
 
-	case PROTO_ID_TDUS_QUERY_DEAL:
-		m_QueryUSDeal.SetTradeReqData(nCmdID, jsnVal, sock);
-		break;
-
 	default:
 		CHECK_OP(false, NOOP);
-		BasicPrice_Ack Ack;
-		Ack.head.ddwErrCode = PROTO_ERR_PARAM_ERR;
-		Ack.head.nProtoID = nCmdID;
-		CA::Unicode2UTF(L"Ð­ÒéºÅ´íÎó£¡", Ack.head.strErrDesc);
-		CProtoBasicPrice proto;	
-		proto.SetProtoData_Ack(&Ack);
-
-		Json::Value jsnAck;
-		if ( proto.MakeJson_Ack(jsnAck) )
-		{
-			std::string strOut;
-			CProtoParseBase::ConvJson2String(jsnAck, strOut, true);
-			m_pNetwork->SendData(sock, strOut.c_str(), (int)strOut.size());
-		}
 		break;
 	}
 }
@@ -158,11 +137,6 @@ void CPluginUSTradeServer::OnChangeOrder(UINT32 nCookie, Trade_SvrResult enSvrRe
 void CPluginUSTradeServer::OnQueryOrderList(UINT32 nCookie, INT32 nCount, const Trade_OrderItem* pArrOrder)
 {
 	m_QueryUSOrder.NotifyOnQueryUSOrder(nCookie, nCount, pArrOrder);
-}
-
-void CPluginUSTradeServer::OnQueryDealList(UINT32 nCookie, INT32 nCount, const Trade_DealItem* pArrOrder)
-{
-	m_QueryUSDeal.NotifyOnQueryUSDeal(nCookie, nCount, pArrOrder);
 }
 
 void CPluginUSTradeServer::OnQueryAccInfo(UINT32 nCookie, const Trade_AccInfo& accInfo)

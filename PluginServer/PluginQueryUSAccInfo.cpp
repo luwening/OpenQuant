@@ -76,12 +76,6 @@ void CPluginQueryUSAccInfo::SetTradeReqData(int nCmdID, const Json::Value &jsnVa
 	if ( !proto.ParseJson_Req(jsnVal) )
 	{
 		CHECK_OP(false, NORET);
-		TradeAckType ack;
-		ack.head = req.head;
-		ack.head.ddwErrCode = PROTO_ERR_PARAM_ERR;
-		CA::Unicode2UTF(L"²ÎÊý´íÎó£¡", ack.head.strErrDesc);
-		ack.body.nCookie = req.body.nCookie;
-		HandleTradeAck(&ack, sock);
 		return;
 	}
 

@@ -81,10 +81,6 @@ void CPluginGearPrice::SetQuoteReqData(int nCmdID, const Json::Value &jsnVal, SO
 	if ( !proto.ParseJson_Req(jsnVal) )
 	{
 		CHECK_OP(false, NORET);
-		StockDataReq req_info;
-		req_info.sock = sock;
-		req_info.req = req;
-		ReplyDataReqError(&req_info, PROTO_ERR_PARAM_ERR, L"²ÎÊý´íÎó£¡");
 		return;
 	}
 

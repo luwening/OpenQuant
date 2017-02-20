@@ -3,7 +3,6 @@
 #include "PluginNetwork.h"
 #include "Protocol/ProtoOrderErrorPush.h"
 #include "Protocol/ProtoOrderUpdatePush.h"
-#include "Protocol/ProtoBasicPrice.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -56,7 +55,6 @@ void CPluginHKTradeServer::InitTradeSvr(IFTPluginCore* pPluginCore, CPluginNetwo
 	m_QueryAccInfo.Init(this, m_pTradeOp);
 	m_QueryHKOrder.Init(this, m_pTradeOp);
 	m_QueryHKPos.Init(this, m_pTradeOp);
-	m_QueryHKDeal.Init(this, m_pTradeOp);
 }
 
 void CPluginHKTradeServer::UninitTradeSvr()
@@ -70,7 +68,6 @@ void CPluginHKTradeServer::UninitTradeSvr()
 		m_PlaceOrder.Uninit();
 		m_ChangeOrder.Uninit();
 		m_SetOrderStatus.Uninit();
-		m_QueryHKDeal.Uninit();
 
 		m_pTradeOp = NULL;
 		m_pPluginCore = NULL;
@@ -110,26 +107,8 @@ void CPluginHKTradeServer::SetTradeReqData(int nCmdID, const Json::Value &jsnVal
 		m_ChangeOrder.SetTradeReqData(nCmdID, jsnVal, sock);
 		break;
 
-	case PROTO_ID_TDHK_QUERY_DEAL:
-		m_QueryHKDeal.SetTradeReqData(nCmdID, jsnVal, sock);
-		break;
-
 	default:
 		CHECK_OP(false, NOOP);
-		BasicPrice_Ack Ack;
-		Ack.head.ddwErrCode = PROTO_ERR_PARAM_ERR;
-		Ack.head.nProtoID = nCmdID;
-		CA::Unicode2UTF(L"Ð­ÒéºÅ´íÎó£¡", Ack.head.strErrDesc);
-		CProtoBasicPrice proto;	
-		proto.SetProtoData_Ack(&Ack);
-
-		Json::Value jsnAck;
-		if ( proto.MakeJson_Ack(jsnAck) )
-		{
-			std::string strOut;
-			CProtoParseBase::ConvJson2String(jsnAck, strOut, true);
-			m_pNetwork->SendData(sock, strOut.c_str(), (int)strOut.size());
-		}
 		break;
 	}
 }
@@ -149,11 +128,6 @@ void CPluginHKTradeServer::OnUnlockTrade(UINT32 nCookie, Trade_SvrResult enSvrRe
 void CPluginHKTradeServer::OnQueryOrderList(Trade_Env enEnv, UINT32 nCookie, INT32 nCount, const Trade_OrderItem* pArrOrder)
 {
 	m_QueryHKOrder.NotifyOnQueryHKOrder(enEnv, nCookie, nCount, pArrOrder);
-}
-
-void CPluginHKTradeServer::OnQueryDealList(Trade_Env enEnv, UINT32 nCookie, INT32 nCount, const Trade_DealItem* pArrOrder)
-{
-	m_QueryHKDeal.NotifyOnQueryHKDeal(enEnv, nCookie, nCount, pArrOrder);
 }
 
 void CPluginHKTradeServer::OnQueryPositionList(Trade_Env enEnv, UINT32 nCookie, INT32 nCount, const Trade_PositionItem* pArrPosition)

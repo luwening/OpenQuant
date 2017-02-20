@@ -1,7 +1,6 @@
 #include "stdafx.h"
 #include "PluginModule.h"
 #include "Protocol/ProtoParseBase.h"
-#include "Protocol/ProtoBasicPrice.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -140,17 +139,6 @@ void  CPluginModule::GetPluginCallback_TradeUS(ITradeCallBack_US** pCallback)
 	*pCallback = &m_USTradeServer;
 }
 
-void CPluginModule::GetPluginCallback_QuoteKL(IQuoteKLCallback** pCallback)
-{
-	if ( pCallback == NULL )
-	{
-		ASSERT(false);
-		return ;
-	}
-
-	*pCallback = &m_QuoteServer;
-}
-
 void CPluginModule::OnReceive(SOCKET sock)
 {
 	m_MsgHandler.SendEvent(EVENT_ID_ON_RECEIVE_DATA, sock, 0);
@@ -190,7 +178,7 @@ void CPluginModule::OnRecvNetData(SOCKET sock)
 					int nNewDataNum = nLastValidCh - nFirstValidCh + 1;
 					m_strRecvBuf.resize(nPreDataSize + nNewDataNum);
 					memcpy(&m_strRecvBuf[0] + nPreDataSize, pBuf + nFirstValidCh, nNewDataNum);
-
+					
 					//{"a":"b"}
 					if ( m_strRecvBuf.size() < 10 ) 
 					{
@@ -250,19 +238,5 @@ void CPluginModule::ParseRecvData(SOCKET sock, char *pBuf, int nBufLen)
 	else
 	{
 		CHECK_OP(false, NOOP);
-		BasicPrice_Ack Ack;
-		Ack.head.ddwErrCode = PROTO_ERR_COMMAND_NOT_SUPPORT;
-		Ack.head.nProtoID = nCmdID;
-		CA::Unicode2UTF(L"Ð­ÒéÃüÁîºÅ´íÎó", Ack.head.strErrDesc);
-		CProtoBasicPrice proto;	
-		proto.SetProtoData_Ack(&Ack);
-
-		Json::Value jsnAck;
-		if ( proto.MakeJson_Ack(jsnAck) )
-		{
-			std::string strOut;
-			CProtoParseBase::ConvJson2String(jsnAck, strOut, true);
-			m_Network.SendData(sock, strOut.c_str(), (int)strOut.size());
-		}
 	}
 }

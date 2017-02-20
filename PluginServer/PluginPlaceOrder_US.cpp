@@ -78,13 +78,6 @@ void CPluginPlaceOrder_US::SetTradeReqData(int nCmdID, const Json::Value &jsnVal
 	if ( !proto.ParseJson_Req(jsnVal) )
 	{
 		CHECK_OP(false, NORET);
-		TradeAckType ack;
-		ack.head = req.head;
-		ack.head.ddwErrCode = PROTO_ERR_PARAM_ERR;
-		CA::Unicode2UTF(L"²ÎÊý´íÎó£¡", ack.head.strErrDesc);
-		ack.body.nCookie = req.body.nCookie;
-		ack.body.nSvrResult = Trade_SvrResult_Failed;
-		HandleTradeAck(&ack, sock);
 		return;
 	}
 

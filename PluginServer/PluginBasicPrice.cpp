@@ -82,14 +82,11 @@ void CPluginBasicPrice::SetQuoteReqData(int nCmdID, const Json::Value &jsnVal, S
 	if ( !proto.ParseJson_Req(jsnVal) )
 	{
 		CHECK_OP(false, NORET);
-		StockDataReq req_info;
-		req_info.sock = sock;
-		req_info.req = req;
-		ReplyDataReqError(&req_info, PROTO_ERR_PARAM_ERR, L"²ÎÊý´íÎó£¡");
 		return;
 	}
 
 	CHECK_RET(req.head.nProtoID == nCmdID, NORET);
+	
 	std::wstring strCode;
 	CA::UTF2Unicode(req.body.strStockCode.c_str(), strCode);
 	INT64 nStockID = m_pQuoteData->GetStockHashVal(strCode.c_str(), (StockMktType)req.body.nStockMarket);
