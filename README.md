@@ -14,6 +14,8 @@
 
 ![image](https://github.com/FutunnOpen/OpenQuant/raw/master/ProfileStructure.png)
 
+​	最新版本在master分支。之前各版本在其他分支上。
+
 ---
 
 
@@ -25,7 +27,6 @@
 3. 使用接口进行行情获取或者交易操作。
 
 
-
 ---
 
 
@@ -35,7 +36,6 @@
 * 富途开放API群 108534288
 * <http://www.futunn.com>
 * <https://github.com/FutunnOpen/OpenQuant/issues>
-
 
 
 ---
