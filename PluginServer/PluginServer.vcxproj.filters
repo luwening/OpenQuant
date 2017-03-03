@@ -1,0 +1,670 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="JsonCpp">
+      <UniqueIdentifier>{ac69a090-6cb2-40b3-8979-8f0676ce7806}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="头源文件">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="资源文件">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
+    </Filter>
+    <Filter Include="Include">
+      <UniqueIdentifier>{25324e02-7139-4108-9b2d-bb7c2e70799a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Protocol">
+      <UniqueIdentifier>{6ab546bc-fa7a-44e8-82ff-8815239fbba6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Protocol\quote">
+      <UniqueIdentifier>{de152e64-f40d-4dee-835d-9e6e51b71902}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Protocol\trade">
+      <UniqueIdentifier>{2fdc9310-8b48-41bb-a88c-1f091af893c9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CM">
+      <UniqueIdentifier>{25502959-c810-47ba-aa36-d47f0aab0467}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Server">
+      <UniqueIdentifier>{ed243314-53f4-4a21-a830-cfa903dc1531}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Server\quote">
+      <UniqueIdentifier>{e84b6c4e-e24f-4d62-a12c-86a13606be6b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Server\trade_us">
+      <UniqueIdentifier>{86a95b37-3f00-44df-945d-dc5fc5d88b80}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Server\trade_hk">
+      <UniqueIdentifier>{d59cfdf8-0ec2-4715-85f1-bd6853fd284d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Comm">
+      <UniqueIdentifier>{20f84aa1-2504-43cd-a78c-589627dc7238}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="JsonCpp\autolink.h">
+      <Filter>JsonCpp</Filter>
+    </ClInclude>
+    <ClInclude Include="JsonCpp\config.h">
+      <Filter>JsonCpp</Filter>
+    </ClInclude>
+    <ClInclude Include="JsonCpp\features.h">
+      <Filter>JsonCpp</Filter>
+    </ClInclude>
+    <ClInclude Include="JsonCpp\forwards.h">
+      <Filter>JsonCpp</Filter>
+    </ClInclude>
+    <ClInclude Include="JsonCpp\json.h">
+      <Filter>JsonCpp</Filter>
+    </ClInclude>
+    <ClInclude Include="JsonCpp\json_batchallocator.h">
+      <Filter>JsonCpp</Filter>
+    </ClInclude>
+    <ClInclude Include="JsonCpp\reader.h">
+      <Filter>JsonCpp</Filter>
+    </ClInclude>
+    <ClInclude Include="JsonCpp\value.h">
+      <Filter>JsonCpp</Filter>
+    </ClInclude>
+    <ClInclude Include="JsonCpp\writer.h">
+      <Filter>JsonCpp</Filter>
+    </ClInclude>
+    <ClInclude Include="DelayOrderIDCvt_HK.h">
+      <Filter>头源文件</Filter>
+    </ClInclude>
+    <ClInclude Include="DelayOrderIDCvt_US.h">
+      <Filter>头源文件</Filter>
+    </ClInclude>
+    <ClInclude Include="FormatTime.h">
+      <Filter>头源文件</Filter>
+    </ClInclude>
+    <ClInclude Include="PluginServer.h">
+      <Filter>头源文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Resource.h">
+      <Filter>头源文件</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h">
+      <Filter>头源文件</Filter>
+    </ClInclude>
+    <ClInclude Include="UsTimezone.h">
+      <Filter>头源文件</Filter>
+    </ClInclude>
+    <ClInclude Include="UtilPlugin.h">
+      <Filter>头源文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\FTPluginCore.h">
+      <Filter>Include</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\FTPluginQuoteDefine.h">
+      <Filter>Include</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\FTPluginQuoteInterface.h">
+      <Filter>Include</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\FTPluginTradeInterface.h">
+      <Filter>Include</Filter>
+    </ClInclude>
+    <ClInclude Include="Protocol\CppJsonConv.h">
+      <Filter>Protocol</Filter>
+    </ClInclude>
+    <ClInclude Include="Protocol\ProtoDataStruct.h">
+      <Filter>Protocol</Filter>
+    </ClInclude>
+    <ClInclude Include="Protocol\ProtoDataStruct_Quote.h">
+      <Filter>Protocol</Filter>
+    </ClInclude>
+    <ClInclude Include="Protocol\ProtoDataStruct_Trade.h">
+      <Filter>Protocol</Filter>
+    </ClInclude>
+    <ClInclude Include="Protocol\ProtoParseBase.h">
+      <Filter>Protocol</Filter>
+    </ClInclude>
+    <ClInclude Include="Protocol\ProtoBasicPrice.h">
+      <Filter>Protocol\quote</Filter>
+    </ClInclude>
+    <ClInclude Include="Protocol\ProtoBatchBasic.h">
+      <Filter>Protocol\quote</Filter>
+    </ClInclude>
+    <ClInclude Include="Protocol\ProtoExRightInfo.h">
+      <Filter>Protocol\quote</Filter>
+    </ClInclude>
+    <ClInclude Include="Protocol\ProtoGearPrice.h">
+      <Filter>Protocol\quote</Filter>
+    </ClInclude>
+    <ClInclude Include="Protocol\ProtoHistoryKL.h">
+      <Filter>Protocol\quote</Filter>
+    </ClInclude>
+    <ClInclude Include="Protocol\ProtoKLData.h">
+      <Filter>Protocol\quote</Filter>
+    </ClInclude>
+    <ClInclude Include="Protocol\ProtoPushStockData.h">
+      <Filter>Protocol\quote</Filter>
+    </ClInclude>
+    <ClInclude Include="Protocol\ProtoQueryStockSub.h">
+      <Filter>Protocol\quote</Filter>
+    </ClInclude>
+    <ClInclude Include="Protocol\ProtoRTData.h">
+      <Filter>Protocol\quote</Filter>
+    </ClInclude>
+    <ClInclude Include="Protocol\ProtoSnapshot.h">
+      <Filter>Protocol\quote</Filter>
+    </ClInclude>
+    <ClInclude Include="Protocol\ProtoStockList.h">
+      <Filter>Protocol\quote</Filter>
+    </ClInclude>
+    <ClInclude Include="Protocol\ProtoStockSub.h">
+      <Filter>Protocol\quote</Filter>
+    </ClInclude>
+    <ClInclude Include="Protocol\ProtoStockUnSub.h">
+      <Filter>Protocol\quote</Filter>
+    </ClInclude>
+    <ClInclude Include="Protocol\ProtoTickerPrice.h">
+      <Filter>Protocol\quote</Filter>
+    </ClInclude>
+    <ClInclude Include="Protocol\ProtoTradeDate.h">
+      <Filter>Protocol\quote</Filter>
+    </ClInclude>
+    <ClInclude Include="Protocol\ProtoChangeOrder.h">
+      <Filter>Protocol\trade</Filter>
+    </ClInclude>
+    <ClInclude Include="Protocol\ProtoOrderErrorPush.h">
+      <Filter>Protocol\trade</Filter>
+    </ClInclude>
+    <ClInclude Include="Protocol\ProtoOrderUpdatePush.h">
+      <Filter>Protocol\trade</Filter>
+    </ClInclude>
+    <ClInclude Include="Protocol\ProtoPlaceOrder.h">
+      <Filter>Protocol\trade</Filter>
+    </ClInclude>
+    <ClInclude Include="Protocol\ProtoQueryHKAccInfo.h">
+      <Filter>Protocol\trade</Filter>
+    </ClInclude>
+    <ClInclude Include="Protocol\ProtoQueryHKDeal.h">
+      <Filter>Protocol\trade</Filter>
+    </ClInclude>
+    <ClInclude Include="Protocol\ProtoQueryHKOrder.h">
+      <Filter>Protocol\trade</Filter>
+    </ClInclude>
+    <ClInclude Include="Protocol\ProtoQueryHKPosition.h">
+      <Filter>Protocol\trade</Filter>
+    </ClInclude>
+    <ClInclude Include="Protocol\ProtoQueryUSAccInfo.h">
+      <Filter>Protocol\trade</Filter>
+    </ClInclude>
+    <ClInclude Include="Protocol\ProtoQueryUSDeal.h">
+      <Filter>Protocol\trade</Filter>
+    </ClInclude>
+    <ClInclude Include="Protocol\ProtoQueryUSOrder.h">
+      <Filter>Protocol\trade</Filter>
+    </ClInclude>
+    <ClInclude Include="Protocol\ProtoQueryUSPosition.h">
+      <Filter>Protocol\trade</Filter>
+    </ClInclude>
+    <ClInclude Include="Protocol\ProtoSetOrderStatus.h">
+      <Filter>Protocol\trade</Filter>
+    </ClInclude>
+    <ClInclude Include="Protocol\ProtoUnlockTrade.h">
+      <Filter>Protocol\trade</Filter>
+    </ClInclude>
+    <ClInclude Include="CM\ca_api.h">
+      <Filter>CM</Filter>
+    </ClInclude>
+    <ClInclude Include="CM\CMHelper.h">
+      <Filter>CM</Filter>
+    </ClInclude>
+    <ClInclude Include="CM\CommonAssist.h">
+      <Filter>CM</Filter>
+    </ClInclude>
+    <ClInclude Include="PluginModule.h">
+      <Filter>Server</Filter>
+    </ClInclude>
+    <ClInclude Include="PluginNetwork.h">
+      <Filter>Server</Filter>
+    </ClInclude>
+    <ClInclude Include="PluginBasicPrice.h">
+      <Filter>Server\quote</Filter>
+    </ClInclude>
+    <ClInclude Include="PluginBatchBasic.h">
+      <Filter>Server\quote</Filter>
+    </ClInclude>
+    <ClInclude Include="PluginExRightInfo.h">
+      <Filter>Server\quote</Filter>
+    </ClInclude>
+    <ClInclude Include="PluginGearPrice.h">
+      <Filter>Server\quote</Filter>
+    </ClInclude>
+    <ClInclude Include="PluginHistoryKL.h">
+      <Filter>Server\quote</Filter>
+    </ClInclude>
+    <ClInclude Include="PluginKLData.h">
+      <Filter>Server\quote</Filter>
+    </ClInclude>
+    <ClInclude Include="PluginPushStockData.h">
+      <Filter>Server\quote</Filter>
+    </ClInclude>
+    <ClInclude Include="PluginQueryStockSub.h">
+      <Filter>Server\quote</Filter>
+    </ClInclude>
+    <ClInclude Include="PluginQuoteServer.h">
+      <Filter>Server\quote</Filter>
+    </ClInclude>
+    <ClInclude Include="PluginRTData.h">
+      <Filter>Server\quote</Filter>
+    </ClInclude>
+    <ClInclude Include="PluginSnapshot.h">
+      <Filter>Server\quote</Filter>
+    </ClInclude>
+    <ClInclude Include="PluginStockList.h">
+      <Filter>Server\quote</Filter>
+    </ClInclude>
+    <ClInclude Include="PluginStockSub.h">
+      <Filter>Server\quote</Filter>
+    </ClInclude>
+    <ClInclude Include="PluginStockUnSub.h">
+      <Filter>Server\quote</Filter>
+    </ClInclude>
+    <ClInclude Include="PluginTickerPrice.h">
+      <Filter>Server\quote</Filter>
+    </ClInclude>
+    <ClInclude Include="PluginTradeDate.h">
+      <Filter>Server\quote</Filter>
+    </ClInclude>
+    <ClInclude Include="PluginChangeOrder_US.h">
+      <Filter>Server\trade_us</Filter>
+    </ClInclude>
+    <ClInclude Include="PluginPlaceOrder_US.h">
+      <Filter>Server\trade_us</Filter>
+    </ClInclude>
+    <ClInclude Include="PluginQueryUSAccInfo.h">
+      <Filter>Server\trade_us</Filter>
+    </ClInclude>
+    <ClInclude Include="PluginQueryUSDeal.h">
+      <Filter>Server\trade_us</Filter>
+    </ClInclude>
+    <ClInclude Include="PluginQueryUSOrder.h">
+      <Filter>Server\trade_us</Filter>
+    </ClInclude>
+    <ClInclude Include="PluginQueryUSPosition.h">
+      <Filter>Server\trade_us</Filter>
+    </ClInclude>
+    <ClInclude Include="PluginSetOrderStatus_US.h">
+      <Filter>Server\trade_us</Filter>
+    </ClInclude>
+    <ClInclude Include="PluginUSTradeServer.h">
+      <Filter>Server\trade_us</Filter>
+    </ClInclude>
+    <ClInclude Include="IManage_SecurityNum.h">
+      <Filter>Server\trade_hk</Filter>
+    </ClInclude>
+    <ClInclude Include="Manage_SecurityNum.h">
+      <Filter>Server\trade_hk</Filter>
+    </ClInclude>
+    <ClInclude Include="PluginChangeOrder_HK.h">
+      <Filter>Server\trade_hk</Filter>
+    </ClInclude>
+    <ClInclude Include="PluginHKTradeServer.h">
+      <Filter>Server\trade_hk</Filter>
+    </ClInclude>
+    <ClInclude Include="PluginPlaceOrder_HK.h">
+      <Filter>Server\trade_hk</Filter>
+    </ClInclude>
+    <ClInclude Include="PluginQueryHKAccInfo.h">
+      <Filter>Server\trade_hk</Filter>
+    </ClInclude>
+    <ClInclude Include="PluginQueryHKDeal.h">
+      <Filter>Server\trade_hk</Filter>
+    </ClInclude>
+    <ClInclude Include="PluginQueryHKOrder.h">
+      <Filter>Server\trade_hk</Filter>
+    </ClInclude>
+    <ClInclude Include="PluginQueryHKPosition.h">
+      <Filter>Server\trade_hk</Filter>
+    </ClInclude>
+    <ClInclude Include="PluginSetOrderStatus_HK.h">
+      <Filter>Server\trade_hk</Filter>
+    </ClInclude>
+    <ClInclude Include="PluginUnlockTrade.h">
+      <Filter>Server\trade_hk</Filter>
+    </ClInclude>
+    <ClInclude Include="MsgHandler.h">
+      <Filter>Comm</Filter>
+    </ClInclude>
+    <ClInclude Include="TimerWnd.h">
+      <Filter>Comm</Filter>
+    </ClInclude>
+    <ClInclude Include="Protocol\ProtoPushBatchBasic.h">
+      <Filter>Protocol\quote</Filter>
+    </ClInclude>
+    <ClInclude Include="PluginPushBatchBasic.h">
+      <Filter>Server\quote</Filter>
+    </ClInclude>
+    <ClInclude Include="Protocol\ProtoPushGearPrice.h">
+      <Filter>Protocol\quote</Filter>
+    </ClInclude>
+    <ClInclude Include="PluginPushGearPrice.h">
+      <Filter>Server\quote</Filter>
+    </ClInclude>
+    <ClInclude Include="Protocol\ProtoPushTickerPrice.h">
+      <Filter>Protocol\quote</Filter>
+    </ClInclude>
+    <ClInclude Include="PluginPushTickerPrice.h">
+      <Filter>Server\quote</Filter>
+    </ClInclude>
+    <ClInclude Include="Protocol\ProtoPushKLData.h">
+      <Filter>Protocol\quote</Filter>
+    </ClInclude>
+    <ClInclude Include="PluginPushKLData.h">
+      <Filter>Server\quote</Filter>
+    </ClInclude>
+    <ClInclude Include="Protocol\ProtoPushRTData.h">
+      <Filter>Protocol\quote</Filter>
+    </ClInclude>
+    <ClInclude Include="PluginPushRTData.h">
+      <Filter>Server\quote</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="JsonCpp\json_internalarray.inl">
+      <Filter>JsonCpp</Filter>
+    </None>
+    <None Include="JsonCpp\json_internalmap.inl">
+      <Filter>JsonCpp</Filter>
+    </None>
+    <None Include="res\PluginServer.rc2">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="config.ini" />
+    <None Include="copy.bat" />
+    <None Include="PluginServer.def" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="JsonCpp\json_op.cpp">
+      <Filter>JsonCpp</Filter>
+    </ClCompile>
+    <ClCompile Include="JsonCpp\json_reader.cpp">
+      <Filter>JsonCpp</Filter>
+    </ClCompile>
+    <ClCompile Include="JsonCpp\json_value.cpp">
+      <Filter>JsonCpp</Filter>
+    </ClCompile>
+    <ClCompile Include="JsonCpp\json_writer.cpp">
+      <Filter>JsonCpp</Filter>
+    </ClCompile>
+    <ClCompile Include="DelayOrderIDCvt_HK.cpp">
+      <Filter>头源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="DelayOrderIDCvt_US.cpp">
+      <Filter>头源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="FormatTime.cpp">
+      <Filter>头源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="PluginServer.cpp">
+      <Filter>头源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>头源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="UsTimezone.cpp">
+      <Filter>头源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="UtilPlugin.cpp">
+      <Filter>头源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Protocol\CppJsonConv.cpp">
+      <Filter>Protocol</Filter>
+    </ClCompile>
+    <ClCompile Include="Protocol\ProtoDataStruct.cpp">
+      <Filter>Protocol</Filter>
+    </ClCompile>
+    <ClCompile Include="Protocol\ProtoParseBase.cpp">
+      <Filter>Protocol</Filter>
+    </ClCompile>
+    <ClCompile Include="Protocol\ProtoBasicPrice.cpp">
+      <Filter>Protocol\quote</Filter>
+    </ClCompile>
+    <ClCompile Include="Protocol\ProtoBatchBasic.cpp">
+      <Filter>Protocol\quote</Filter>
+    </ClCompile>
+    <ClCompile Include="Protocol\ProtoExRightInfo.cpp">
+      <Filter>Protocol\quote</Filter>
+    </ClCompile>
+    <ClCompile Include="Protocol\ProtoGearPrice.cpp">
+      <Filter>Protocol\quote</Filter>
+    </ClCompile>
+    <ClCompile Include="Protocol\ProtoHistoryKL.cpp">
+      <Filter>Protocol\quote</Filter>
+    </ClCompile>
+    <ClCompile Include="Protocol\ProtoKLData.cpp">
+      <Filter>Protocol\quote</Filter>
+    </ClCompile>
+    <ClCompile Include="Protocol\ProtoPushStockData.cpp">
+      <Filter>Protocol\quote</Filter>
+    </ClCompile>
+    <ClCompile Include="Protocol\ProtoQueryStockSub.cpp">
+      <Filter>Protocol\quote</Filter>
+    </ClCompile>
+    <ClCompile Include="Protocol\ProtoRTData.cpp">
+      <Filter>Protocol\quote</Filter>
+    </ClCompile>
+    <ClCompile Include="Protocol\ProtoSnapshot.cpp">
+      <Filter>Protocol\quote</Filter>
+    </ClCompile>
+    <ClCompile Include="Protocol\ProtoStockList.cpp">
+      <Filter>Protocol\quote</Filter>
+    </ClCompile>
+    <ClCompile Include="Protocol\ProtoStockSub.cpp">
+      <Filter>Protocol\quote</Filter>
+    </ClCompile>
+    <ClCompile Include="Protocol\ProtoStockUnSub.cpp">
+      <Filter>Protocol\quote</Filter>
+    </ClCompile>
+    <ClCompile Include="Protocol\ProtoTickerPrice.cpp">
+      <Filter>Protocol\quote</Filter>
+    </ClCompile>
+    <ClCompile Include="Protocol\ProtoTradeDate.cpp">
+      <Filter>Protocol\quote</Filter>
+    </ClCompile>
+    <ClCompile Include="Protocol\ProtoChangeOrder.cpp">
+      <Filter>Protocol\trade</Filter>
+    </ClCompile>
+    <ClCompile Include="Protocol\ProtoOrderErrorPush.cpp">
+      <Filter>Protocol\trade</Filter>
+    </ClCompile>
+    <ClCompile Include="Protocol\ProtoOrderUpdatePush.cpp">
+      <Filter>Protocol\trade</Filter>
+    </ClCompile>
+    <ClCompile Include="Protocol\ProtoPlaceOrder.cpp">
+      <Filter>Protocol\trade</Filter>
+    </ClCompile>
+    <ClCompile Include="Protocol\ProtoQueryHKAccInfo.cpp">
+      <Filter>Protocol\trade</Filter>
+    </ClCompile>
+    <ClCompile Include="Protocol\ProtoQueryHKDeal.cpp">
+      <Filter>Protocol\trade</Filter>
+    </ClCompile>
+    <ClCompile Include="Protocol\ProtoQueryHKOrder.cpp">
+      <Filter>Protocol\trade</Filter>
+    </ClCompile>
+    <ClCompile Include="Protocol\ProtoQueryHKPosition.cpp">
+      <Filter>Protocol\trade</Filter>
+    </ClCompile>
+    <ClCompile Include="Protocol\ProtoQueryUSAccInfo.cpp">
+      <Filter>Protocol\trade</Filter>
+    </ClCompile>
+    <ClCompile Include="Protocol\ProtoQueryUSDeal.cpp">
+      <Filter>Protocol\trade</Filter>
+    </ClCompile>
+    <ClCompile Include="Protocol\ProtoQueryUSOrder.cpp">
+      <Filter>Protocol\trade</Filter>
+    </ClCompile>
+    <ClCompile Include="Protocol\ProtoQueryUSPosition.cpp">
+      <Filter>Protocol\trade</Filter>
+    </ClCompile>
+    <ClCompile Include="Protocol\ProtoSetOrderStatus.cpp">
+      <Filter>Protocol\trade</Filter>
+    </ClCompile>
+    <ClCompile Include="Protocol\ProtoUnlockTrade.cpp">
+      <Filter>Protocol\trade</Filter>
+    </ClCompile>
+    <ClCompile Include="PluginModule.cpp">
+      <Filter>Server</Filter>
+    </ClCompile>
+    <ClCompile Include="PluginNetwork.cpp">
+      <Filter>Server</Filter>
+    </ClCompile>
+    <ClCompile Include="PluginBasicPrice.cpp">
+      <Filter>Server\quote</Filter>
+    </ClCompile>
+    <ClCompile Include="PluginBatchBasic.cpp">
+      <Filter>Server\quote</Filter>
+    </ClCompile>
+    <ClCompile Include="PluginExRightInfo.cpp">
+      <Filter>Server\quote</Filter>
+    </ClCompile>
+    <ClCompile Include="PluginGearPrice.cpp">
+      <Filter>Server\quote</Filter>
+    </ClCompile>
+    <ClCompile Include="PluginHistoryKL.cpp">
+      <Filter>Server\quote</Filter>
+    </ClCompile>
+    <ClCompile Include="PluginKLData.cpp">
+      <Filter>Server\quote</Filter>
+    </ClCompile>
+    <ClCompile Include="PluginPushStockData.cpp">
+      <Filter>Server\quote</Filter>
+    </ClCompile>
+    <ClCompile Include="PluginQueryStockSub.cpp">
+      <Filter>Server\quote</Filter>
+    </ClCompile>
+    <ClCompile Include="PluginQuoteServer.cpp">
+      <Filter>Server\quote</Filter>
+    </ClCompile>
+    <ClCompile Include="PluginRTData.cpp">
+      <Filter>Server\quote</Filter>
+    </ClCompile>
+    <ClCompile Include="PluginSnapshot.cpp">
+      <Filter>Server\quote</Filter>
+    </ClCompile>
+    <ClCompile Include="PluginStockList.cpp">
+      <Filter>Server\quote</Filter>
+    </ClCompile>
+    <ClCompile Include="PluginStockSub.cpp">
+      <Filter>Server\quote</Filter>
+    </ClCompile>
+    <ClCompile Include="PluginStockUnSub.cpp">
+      <Filter>Server\quote</Filter>
+    </ClCompile>
+    <ClCompile Include="PluginTickerPrice.cpp">
+      <Filter>Server\quote</Filter>
+    </ClCompile>
+    <ClCompile Include="PluginTradeDate.cpp">
+      <Filter>Server\quote</Filter>
+    </ClCompile>
+    <ClCompile Include="PluginChangeOrder_US.cpp">
+      <Filter>Server\trade_us</Filter>
+    </ClCompile>
+    <ClCompile Include="PluginPlaceOrder_US.cpp">
+      <Filter>Server\trade_us</Filter>
+    </ClCompile>
+    <ClCompile Include="PluginQueryUSAccInfo.cpp">
+      <Filter>Server\trade_us</Filter>
+    </ClCompile>
+    <ClCompile Include="PluginQueryUSDeal.cpp">
+      <Filter>Server\trade_us</Filter>
+    </ClCompile>
+    <ClCompile Include="PluginQueryUSOrder.cpp">
+      <Filter>Server\trade_us</Filter>
+    </ClCompile>
+    <ClCompile Include="PluginQueryUSPosition.cpp">
+      <Filter>Server\trade_us</Filter>
+    </ClCompile>
+    <ClCompile Include="PluginSetOrderStatus_US.cpp">
+      <Filter>Server\trade_us</Filter>
+    </ClCompile>
+    <ClCompile Include="PluginUSTradeServer.cpp">
+      <Filter>Server\trade_us</Filter>
+    </ClCompile>
+    <ClCompile Include="IManage_SecurityNum.cpp">
+      <Filter>Server\trade_hk</Filter>
+    </ClCompile>
+    <ClCompile Include="Manage_SecurityNum.cpp">
+      <Filter>Server\trade_hk</Filter>
+    </ClCompile>
+    <ClCompile Include="PluginChangeOrder_HK.cpp">
+      <Filter>Server\trade_hk</Filter>
+    </ClCompile>
+    <ClCompile Include="PluginHKTradeServer.cpp">
+      <Filter>Server\trade_hk</Filter>
+    </ClCompile>
+    <ClCompile Include="PluginPlaceOrder_HK.cpp">
+      <Filter>Server\trade_hk</Filter>
+    </ClCompile>
+    <ClCompile Include="PluginQueryHKAccInfo.cpp">
+      <Filter>Server\trade_hk</Filter>
+    </ClCompile>
+    <ClCompile Include="PluginQueryHKDeal.cpp">
+      <Filter>Server\trade_hk</Filter>
+    </ClCompile>
+    <ClCompile Include="PluginQueryHKOrder.cpp">
+      <Filter>Server\trade_hk</Filter>
+    </ClCompile>
+    <ClCompile Include="PluginQueryHKPosition.cpp">
+      <Filter>Server\trade_hk</Filter>
+    </ClCompile>
+    <ClCompile Include="PluginSetOrderStatus_HK.cpp">
+      <Filter>Server\trade_hk</Filter>
+    </ClCompile>
+    <ClCompile Include="PluginUnlockTrade.cpp">
+      <Filter>Server\trade_hk</Filter>
+    </ClCompile>
+    <ClCompile Include="MsgHandler.cpp">
+      <Filter>Comm</Filter>
+    </ClCompile>
+    <ClCompile Include="TimerWnd.cpp">
+      <Filter>Comm</Filter>
+    </ClCompile>
+    <ClCompile Include="Protocol\ProtoPushBatchBasic.cpp">
+      <Filter>Protocol\quote</Filter>
+    </ClCompile>
+    <ClCompile Include="PluginPushBatchBasic.cpp">
+      <Filter>Server\quote</Filter>
+    </ClCompile>
+    <ClCompile Include="Protocol\ProtoPushGearPrice.cpp">
+      <Filter>Protocol\quote</Filter>
+    </ClCompile>
+    <ClCompile Include="PluginPushGearPrice.cpp">
+      <Filter>Server\quote</Filter>
+    </ClCompile>
+    <ClCompile Include="Protocol\ProtoPushTickerPrice.cpp">
+      <Filter>Protocol\quote</Filter>
+    </ClCompile>
+    <ClCompile Include="PluginPushTickerPrice.cpp">
+      <Filter>Server\quote</Filter>
+    </ClCompile>
+    <ClCompile Include="Protocol\ProtoPushKLData.cpp">
+      <Filter>Protocol\quote</Filter>
+    </ClCompile>
+    <ClCompile Include="PluginPushKLData.cpp">
+      <Filter>Server\quote</Filter>
+    </ClCompile>
+    <ClCompile Include="Protocol\ProtoPushRTData.cpp">
+      <Filter>Protocol\quote</Filter>
+    </ClCompile>
+    <ClCompile Include="PluginPushRTData.cpp">
+      <Filter>Server\quote</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="PluginServer.rc">
+      <Filter>资源文件</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="ReadMe.txt" />
+    <Text Include="需求.txt" />
+  </ItemGroup>
+</Project>

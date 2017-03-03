@@ -1,0 +1,362 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{0431A3DF-5586-4991-9B03-2E456E986FB5}</ProjectGuid>
+    <RootNamespace>PluginServer</RootNamespace>
+    <Keyword>MFCDLLProj</Keyword>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <PlatformToolset>v120</PlatformToolset>
+    <UseOfMfc>Static</UseOfMfc>
+    <UseOfAtl>Static</UseOfAtl>
+    <CharacterSet>Unicode</CharacterSet>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <PlatformToolset>v120</PlatformToolset>
+    <UseOfMfc>Static</UseOfMfc>
+    <UseOfAtl>Static</UseOfAtl>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>12.0.30501.0</_ProjectFileVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>$(SolutionDir)$(Configuration)\</OutDir>
+    <IntDir>$(Configuration)\</IntDir>
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>$(SolutionDir)$(Configuration)\</OutDir>
+    <IntDir>$(Configuration)\</IntDir>
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Midl>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MkTypLibCompatible>false</MkTypLibCompatible>
+    </Midl>
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MinimalRebuild>true</MinimalRebuild>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0804</Culture>
+      <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Link>
+      <AdditionalDependencies>uafxcwd.lib;Libcmtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <OutputFile>$(OutDir)$(ProjectName).dll</OutputFile>
+      <IgnoreSpecificDefaultLibraries>uafxcwd.lib;Libcmtd.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <ModuleDefinitionFile>.\PluginServer.def</ModuleDefinitionFile>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <TargetMachine>MachineX86</TargetMachine>
+    </Link>
+    <PostBuildEvent>
+      <Command>copy.bat</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Midl>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MkTypLibCompatible>false</MkTypLibCompatible>
+    </Midl>
+    <ClCompile>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0804</Culture>
+      <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Link>
+      <AdditionalDependencies>uafxcw.lib;Libcmt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <IgnoreSpecificDefaultLibraries>uafxcw.lib;Libcmt.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <ModuleDefinitionFile>.\PluginServer.def</ModuleDefinitionFile>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <TargetMachine>MachineX86</TargetMachine>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="CM\ca_api.h" />
+    <ClInclude Include="CM\CMHelper.h" />
+    <ClInclude Include="CM\CommonAssist.h" />
+    <ClInclude Include="DelayOrderIDCvt_HK.h" />
+    <ClInclude Include="DelayOrderIDCvt_US.h" />
+    <ClInclude Include="FormatTime.h" />
+    <ClInclude Include="IManage_SecurityNum.h" />
+    <ClInclude Include="Include\FTPluginCore.h" />
+    <ClInclude Include="Include\FTPluginQuoteDefine.h" />
+    <ClInclude Include="Include\FTPluginQuoteInterface.h" />
+    <ClInclude Include="Include\FTPluginTradeInterface.h" />
+    <ClInclude Include="JsonCpp\autolink.h" />
+    <ClInclude Include="JsonCpp\config.h" />
+    <ClInclude Include="JsonCpp\features.h" />
+    <ClInclude Include="JsonCpp\forwards.h" />
+    <ClInclude Include="JsonCpp\json.h" />
+    <ClInclude Include="JsonCpp\json_batchallocator.h" />
+    <ClInclude Include="JsonCpp\reader.h" />
+    <ClInclude Include="JsonCpp\value.h" />
+    <ClInclude Include="JsonCpp\writer.h" />
+    <ClInclude Include="Manage_SecurityNum.h" />
+    <ClInclude Include="MsgHandler.h" />
+    <ClInclude Include="PluginBasicPrice.h" />
+    <ClInclude Include="PluginBatchBasic.h" />
+    <ClInclude Include="PluginChangeOrder_HK.h" />
+    <ClInclude Include="PluginChangeOrder_US.h" />
+    <ClInclude Include="PluginExRightInfo.h" />
+    <ClInclude Include="PluginGearPrice.h" />
+    <ClInclude Include="PluginHistoryKL.h" />
+    <ClInclude Include="PluginHKTradeServer.h" />
+    <ClInclude Include="PluginKLData.h" />
+    <ClInclude Include="PluginModule.h" />
+    <ClInclude Include="PluginNetwork.h" />
+    <ClInclude Include="PluginPlaceOrder_HK.h" />
+    <ClInclude Include="PluginPlaceOrder_US.h" />
+    <ClInclude Include="PluginPushBatchBasic.h" />
+    <ClInclude Include="PluginPushGearPrice.h" />
+    <ClInclude Include="PluginPushKLData.h" />
+    <ClInclude Include="PluginPushRTData.h" />
+    <ClInclude Include="PluginPushStockData.h" />
+    <ClInclude Include="PluginPushTickerPrice.h" />
+    <ClInclude Include="PluginQueryHKAccInfo.h" />
+    <ClInclude Include="PluginQueryHKDeal.h" />
+    <ClInclude Include="PluginQueryHKOrder.h" />
+    <ClInclude Include="PluginQueryHKPosition.h" />
+    <ClInclude Include="PluginQueryStockSub.h" />
+    <ClInclude Include="PluginQueryUSAccInfo.h" />
+    <ClInclude Include="PluginQueryUSDeal.h" />
+    <ClInclude Include="PluginQueryUSOrder.h" />
+    <ClInclude Include="PluginQueryUSPosition.h" />
+    <ClInclude Include="PluginQuoteServer.h" />
+    <ClInclude Include="PluginRTData.h" />
+    <ClInclude Include="PluginServer.h" />
+    <ClInclude Include="PluginSetOrderStatus_HK.h" />
+    <ClInclude Include="PluginSetOrderStatus_US.h" />
+    <ClInclude Include="PluginSnapshot.h" />
+    <ClInclude Include="PluginStockList.h" />
+    <ClInclude Include="PluginStockSub.h" />
+    <ClInclude Include="PluginStockUnSub.h" />
+    <ClInclude Include="PluginTickerPrice.h" />
+    <ClInclude Include="PluginTradeDate.h" />
+    <ClInclude Include="PluginUnlockTrade.h" />
+    <ClInclude Include="PluginUSTradeServer.h" />
+    <ClInclude Include="Protocol\CppJsonConv.h" />
+    <ClInclude Include="Protocol\ProtoBasicPrice.h" />
+    <ClInclude Include="Protocol\ProtoBatchBasic.h" />
+    <ClInclude Include="Protocol\ProtoChangeOrder.h" />
+    <ClInclude Include="Protocol\ProtoDataStruct.h" />
+    <ClInclude Include="Protocol\ProtoDataStruct_Quote.h" />
+    <ClInclude Include="Protocol\ProtoDataStruct_Trade.h" />
+    <ClInclude Include="Protocol\ProtoExRightInfo.h" />
+    <ClInclude Include="Protocol\ProtoGearPrice.h" />
+    <ClInclude Include="Protocol\ProtoHistoryKL.h" />
+    <ClInclude Include="Protocol\ProtoKLData.h" />
+    <ClInclude Include="Protocol\ProtoOrderErrorPush.h" />
+    <ClInclude Include="Protocol\ProtoOrderUpdatePush.h" />
+    <ClInclude Include="Protocol\ProtoParseBase.h" />
+    <ClInclude Include="Protocol\ProtoPlaceOrder.h" />
+    <ClInclude Include="Protocol\ProtoPushBatchBasic.h" />
+    <ClInclude Include="Protocol\ProtoPushGearPrice.h" />
+    <ClInclude Include="Protocol\ProtoPushKLData.h" />
+    <ClInclude Include="Protocol\ProtoPushRTData.h" />
+    <ClInclude Include="Protocol\ProtoPushStockData.h" />
+    <ClInclude Include="Protocol\ProtoPushTickerPrice.h" />
+    <ClInclude Include="Protocol\ProtoQueryHKAccInfo.h" />
+    <ClInclude Include="Protocol\ProtoQueryHKDeal.h" />
+    <ClInclude Include="Protocol\ProtoQueryHKOrder.h" />
+    <ClInclude Include="Protocol\ProtoQueryHKPosition.h" />
+    <ClInclude Include="Protocol\ProtoQueryStockSub.h" />
+    <ClInclude Include="Protocol\ProtoQueryUSAccInfo.h" />
+    <ClInclude Include="Protocol\ProtoQueryUSDeal.h" />
+    <ClInclude Include="Protocol\ProtoQueryUSOrder.h" />
+    <ClInclude Include="Protocol\ProtoQueryUSPosition.h" />
+    <ClInclude Include="Protocol\ProtoRTData.h" />
+    <ClInclude Include="Protocol\ProtoSetOrderStatus.h" />
+    <ClInclude Include="Protocol\ProtoSnapshot.h" />
+    <ClInclude Include="Protocol\ProtoStockList.h" />
+    <ClInclude Include="Protocol\ProtoStockSub.h" />
+    <ClInclude Include="Protocol\ProtoStockUnSub.h" />
+    <ClInclude Include="Protocol\ProtoTickerPrice.h" />
+    <ClInclude Include="Protocol\ProtoTradeDate.h" />
+    <ClInclude Include="Protocol\ProtoUnlockTrade.h" />
+    <ClInclude Include="Resource.h" />
+    <ClInclude Include="stdafx.h" />
+    <ClInclude Include="TimerWnd.h" />
+    <ClInclude Include="UsTimezone.h" />
+    <ClInclude Include="UtilPlugin.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="config.ini" />
+    <None Include="copy.bat" />
+    <None Include="JsonCpp\json_internalarray.inl" />
+    <None Include="JsonCpp\json_internalmap.inl" />
+    <None Include="PluginServer.def" />
+    <None Include="res\PluginServer.rc2" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="DelayOrderIDCvt_HK.cpp" />
+    <ClCompile Include="DelayOrderIDCvt_US.cpp" />
+    <ClCompile Include="FormatTime.cpp" />
+    <ClCompile Include="IManage_SecurityNum.cpp" />
+    <ClCompile Include="JsonCpp\json_op.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+      </PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+      </PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="JsonCpp\json_reader.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+      </PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+      </PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="JsonCpp\json_value.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+      </PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+      </PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="JsonCpp\json_writer.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+      </PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+      </PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Manage_SecurityNum.cpp" />
+    <ClCompile Include="MsgHandler.cpp" />
+    <ClCompile Include="PluginBasicPrice.cpp" />
+    <ClCompile Include="PluginBatchBasic.cpp" />
+    <ClCompile Include="PluginChangeOrder_HK.cpp" />
+    <ClCompile Include="PluginChangeOrder_US.cpp" />
+    <ClCompile Include="PluginExRightInfo.cpp" />
+    <ClCompile Include="PluginGearPrice.cpp" />
+    <ClCompile Include="PluginHistoryKL.cpp" />
+    <ClCompile Include="PluginHKTradeServer.cpp" />
+    <ClCompile Include="PluginKLData.cpp" />
+    <ClCompile Include="PluginModule.cpp" />
+    <ClCompile Include="PluginNetwork.cpp" />
+    <ClCompile Include="PluginPlaceOrder_HK.cpp" />
+    <ClCompile Include="PluginPlaceOrder_US.cpp" />
+    <ClCompile Include="PluginPushBatchBasic.cpp" />
+    <ClCompile Include="PluginPushGearPrice.cpp" />
+    <ClCompile Include="PluginPushKLData.cpp" />
+    <ClCompile Include="PluginPushRTData.cpp" />
+    <ClCompile Include="PluginPushStockData.cpp" />
+    <ClCompile Include="PluginPushTickerPrice.cpp" />
+    <ClCompile Include="PluginQueryHKAccInfo.cpp" />
+    <ClCompile Include="PluginQueryHKDeal.cpp" />
+    <ClCompile Include="PluginQueryHKOrder.cpp" />
+    <ClCompile Include="PluginQueryHKPosition.cpp" />
+    <ClCompile Include="PluginQueryStockSub.cpp" />
+    <ClCompile Include="PluginQueryUSAccInfo.cpp" />
+    <ClCompile Include="PluginQueryUSDeal.cpp" />
+    <ClCompile Include="PluginQueryUSOrder.cpp" />
+    <ClCompile Include="PluginQueryUSPosition.cpp" />
+    <ClCompile Include="PluginQuoteServer.cpp" />
+    <ClCompile Include="PluginRTData.cpp" />
+    <ClCompile Include="PluginServer.cpp" />
+    <ClCompile Include="PluginSetOrderStatus_HK.cpp" />
+    <ClCompile Include="PluginSetOrderStatus_US.cpp" />
+    <ClCompile Include="PluginSnapshot.cpp" />
+    <ClCompile Include="PluginStockList.cpp" />
+    <ClCompile Include="PluginStockSub.cpp" />
+    <ClCompile Include="PluginStockUnSub.cpp" />
+    <ClCompile Include="PluginTickerPrice.cpp" />
+    <ClCompile Include="PluginTradeDate.cpp" />
+    <ClCompile Include="PluginUnlockTrade.cpp" />
+    <ClCompile Include="PluginUSTradeServer.cpp" />
+    <ClCompile Include="Protocol\CppJsonConv.cpp" />
+    <ClCompile Include="Protocol\ProtoBasicPrice.cpp" />
+    <ClCompile Include="Protocol\ProtoBatchBasic.cpp" />
+    <ClCompile Include="Protocol\ProtoChangeOrder.cpp" />
+    <ClCompile Include="Protocol\ProtoDataStruct.cpp" />
+    <ClCompile Include="Protocol\ProtoExRightInfo.cpp" />
+    <ClCompile Include="Protocol\ProtoGearPrice.cpp" />
+    <ClCompile Include="Protocol\ProtoHistoryKL.cpp" />
+    <ClCompile Include="Protocol\ProtoKLData.cpp" />
+    <ClCompile Include="Protocol\ProtoOrderErrorPush.cpp" />
+    <ClCompile Include="Protocol\ProtoOrderUpdatePush.cpp" />
+    <ClCompile Include="Protocol\ProtoParseBase.cpp" />
+    <ClCompile Include="Protocol\ProtoPlaceOrder.cpp" />
+    <ClCompile Include="Protocol\ProtoPushBatchBasic.cpp" />
+    <ClCompile Include="Protocol\ProtoPushGearPrice.cpp" />
+    <ClCompile Include="Protocol\ProtoPushKLData.cpp" />
+    <ClCompile Include="Protocol\ProtoPushRTData.cpp" />
+    <ClCompile Include="Protocol\ProtoPushStockData.cpp" />
+    <ClCompile Include="Protocol\ProtoPushTickerPrice.cpp" />
+    <ClCompile Include="Protocol\ProtoQueryHKAccInfo.cpp" />
+    <ClCompile Include="Protocol\ProtoQueryHKDeal.cpp" />
+    <ClCompile Include="Protocol\ProtoQueryHKOrder.cpp" />
+    <ClCompile Include="Protocol\ProtoQueryHKPosition.cpp" />
+    <ClCompile Include="Protocol\ProtoQueryStockSub.cpp" />
+    <ClCompile Include="Protocol\ProtoQueryUSAccInfo.cpp" />
+    <ClCompile Include="Protocol\ProtoQueryUSDeal.cpp" />
+    <ClCompile Include="Protocol\ProtoQueryUSOrder.cpp" />
+    <ClCompile Include="Protocol\ProtoQueryUSPosition.cpp" />
+    <ClCompile Include="Protocol\ProtoRTData.cpp" />
+    <ClCompile Include="Protocol\ProtoSetOrderStatus.cpp" />
+    <ClCompile Include="Protocol\ProtoSnapshot.cpp" />
+    <ClCompile Include="Protocol\ProtoStockList.cpp" />
+    <ClCompile Include="Protocol\ProtoStockSub.cpp" />
+    <ClCompile Include="Protocol\ProtoStockUnSub.cpp" />
+    <ClCompile Include="Protocol\ProtoTickerPrice.cpp" />
+    <ClCompile Include="Protocol\ProtoTradeDate.cpp" />
+    <ClCompile Include="Protocol\ProtoUnlockTrade.cpp" />
+    <ClCompile Include="stdafx.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="TimerWnd.cpp" />
+    <ClCompile Include="UsTimezone.cpp" />
+    <ClCompile Include="UtilPlugin.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="PluginServer.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="ReadMe.txt" />
+    <Text Include="需求.txt" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
