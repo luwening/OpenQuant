@@ -12,7 +12,7 @@
 
 ### 组织结构
 
-![image](https://github.com/FutunnOpen/OpenQuant/raw/master/ProfileStructure.png)
+![image](https://github.com/FutunnOpen/OpenQuant/raw/master/Structure.png)
 
 ​	最新版本在master分支。之前各版本在其他分支上。
 
