@@ -20,8 +20,6 @@
 
 ### API与富途牛牛客户端架构
 
-![image](https://github.com/FutunnOpen/OpenQuant/raw/master/API结构图.png)
-
 ***
 
 ### 使用须知
