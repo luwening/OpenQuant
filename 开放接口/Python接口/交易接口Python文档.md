@@ -10,23 +10,22 @@ tradehk_ctx = OpenHKTradeContext(host='127.0.0.1', sync_port=11111)
 
 **功能**：创建上下文，建立网络连接
 **参数**:
-**host**：网络连接地址
+**host**：网络连接地址。
 **sync_port**：网络连接端口，用于同步通信。
-**async_port**：网络连接端口，用于异步通信，接收客户端的数据推送。
 
 
 
 ### 解锁接口 unlock_trade
 
 ```python
-ret_code, ret_data = tradehk_ctx.unclok_trade(cookie, password)
+ret_code, ret_data = tradehk_ctx.unlock_trade(cookie, password)
 ```
 
-**功能**：交易解锁。
+**功能**：港股交易解锁。
 
 **参数**：
-**cookie**: 本地cookie，用来区分回包
-**password**: 用户交易密码
+**cookie**: 本地cookie，用来区分回包。
+**password**: 用户交易密码。
 
 **返回**：
 ret_code失败时，ret_data返回为错误描述字符串；
@@ -49,11 +48,11 @@ ret_code, ret_data = tradehk_ctx.place_order(cookie, price, qty, strcode, orders
 
 **参数**：
 
-**cookie**: 本地cookie，用来区分回包
+**cookie**: 本地cookie，用来区分回包。
 
 **price**: 交易价格。
 
-**qty**: 交易数量
+**qty**: 交易数量。
 
 **strcode**: 股票ID。**不用带市场参数**。例如：“00700”。
 
@@ -104,7 +103,7 @@ ret_code, ret_data = tradehk_ctx.set_order_status(cookie, status, localid=0, ord
 
 **参数**：
 
-**cookie**: 本地cookie，用来区分回包
+**cookie**: 本地cookie，用来区分回包。
 
 **status**: 更改状态的类型。如下表所示。
 
@@ -155,7 +154,7 @@ ret_code, ret_data = tradehk_ctx.change_order(cookie, price, qty, localid=0, ord
 
 **price**: 交易价格。
 
-**qty**: 交易数量
+**qty**: 交易数量。
 
 **localid**: 订单的本地标识。
 
@@ -212,8 +211,8 @@ ret_code失败时，ret_data返回为错误描述字符串；
 | Power | 购买力   | ZCJZ  | 资产净值  |
 | ZQSZ  | 证券市值  | XJJY  | 现金结余  |
 | KQXJ  | 可取现金  | DJZJ  | 冻结资金  |
-| ZSJE  | 追收金额  | ZGJDE | 最高信贷额 |
-| YYJDE | 已用信贷额 | GPBZJ | 股票保证金 |
+| ZSJE  | 追收金额  | ZGJDE | 最高借贷额 |
+| YYJDE | 已用借贷额 | GPBZJ | 股票保证金 |
 
 **失败情况**：
 
@@ -282,7 +281,7 @@ ret_code, ret_data = tradehk_ctx.position_list_query(cookie, envtype=0)
 
 **参数**：
 
-**cookie**:本地cookie，用来区分回包
+**cookie**:本地cookie，用来区分回包。
 
 **envtype**: 交易环境参数。如下表所示。
 
@@ -325,7 +324,7 @@ ret_code, ret_data = tradehk_ctx.deal_list_query(cookie, envtype=0)
 
 **参数**：
 
-**cookie**:本地cookie，用来区分回包
+**cookie**:本地cookie，用来区分回包。
 
 **envtype**: 交易环境参数。如下表所示。
 
@@ -341,7 +340,7 @@ ret_code失败时，ret_data返回为错误描述字符串；
 
 **price**: 交易价格。
 
-**qty**: 交易数量
+**qty**: 交易数量。
 
 **localid**: 订单的本地标识。
 
@@ -375,25 +374,24 @@ ret_code失败时，ret_data返回为错误描述字符串；
 tradeus_ctx = OpenUSTradeContext(host='127.0.0.1', sync_port=11111)
 ```
 
-**功能**：创建上下文，建立网络连接
+**功能**：创建上下文，建立网络连接。
 **参数**:
 **host**：网络连接地址
 **sync_port**：网络连接端口，用于同步通信。
-**async_port**：网络连接端口，用于异步通信，接收客户端的数据推送。
 
 
 
 ### 解锁接口 unlock_trade
 
 ```python
-ret_code, ret_data = tradeus_ctx.unclok_trade(cookie, password)
+ret_code, ret_data = tradeus_ctx.unlock_trade(cookie, password)
 ```
 
 **功能**：交易解锁。
 
 **参数**：
-**cookie**: 本地cookie，用来区分回包
-**password**: 用户交易密码
+**cookie**: 本地cookie，用来区分回包。
+**password**: 用户交易密码。
 
 **返回**：
 ret_code失败时，ret_data返回为错误描述字符串；
@@ -412,11 +410,11 @@ ret_code失败时，ret_data返回为错误描述字符串；
 ret_code, ret_data = tradeus_ctx.place_order(cookie, price, qty, strcode, orderside, ordertype=2)
 ```
 
-**功能**：港股下单接口。
+**功能**：美股下单接口。
 
 **参数**：
 
-**cookie**: 本地cookie，用来区分回包
+**cookie**: 本地cookie，用来区分回包。
 
 **price**: 交易价格。
 
@@ -465,7 +463,7 @@ ret_code, ret_data = tradeus_ctx.set_order_status(cookie, localid=0, orderid=0)
 
 **参数**：
 
-**cookie**: 本地cookie，用来区分回包
+**cookie**: 本地cookie，用来区分回包。
 
 **localid**: 订单的本地标识。
 
@@ -498,11 +496,11 @@ ret_code, ret_data = tradeus_ctx.change_order(cookie, price, qty, localid=0, ord
 
 **参数**：
 
-**cookie**: 本地cookie，用来区分回包
+**cookie**: 本地cookie，用来区分回包。
 
 **price**: 交易价格。
 
-**qty**: 交易数量
+**qty**: 交易数量。
 
 **localid**: 订单的本地标识。
 
@@ -545,8 +543,8 @@ ret_code失败时，ret_data返回为错误描述字符串；
 | Power | 购买力   | ZCJZ  | 资产净值  |
 | ZQSZ  | 证券市值  | XJJY  | 现金结余  |
 | KQXJ  | 可取现金  | DJZJ  | 冻结资金  |
-| ZSJE  | 追收金额  | ZGJDE | 最高信贷额 |
-| YYJDE | 已用信贷额 | GPBZJ | 股票保证金 |
+| ZSJE  | 追收金额  | ZGJDE | 最高借贷额 |
+| YYJDE | 已用借贷额 | GPBZJ | 股票保证金 |
 
 **失败情况**：
 
@@ -565,7 +563,7 @@ ret_code, ret_data = tradeus_ctx.order_list_query(cookie)
 
 **参数**：
 
-**cookie**:本地cookie，用来区分回包
+**cookie**:本地cookie，用来区分回包。
 
 **返回:**
 
@@ -644,7 +642,7 @@ ret_code, ret_data = tradeus_ctx.deal_list_query(cookie)
 
 **参数**：
 
-**cookie**:本地cookie，用来区分回包
+**cookie**:本地cookie，用来区分回包。
 
 **返回:**
 
@@ -653,7 +651,7 @@ ret_code失败时，ret_data返回为错误描述字符串；
 
 **price**: 交易价格。
 
-**qty**: 交易数量
+**qty**: 交易数量。
 
 **localid**: 订单的本地标识。
 
