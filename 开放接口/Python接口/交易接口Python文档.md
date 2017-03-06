@@ -5,7 +5,7 @@
 ### 实例化上下文对象
 
 ```python
-tradehk_ctx = OpenHKTradeContext(host='127.0.0.1', sync_port=111111)
+tradehk_ctx = OpenHKTradeContext(host='127.0.0.1', sync_port=11111)
 ```
 
 **功能**：创建上下文，建立网络连接
@@ -19,7 +19,7 @@ tradehk_ctx = OpenHKTradeContext(host='127.0.0.1', sync_port=111111)
 ### 解锁接口 unlock_trade
 
 ```python
-ret_code, ret_data = tradehk_ctx.get_trading_days(cookie, password)
+ret_code, ret_data = tradehk_ctx.unclok_trade(cookie, password)
 ```
 
 **功能**：交易解锁。
@@ -35,7 +35,7 @@ ret_code失败时，ret_data返回为错误描述字符串；
 **失败情况**：
 
 1.  交易密码错误
-2. 客户端内部或网络错误
+2.  客户端内部或网络错误
 
 
 
@@ -178,8 +178,8 @@ ret_code失败时，ret_data返回为错误描述字符串；
 **失败情况**：
 
 1.  参数错误
-2. 客户端内部或网络错误
-3. 订单不存在
+2.  客户端内部或网络错误
+3.  订单不存在
 
 
 
@@ -372,7 +372,7 @@ ret_code失败时，ret_data返回为错误描述字符串；
 ### 实例化上下文对象
 
 ```python
-tradeus_ctx = OpenUSTradeContext(host='127.0.0.1', sync_port=111111)
+tradeus_ctx = OpenUSTradeContext(host='127.0.0.1', sync_port=11111)
 ```
 
 **功能**：创建上下文，建立网络连接
@@ -386,7 +386,7 @@ tradeus_ctx = OpenUSTradeContext(host='127.0.0.1', sync_port=111111)
 ### 解锁接口 unlock_trade
 
 ```python
-ret_code, ret_data = tradeus_ctx.get_trading_days(cookie, password)
+ret_code, ret_data = tradeus_ctx.unclok_trade(cookie, password)
 ```
 
 **功能**：交易解锁。
@@ -402,7 +402,7 @@ ret_code失败时，ret_data返回为错误描述字符串；
 **失败情况**：
 
 1.  交易密码错误
-2. 客户端内部或网络错误
+2.  客户端内部或网络错误
 
 
 
@@ -518,8 +518,8 @@ ret_code失败时，ret_data返回为错误描述字符串；
 **失败情况**：
 
 1.  参数错误
-2. 客户端内部或网络错误
-3. 订单不存在
+2.  客户端内部或网络错误
+3.  订单不存在
 
 
 
