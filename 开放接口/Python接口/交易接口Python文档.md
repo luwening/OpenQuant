@@ -5,7 +5,7 @@
 ### 实例化上下文对象
 
 ```python
-tradehk_ctx = OpenHKTradeContext(host='127.0.0.1', sync_port=111111)
+tradehk_ctx = OpenHKTradeContext(host='127.0.0.1', sync_port=11111)
 ```
 
 **功能**：创建上下文，建立网络连接
@@ -372,7 +372,7 @@ ret_code失败时，ret_data返回为错误描述字符串；
 ### 实例化上下文对象
 
 ```python
-tradeus_ctx = OpenUSTradeContext(host='127.0.0.1', sync_port=111111)
+tradeus_ctx = OpenUSTradeContext(host='127.0.0.1', sync_port=11111)
 ```
 
 **功能**：创建上下文，建立网络连接
