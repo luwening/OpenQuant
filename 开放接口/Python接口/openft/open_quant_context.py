@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from .quote_query import *
 from .trade_query import *
 from multiprocessing import Queue
@@ -9,9 +7,10 @@ import sys
 import pandas as pd
 import asyncore
 import socket as sock
+import time
 
 
-class RspHandlerBase:
+class RspHandlerBase(object):
     def __init__(self):
         pass
 
@@ -195,7 +194,7 @@ class _SyncNetworkQueryCtx:
             s_cnt = self.s.send(s_buf)
         except Exception:
             err = sys.exc_info()[1]
-            error_str = ERROR_STR_PREFIX + str(err) + 'when sending. For req: ' + req_str
+            error_str = ERROR_STR_PREFIX + str(err) + ' when sending. For req: ' + req_str
 
             self._force_close_session()
             return RET_ERROR, error_str, None
@@ -209,7 +208,7 @@ class _SyncNetworkQueryCtx:
             except Exception:
                 err = sys.exc_info()[1]
                 error_str = ERROR_STR_PREFIX + str(
-                    err) + 'when recving after sending %s bytes. For req: ' % s_cnt + req_str
+                    err) + ' when recving after sending %s bytes. For req: ' % s_cnt + req_str
                 self._force_close_session()
                 return RET_ERROR, error_str, None
 
@@ -232,7 +231,7 @@ class _AsyncNetworkManager(asyncore.dispatcher_with_send):
         asyncore.dispatcher_with_send.__init__(self)
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         self.connect((self.__host, self.__port))
-
+        time.sleep(0.1)
         self.rsp_buf = b''
         self.handler_ctx = handler_ctx
 
@@ -376,6 +375,18 @@ class OpenQuoteContext:
 
     def get_trading_days(self, market, start_date=None, end_date=None):
 
+        if market is None or isinstance(market, str) is False:
+            error_str = ERROR_STR_PREFIX + "the type of market param is wrong"
+            return RET_ERROR, error_str
+
+        if start_date is not None and isinstance(start_date, str) is False:
+            error_str = ERROR_STR_PREFIX + "the type of start_date param is wrong"
+            return RET_ERROR, error_str
+
+        if end_date is not None and isinstance(end_date, str) is False:
+            error_str = ERROR_STR_PREFIX + "the type of end_date param is wrong"
+            return RET_ERROR, error_str
+
         query_processor = self._get_sync_query_processor(TradeDayQuery.pack_req,
                                                          TradeDayQuery.unpack_rsp)
 
@@ -389,6 +400,12 @@ class OpenQuoteContext:
         return RET_OK, trade_day_list
 
     def get_stock_basicinfo(self, market, stock_type='STOCK'):
+        param_table = {'market': market, 'stock_type': stock_type}
+        for x in param_table:
+            param = param_table[x]
+            if param is None or isinstance(param, str) is False:
+                error_str = ERROR_STR_PREFIX + "the type of %s param is wrong" % x
+                return RET_ERROR, error_str
 
         query_processor = self._get_sync_query_processor(StockBasicInfoQuery.pack_req,
                                                          StockBasicInfoQuery.unpack_rsp)
@@ -405,6 +422,22 @@ class OpenQuoteContext:
         return RET_OK, basic_info_table
 
     def get_history_kline(self, code, start=None, end=None, ktype='K_DAY', autype='qfq'):
+
+        if start is not None and isinstance(start, str) is False:
+            error_str = ERROR_STR_PREFIX + "the type of start param is wrong"
+            return RET_ERROR, error_str
+
+        if end is not None and isinstance(end, str) is False:
+            error_str = ERROR_STR_PREFIX + "the type of end param is wrong"
+            return RET_ERROR, error_str
+
+        param_table = {'code': code, 'ktype': ktype, 'autype': autype}
+        for x in param_table:
+            param = param_table[x]
+            if param is None or isinstance(param, str) is False:
+                error_str = ERROR_STR_PREFIX + "the type of %s param is wrong" % x
+                return RET_ERROR, error_str
+
         query_processor = self._get_sync_query_processor(HistoryKlineQuery.pack_req,
                                                          HistoryKlineQuery.unpack_rsp)
         kargs = {"stock_str": code, "start_date": start, "end_date": end, "ktype": ktype, "autype": autype}
@@ -419,6 +452,16 @@ class OpenQuoteContext:
         return RET_OK, kline_frame_table
 
     def get_autype_list(self, code_list):
+
+        if code_list is None or isinstance(code_list, list) is False:
+            error_str = ERROR_STR_PREFIX + "the type of code_list param is wrong"
+            return RET_ERROR, error_str
+
+        for code in code_list:
+            if code is None or isinstance(code, str) is False:
+                error_str = ERROR_STR_PREFIX + "the type of param in code_list is wrong"
+                return RET_ERROR, error_str
+
         query_processor = self._get_sync_query_processor(ExrightQuery.pack_req,
                                                          ExrightQuery.unpack_rsp)
         kargs = {"stock_list": code_list}
@@ -446,6 +489,15 @@ class OpenQuoteContext:
         return RET_OK, exr_frame_table
 
     def get_market_snapshot(self, code_list):
+        if code_list is None or isinstance(code_list, list) is False:
+            error_str = ERROR_STR_PREFIX + "the type of code_list param is wrong"
+            return RET_ERROR, error_str
+
+        for code in code_list:
+            if code is None or isinstance(code, str) is False:
+                error_str = ERROR_STR_PREFIX + "the type of param in code_list is wrong"
+                return RET_ERROR, error_str
+
         query_processor = self._get_sync_query_processor(MarketSnapshotQuery.pack_req,
                                                          MarketSnapshotQuery.unpack_rsp)
         kargs = {"stock_list": code_list}
@@ -471,6 +523,13 @@ class OpenQuoteContext:
         :param push: push option
         :return: (ret_code, ret_data). ret_code: RET_OK or RET_ERROR.
         """
+        param_table = {'stock_code': stock_code, 'data_type': data_type}
+        for x in param_table:
+            param = param_table[x]
+            if param is None or isinstance(param, str) is False:
+                error_str = ERROR_STR_PREFIX + "the type of %s param is wrong" % x
+                return RET_ERROR, error_str
+
         query_processor = self._get_sync_query_processor(SubscriptionQuery.pack_subscribe_req,
                                                          SubscriptionQuery.unpack_subscribe_rsp)
 
@@ -500,6 +559,14 @@ class OpenQuoteContext:
         :param data_type: string  data type. For instance, "K_1M", "K_MON"
         :return: (ret_code, ret_data). ret_code: RET_OK or RET_ERROR.
         """
+
+        param_table = {'stock_code': stock_code, 'data_type': data_type}
+        for x in param_table:
+            param = param_table[x]
+            if param is None or isinstance(param, str) is False:
+                error_str = ERROR_STR_PREFIX + "the type of %s param is wrong" % x
+                return RET_ERROR, error_str
+
         query_processor = self._get_sync_query_processor(SubscriptionQuery.pack_unsubscribe_req,
                                                          SubscriptionQuery.unpack_unsubscribe_rsp)
         # the keys of kargs should be corresponding to the actual function arguments
@@ -538,6 +605,14 @@ class OpenQuoteContext:
         get_stock_quote to obtain the data
 
         """
+        if code_list is None or isinstance(code_list, list) is False:
+            error_str = ERROR_STR_PREFIX + "the type of code_list param is wrong"
+            return RET_ERROR, error_str
+
+        for code in code_list:
+            if code is None or isinstance(code, str) is False:
+                error_str = ERROR_STR_PREFIX + "the type of param in code_list is wrong"
+                return RET_ERROR, error_str
 
         query_processor = self._get_sync_query_processor(StockQuoteQuery.pack_req,
                                                          StockQuoteQuery.unpack_rsp,
@@ -558,6 +633,15 @@ class OpenQuoteContext:
         return RET_OK, quote_frame_table
 
     def get_rt_ticker(self, code, num=500):
+
+        if code is None or isinstance(code, str) is False:
+            error_str = ERROR_STR_PREFIX + "the type of code param is wrong"
+            return RET_ERROR, error_str
+
+        if num is None or isinstance(num, int) is False:
+            error_str = ERROR_STR_PREFIX + "the type of num param is wrong"
+            return RET_ERROR, error_str
+
         query_processor = self._get_sync_query_processor(TickerQuery.pack_req,
                                                          TickerQuery.unpack_rsp,
                                                          )
@@ -572,6 +656,21 @@ class OpenQuoteContext:
         return RET_OK, ticker_frame_table
 
     def get_cur_kline(self, code, num, ktype='K_DAY', autype='qfq'):
+        param_table = {'code': code, 'ktype': ktype}
+        for x in param_table:
+            param = param_table[x]
+            if param is None or isinstance(param, str) is False:
+                error_str = ERROR_STR_PREFIX + "the type of %s param is wrong" % x
+                return RET_ERROR, error_str
+
+        if num is None or isinstance(num, int) is False:
+            error_str = ERROR_STR_PREFIX + "the type of num param is wrong"
+            return RET_ERROR, error_str
+
+        if autype is not None and isinstance(autype, str) is False:
+            error_str = ERROR_STR_PREFIX + "the type of autype param is wrong"
+            return RET_ERROR, error_str
+
         query_processor = self._get_sync_query_processor(CurKlineQuery.pack_req,
                                                          CurKlineQuery.unpack_rsp,
                                                          )
@@ -587,6 +686,10 @@ class OpenQuoteContext:
         return RET_OK, kline_frame_table
 
     def get_order_book(self, code):
+        if code is None or isinstance(code, str) is False:
+            error_str = ERROR_STR_PREFIX + "the type of code param is wrong"
+            return RET_ERROR, error_str
+
         query_processor = self._get_sync_query_processor(OrderBookQuery.pack_req,
                                                          OrderBookQuery.unpack_rsp,
                                                          )
@@ -597,6 +700,46 @@ class OpenQuoteContext:
             return ret_code, msg
 
         return RET_OK, orderbook
+
+
+if __name__ == "__main__":
+
+    class StockQuoteTest(StockQuoteHandlerBase):
+        def on_recv_rsp(self, rsp_str):
+            ret_code, content = super().on_recv_rsp(rsp_str)
+            if ret_code != RET_OK:
+                print("StockQuoteTest: error, msg: %s" % content)
+                return RET_ERROR, content
+            print("StockQuoteTest ", content)
+            return RET_OK, content
+
+
+    class OrderBookTest(OrderBookHandlerBase):
+        def on_recv_rsp(self, rsp_str):
+            ret_code, content = super().on_recv_rsp(rsp_str)
+            if ret_code != RET_OK:
+                print("OrderBookTest: error, msg: %s" % content)
+                return RET_ERROR, content
+            print("OrderBookTest", content)
+            return RET_OK, content
+
+    class CurKlineTest(CurKlineHandlerBase):
+        def on_recv_rsp(self, rsp_str):
+            ret_code, content = super().on_recv_rsp(rsp_str)
+            if ret_code != RET_OK:
+                print("CurKlineTest: error, msg: %s" % content)
+                return RET_ERROR, content
+            print("CurKlineTest", content)
+            return RET_OK, content
+
+    class TickerTest(TickerHandlerBase):
+        def on_recv_rsp(self, rsp_str):
+            ret_code, content = super().on_recv_rsp(rsp_str)
+            if ret_code != RET_OK:
+                print("TickerTest: error, msg: %s" % content)
+                return RET_ERROR, content
+            print("TickerTest", content)
+            return RET_OK, content
 
 
 class OpenHKTradeContext:
