@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from openft.open_quant_context import *
 
 
@@ -126,7 +124,7 @@ def _example_stock_basic(quote_ctx):
 
 class StockQuoteTest(StockQuoteHandlerBase):
     def on_recv_rsp(self, rsp_str):
-        ret_code, content = super().on_recv_rsp(rsp_str)
+        ret_code, content = super(StockQuoteTest, self).on_recv_rsp(rsp_str)
         if ret_code != RET_OK:
             print("StockQuoteTest: error, msg: %s" % content)
             return RET_ERROR, content
@@ -136,7 +134,7 @@ class StockQuoteTest(StockQuoteHandlerBase):
 
 class OrderBookTest(OrderBookHandlerBase):
     def on_recv_rsp(self, rsp_str):
-        ret_code, content = super().on_recv_rsp(rsp_str)
+        ret_code, content = super(OrderBookTest, self).on_recv_rsp(rsp_str)
         if ret_code != RET_OK:
             print("OrderBookTest: error, msg: %s" % content)
             return RET_ERROR, content
@@ -146,7 +144,7 @@ class OrderBookTest(OrderBookHandlerBase):
 
 class CurKlineTest(CurKlineHandlerBase):
     def on_recv_rsp(self, rsp_str):
-        ret_code, content = super().on_recv_rsp(rsp_str)
+        ret_code, content = super(CurKlineTest, self).on_recv_rsp(rsp_str)
         if ret_code != RET_OK:
             print("CurKlineTest: error, msg: %s" % content)
             return RET_ERROR, content
@@ -156,7 +154,7 @@ class CurKlineTest(CurKlineHandlerBase):
 
 class TickerTest(TickerHandlerBase):
     def on_recv_rsp(self, rsp_str):
-        ret_code, content = super().on_recv_rsp(rsp_str)
+        ret_code, content = super(TickerTest, self).on_recv_rsp(rsp_str)
         if ret_code != RET_OK:
             print("TickerTest: error, msg: %s" % content)
             return RET_ERROR, content
