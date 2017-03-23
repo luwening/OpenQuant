@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from .quote_query import *
 from .trade_query import *
 from multiprocessing import Queue
