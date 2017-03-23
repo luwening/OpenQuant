@@ -42,8 +42,10 @@
 
 ### 客户端下载及交流方式
 
-* 富途开放API群 108534288
-* <http://www.futunn.com>
+* 富途开放API群(108534288)    群文件 >富途牛牛客户端(API接口专用版本)
+
+  ![image](https://github.com/FutunnOpen/OpenQuant/raw/master/Download.png)
+
 * <https://github.com/FutunnOpen/OpenQuant/issues>
 
 
