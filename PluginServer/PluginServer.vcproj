@@ -983,14 +983,6 @@
 					>
 				</File>
 				<File
-					RelativePath=".\PluginCheckSecNum.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\PluginCheckSecNum.h"
-					>
-				</File>
-				<File
 					RelativePath=".\PluginHKTradeServer.cpp"
 					>
 				</File>

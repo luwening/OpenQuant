@@ -165,6 +165,7 @@ def binary2str(b):
     """
     return b.decode('utf-8')
 
+
 class UnlockTrade:
     def __init__(self):
         pass
@@ -199,6 +200,7 @@ class UnlockTrade:
         ret = {"SvrResult": rsp_data["SvrResult"],
                "Cookie": rsp_data["Cookie"]}
         return RET_OK, "", ret
+
 
 class PlaceOrder:
     def __init__(self):
@@ -314,6 +316,7 @@ class PlaceOrder:
                }
         return RET_OK, "", ret
 
+
 class SetOrderStatus:
     def __init__(self):
         pass
@@ -420,6 +423,7 @@ class SetOrderStatus:
                }
         return RET_OK, "", ret
 
+
 class ChangeOrder:
     def __init__(self):
         pass
@@ -524,6 +528,7 @@ class ChangeOrder:
                }
         return RET_OK, "", ret
 
+
 class AccInfoQuery:
     def __init__(self):
         pass
@@ -613,6 +618,7 @@ class AccInfoQuery:
                'YYJDE': str(int(rsp_data['YYJDE'])/1000), 'GPBZJ': str(int(rsp_data['GPBZJ'])/1000)
                }
         return RET_OK, "", ret
+
 
 class OrderListQuery:
     def __init__(self):
@@ -715,6 +721,7 @@ class OrderListQuery:
                        }
                       for order in raw_order_list]
         return RET_OK, "", order_list
+
 
 class PositionListQuery:
     def __init__(self):
@@ -829,6 +836,7 @@ class PositionListQuery:
                           }
                          for position in raw_position_list]
         return RET_OK, "", position_list
+
 
 class DealListQuery:
     def __init__(self):

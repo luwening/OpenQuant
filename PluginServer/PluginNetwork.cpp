@@ -604,7 +604,9 @@ void CPluginNetwork::AccpetLoop()
 				else
 					SetNewConnectSocket(sock_accpt);
 			}
-			WSAResetEvent(hAccpt);
+			WSACloseEvent(hAccpt);
+			WSAEVENT hAccpt = WSACreateEvent();
+			WSAEventSelect(sock_lstn, hAccpt, FD_ACCEPT);
 			continue;
 		}
 		else if ( WAIT_TIMEOUT == dwRet )

@@ -97,7 +97,7 @@ def extract_pls_rsp(rsp_str):
     error_code = int(rsp['ErrCode'])
 
     if error_code != 0:
-        error_str = ERROR_STR_PREFIX + rsp['ErrDesc']
+        error_str = ERROR_STR_PREFIX +  str(error_code) + ' ' + rsp['ErrDesc']
         return RET_ERROR, error_str, None
 
     if 'RetData' not in rsp:
