@@ -1,0 +1,28 @@
+from openft.open_quant_context import *
+from host import *
+import time
+import numpy as np
+import talib as tl
+
+quote_context = OpenQuoteContext(host=host, async_port=11111)
+
+
+quote_context.subscribe('HK.00700', "ORDER_BOOK")
+quote_context.subscribe('HK.800000', 'K_1M', push=False)
+quote_context.subscribe('HK.65999', "ORDER_BOOK")
+quote_context.subscribe('HK.63149', "ORDER_BOOK")
+quote_context.subscribe('HK.24833', "ORDER_BOOK")
+while True:
+    try:
+        #start=time.time()
+        x,y=quote_context.get_cur_kline('HK.800000', 60, ktype='K_1M', autype='qfq')
+        
+        x1,y2=quote_context.get_order_book('HK.65999')    
+
+        x1,y1=quote_context.get_order_book('HK.63149')
+        x1,y3=quote_context.get_order_book('HK.24833')
+        #print(time.time()-start)
+        #start=time.time()
+        time.sleep(4)
+    except:
+        print('some error')
