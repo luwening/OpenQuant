@@ -1,5 +1,4 @@
 from openft.open_quant_context import *
-from host import *
 
 # Examples for use the python functions
 #
@@ -164,7 +163,7 @@ class TickerTest(TickerHandlerBase):
 
 if __name__ == "__main__":
 
-    quote_context = OpenQuoteContext(host=host, async_port=11111)
+    quote_context = OpenQuoteContext(host='127.0.0.1', async_port=11111)
     quote_context.set_handler(StockQuoteTest())
     quote_context.set_handler(OrderBookTest())
     quote_context.set_handler(CurKlineTest())
@@ -178,4 +177,4 @@ if __name__ == "__main__":
     _example_get_trade_days(quote_context)
     _example_stock_basic(quote_context)
 
-    #quote_context.subscribe('HK.00700', "QUOTE", push=True)
+    quote_context.subscribe('HK.00700', "QUOTE", push=True)
