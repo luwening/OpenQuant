@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from .quote_query import *
 from .trade_query import *
 from multiprocessing import Queue
@@ -97,6 +99,12 @@ class HandlerContext:
                                }
 
     def set_handler(self, handler):
+        """
+        set the callback processing object to be used by the receiving thread after receiving the data.User should set
+        their own callback object setting in order to achieve event driven.
+        :param handler:the object in callback handler base
+        :return: ret_error or ret_ok
+        """
         set_flag = False
         for protoc in self._handler_table:
             if isinstance(handler, self._handler_table[protoc]["type"]):
@@ -236,6 +244,10 @@ class _AsyncNetworkManager(asyncore.dispatcher_with_send):
         self.handler_ctx = handler_ctx
 
     def handle_read(self):
+        """
+        deal with Json package
+        :return: err
+        """
         delimiter = b'\r\n\r\n'
         try:
             recv_buf = self.recv(5 * 1024 * 1024)
@@ -265,7 +277,12 @@ class _AsyncNetworkManager(asyncore.dispatcher_with_send):
 
 
 def _net_proc(async_ctx, req_queue):
-
+    """
+    processing request queue
+    :param async_ctx:
+    :param req_queue: request queue
+    :return:
+    """
     while True:
         if req_queue.empty() is False:
             ctl_flag, req_str = req_queue.get(timeout=0.001)
@@ -278,6 +295,12 @@ def _net_proc(async_ctx, req_queue):
 
 class OpenQuoteContext:
     def __init__(self, host="127.0.0.1", sync_port=11111, async_port=11111):
+        """
+        create a context to established a network connection
+        :param host:the address of the network connection
+        :param sync_port:network connection port for synchronous communication
+        :param async_port:network connection port for asynchronous communication,receiving client data push
+        """
         self.__host = host
         self.__sync_port = sync_port
         self.__async_port = async_port
@@ -302,6 +325,9 @@ class OpenQuoteContext:
         return self._handlers_ctx.set_handler(handler)
 
     def start(self):
+        """
+        start the receiving thread,asynchronously receive the data pushed by the client
+        """
         self._net_proc = Thread(target=_net_proc,
                                 args=(self._async_ctx,
                                       self._req_queue,))
@@ -309,6 +335,9 @@ class OpenQuoteContext:
         self._proc_run = True
 
     def stop(self):
+        """
+        stop the receiving thread, no longer receive the data pushed by the client
+        """
         if self._proc_run:
             self._stop_net_proc()
             self._net_proc.join(timeout=5)
@@ -318,12 +347,18 @@ class OpenQuoteContext:
                                       self._req_queue,))
 
     def _send_sync_req(self, req_str):
+        """
+        send a synchronous request
+        """
         ret, msg, content = self._sync_net_ctx.network_query(req_str)
         if ret != RET_OK:
             return RET_ERROR, msg, None
         return RET_OK, msg, content
 
     def _send_async_req(self, req_str):
+        """
+        send a asynchronous request
+        """
         if self._req_queue.full() is False:
             try:
                 self._req_queue.put((True, req_str), timeout=1)
@@ -338,7 +373,12 @@ class OpenQuoteContext:
             return RET_ERROR, error_str
 
     def _get_sync_query_processor(self, pack_func, unpack_func):
-
+        """
+        synchronize the query processor
+        :param pack_func: back
+        :param unpack_func: unpack
+        :return: sync_query_processor
+        """
         send_req = self._send_sync_req
 
         def sync_query_processor(**kargs):
@@ -359,6 +399,10 @@ class OpenQuoteContext:
         return sync_query_processor
 
     def _stop_net_proc(self):
+        """
+        stop the request of network
+        :return: (ret_error,error_str)
+        """
         if self._req_queue.full() is False:
             try:
                 self._req_queue.put((False, None), timeout=1)
@@ -633,6 +677,12 @@ class OpenQuoteContext:
         return RET_OK, quote_frame_table
 
     def get_rt_ticker(self, code, num=500):
+        """
+        get transaction information
+        :param code: stock code
+        :param num: the default is 500
+        :return: (ret_ok, ticker_frame_table)
+        """
 
         if code is None or isinstance(code, str) is False:
             error_str = ERROR_STR_PREFIX + "the type of code param is wrong"
@@ -656,6 +706,14 @@ class OpenQuoteContext:
         return RET_OK, ticker_frame_table
 
     def get_cur_kline(self, code, num, ktype='K_DAY', autype='qfq'):
+        """
+        get current kline
+        :param code: stock code
+        :param num:
+        :param ktype: the type of kline
+        :param autype:
+        :return:
+        """
         param_table = {'code': code, 'ktype': ktype}
         for x in param_table:
             param = param_table[x]
@@ -700,46 +758,6 @@ class OpenQuoteContext:
             return ret_code, msg
 
         return RET_OK, orderbook
-
-
-if __name__ == "__main__":
-
-    class StockQuoteTest(StockQuoteHandlerBase):
-        def on_recv_rsp(self, rsp_str):
-            ret_code, content = super().on_recv_rsp(rsp_str)
-            if ret_code != RET_OK:
-                print("StockQuoteTest: error, msg: %s" % content)
-                return RET_ERROR, content
-            print("StockQuoteTest ", content)
-            return RET_OK, content
-
-
-    class OrderBookTest(OrderBookHandlerBase):
-        def on_recv_rsp(self, rsp_str):
-            ret_code, content = super().on_recv_rsp(rsp_str)
-            if ret_code != RET_OK:
-                print("OrderBookTest: error, msg: %s" % content)
-                return RET_ERROR, content
-            print("OrderBookTest", content)
-            return RET_OK, content
-
-    class CurKlineTest(CurKlineHandlerBase):
-        def on_recv_rsp(self, rsp_str):
-            ret_code, content = super().on_recv_rsp(rsp_str)
-            if ret_code != RET_OK:
-                print("CurKlineTest: error, msg: %s" % content)
-                return RET_ERROR, content
-            print("CurKlineTest", content)
-            return RET_OK, content
-
-    class TickerTest(TickerHandlerBase):
-        def on_recv_rsp(self, rsp_str):
-            ret_code, content = super().on_recv_rsp(rsp_str)
-            if ret_code != RET_OK:
-                print("TickerTest: error, msg: %s" % content)
-                return RET_ERROR, content
-            print("TickerTest", content)
-            return RET_OK, content
 
 
 class OpenHKTradeContext:
@@ -832,6 +850,12 @@ class OpenHKTradeContext:
         return RET_OK, ret
 
     def accinfo_query(self, cookie, envtype=0):
+        """
+        query account information
+        :param cookie: request operation flag
+        :param envtype: trading environment parameters,0 means real transaction and 1 means simulation trading
+        :return:error return RET_ERROR,msg and ok return RET_OK,ret
+        """
         query_processor = self._get_sync_query_processor(AccInfoQuery.hk_pack_req,
                                                          AccInfoQuery.hk_unpack_rsp)
 
