@@ -1,6 +1,5 @@
 from openft.open_quant_context import *
 
-
 # Examples for use the python functions
 #
 def _example_stock_quote(quote_ctx):

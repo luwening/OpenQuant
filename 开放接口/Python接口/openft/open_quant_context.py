@@ -10,6 +10,7 @@ import pandas as pd
 import asyncore
 import socket as sock
 import time
+import struct
 
 
 class RspHandlerBase(object):
@@ -159,8 +160,8 @@ class _SyncNetworkQueryCtx:
 
         s = sock.socket(sock.AF_INET, sock.SOCK_STREAM)
         s.setsockopt(sock.SOL_SOCKET, sock.SO_REUSEADDR, 1)
-        s.setsockopt(sock.SOL_SOCKET, sock.SO_LINGER, 0)
-        s.settimeout(5)
+        s.setsockopt(sock.SOL_SOCKET, sock.SO_LINGER, struct.pack('ii',0,0))
+        s.settimeout(10)
         self.s = s
 
         try:
