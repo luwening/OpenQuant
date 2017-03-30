@@ -607,14 +607,6 @@
 					>
 				</File>
 				<File
-					RelativePath=".\Protocol\ProtoCheckSecNum.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\Protocol\ProtoCheckSecNum.h"
-					>
-				</File>
-				<File
 					RelativePath=".\Protocol\ProtoOrderErrorPush.cpp"
 					>
 				</File>
