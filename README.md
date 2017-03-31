@@ -8,8 +8,8 @@
 
 ---
 
-### [富途牛牛行情交易API入门指引](https://github.com/FutunnOpen/OpenQuant/raw/master/富途牛牛行情交易API入门指引.html)
-
+### 富途牛牛行情交易API入门指引
+    [点击查看](https://github.com/FutunnOpen/OpenQuant/blob/master/OpenInterface/Python/%E5%85%A5%E9%97%A8%E6%8C%87%E5%BC%95%E5%8F%8A%E6%8E%A5%E5%8F%A3%E6%96%87%E6%A1%A3/%E5%AF%8C%E9%80%94%E7%89%9B%E7%89%9B%E8%A1%8C%E6%83%85%E4%BA%A4%E6%98%93API%E5%85%A5%E9%97%A8%E6%8C%87%E5%BC%95.md)
 ---
 
 
