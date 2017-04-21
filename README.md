@@ -15,7 +15,7 @@
 
 ### 组织结构
 
-![image](https://github.com/FutunnOpen/OpenQuant/raw/master/Structure.png)
+![image](https://github.com/FutunnOpen/OpenQuant/raw/master/Resources/Structure.png)
 
 ​	最新版本在master分支。之前各版本在其他分支上。
 
@@ -23,7 +23,7 @@
 
 ### API与富途牛牛客户端架构
 
-![image](https://github.com/FutunnOpen/OpenQuant/raw/master/API.png)
+![image](https://github.com/FutunnOpen/OpenQuant/raw/master/Resources/API.png)
 
 ***
 
@@ -47,7 +47,7 @@
 
 * 富途开放API群(108534288)    群文件 >富途牛牛客户端(API接口专用版本)
 
-  ![image](https://github.com/FutunnOpen/OpenQuant/raw/master/Download.png)
+  ![image](https://github.com/FutunnOpen/OpenQuant/raw/master/Resources/Download.png)
 
 * <https://github.com/FutunnOpen/OpenQuant/issues>
 
