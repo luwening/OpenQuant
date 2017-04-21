@@ -8,14 +8,11 @@
 
 ---
 
-### 富途牛牛行情交易API入门指引
-### [点击查看](https://github.com/FutunnOpen/OpenQuant/blob/master/OpenInterface/Python/入门指引及接口文档/富途牛牛行情交易API入门指引.md)
 
----
 
 ### 组织结构
 
-![image](https://github.com/FutunnOpen/OpenQuant/raw/master/Structure.png)
+![image](https://github.com/FutunnOpen/OpenQuant/raw/master/Resource/Structure.png)
 
 ​	最新版本在master分支。之前各版本在其他分支上。
 
@@ -23,7 +20,7 @@
 
 ### API与富途牛牛客户端架构
 
-![image](https://github.com/FutunnOpen/OpenQuant/raw/master/API.png)
+![image](https://github.com/FutunnOpen/OpenQuant/raw/master/Resource/API.png)
 
 ***
 
@@ -47,7 +44,7 @@
 
 * 富途开放API群(108534288)    群文件 >富途牛牛客户端(API接口专用版本)
 
-  ![image](https://github.com/FutunnOpen/OpenQuant/raw/master/Download.png)
+  ![image](https://github.com/FutunnOpen/OpenQuant/raw/master/Resource/Download.png)
 
 * <https://github.com/FutunnOpen/OpenQuant/issues>
 
