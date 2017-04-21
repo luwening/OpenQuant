@@ -125,31 +125,23 @@ void CPluginStockUnSub::SetQuoteReqData(int nCmdID, const Json::Value &jsnVal, S
 
 	if ( bNeedSub )
 	{
-		/////需要先判断是否已经订阅
-		bool bIsSub = m_pQuoteData->IsSubStockOneType(nStockID, (StockSubType)req.body.nStockSubType);
-		if ( bIsSub )
+		StockSubErrCode SubResult = m_pQuoteServer->SubscribeQuote(req.body.strStockCode, (StockMktType)req.body.nStockMarket, (StockSubType)req.body.nStockSubType, false, sock);
+		if ( SubResult == StockSub_UnSubTimeError )
 		{
-			StockSubErrCode SubResult = m_pQuoteServer->SubscribeQuote(req.body.strStockCode, (StockMktType)req.body.nStockMarket, (StockSubType)req.body.nStockSubType, false);
-			if ( SubResult == StockSub_UnSubTimeError )
+			////不满足反订阅的时间要求，对vtReq中的每一个
+			for (size_t i = 0; i < vtReq.size(); i++)
 			{
-				////不满足反订阅的时间要求，对vtReq中的每一个
-				for (size_t i = 0; i < vtReq.size(); i++)
-				{
-					StockDataReq *pReqAnswer = vtReq[i];
-					ReplyDataReqError(pReqInfo, PROTO_ERR_UNSUB_TIME_ERR, L"股票不满足反订阅时间要求！");
-				}
-				MAP_STOCK_DATA_REQ::iterator it_iterator = m_mapReqInfo.find(std::make_pair(nStockID, req.body.nStockSubType));
-				if ( it_iterator != m_mapReqInfo.end() )
-				{
-					it_iterator = m_mapReqInfo.erase(it_iterator);
-				}
-				return;
+				StockDataReq *pReqAnswer = vtReq[i];
+				ReplyDataReqError(pReqInfo, PROTO_ERR_UNSUB_TIME_ERR, L"股票不满足反订阅时间要求！");
 			}
+			MAP_STOCK_DATA_REQ::iterator it_iterator = m_mapReqInfo.find(std::make_pair(nStockID, req.body.nStockSubType));
+			if ( it_iterator != m_mapReqInfo.end() )
+			{
+				it_iterator = m_mapReqInfo.erase(it_iterator);
+			}
+			return;
 		}
-		else
-		{
-			////如果未订阅，不做操作
-		}
+
 		QuoteAckDataBody &ack = m_mapCacheData[std::make_pair(nStockID, req.body.nStockSubType)];
 	}
 

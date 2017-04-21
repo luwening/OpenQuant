@@ -106,15 +106,15 @@ void CPluginQueryStockSub::SetQuoteReqData(int nCmdID, const Json::Value &jsnVal
 	{
 		Quote_SubInfo* pSubInfo = NULL;
 		int nSubInfoLen = 0;
-		m_pQuoteData->GetStockSubInfoList(pSubInfo, nSubInfoLen);
+		m_pQuoteData->GetStockSubInfoList(pSubInfo, nSubInfoLen, sock);
 		QuoteAckDataBody &ack = m_mapCacheData[dwReqTick];
 		for ( int n = 0; n < nSubInfoLen; n++ )
 		{
 			SubInfoAckItem item;
-			item.nStockSubType = pSubInfo[n].nStockSubType;
+			item.nStockSubType = pSubInfo[n].eStockSubType;
 			StockMktType eMkt = StockMkt_HK;
-			wchar_t szStockCode[16] = {}; 
-			m_pQuoteData->GetStockInfoByHashVal(pSubInfo[n].ddwStockHash, eMkt, szStockCode);
+			wchar_t szStockCode[16] = {}, szStockName[128] = { 0 };
+			m_pQuoteData->GetStockInfoByHashVal(pSubInfo[n].ddwStockHash, eMkt, szStockCode, szStockName);
 			item.nStockMarket = (int)eMkt;
 			item.strStockCode = szStockCode;
 			ack.vtSubInfo.push_back(item);

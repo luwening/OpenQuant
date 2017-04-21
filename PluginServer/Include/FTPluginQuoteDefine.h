@@ -24,6 +24,7 @@ enum StockMktType
 	StockMkt_Feature_Old = 5,  //旧的期货 code: 999000, 999001 （旧期货分时数据在一天连续）
 	StockMkt_Feature_New = 6,  //新期货 code: 999010, 999011 （新期货分时数据会跨天，与传统软件保持一致）
 };
+#define  IsValidMktID(mkt)  ((int)mkt >= (int)StockMkt_HK && (int)mkt <= (int)StockMkt_Feature_New)
 
 enum StockSubErrCode
 {
@@ -62,6 +63,9 @@ enum StockSubType
 	StockSubType_KL_MIN1 = 11,
 	StockSubType_KL_WEEK = 12,
 	StockSubType_KL_MONTH = 13,
+	StockSubType_Broker = 14, //定阅经纪队列
+
+	StockSubType_Max = StockSubType_Broker + 1,
 };
 
 enum PluginSecurityType
@@ -155,7 +159,12 @@ typedef struct tagQueryStockKLData
 typedef struct tagSubInfo
 {
 	INT64 ddwStockHash;
-	int   nStockSubType;
+	StockSubType eStockSubType;
+	bool operator==(const tagSubInfo &Item) const
+	{
+		return (this->ddwStockHash == Item.ddwStockHash && this->eStockSubType == Item.eStockSubType);
+	};
+
 }Quote_SubInfo, *LPQuote_SubInfo;
 
 //nKLType:
@@ -194,6 +203,8 @@ typedef struct tagPluginStockInfo
 	PluginSecurityType nSecType;
 	WCHAR chSimpName[64];
 	WCHAR chCodeSig[16];
+	int nSubType; 
+	INT64 nOwnerStockID;
 }PluginStockInfo, *LPPluginStockInfo;
 
 typedef struct tagBatchBasic
@@ -279,12 +290,24 @@ struct PluginExRightItem
 	wchar_t tc_txt[160];
 };
 
+enum Quote_WarrantType
+{
+	Quote_WarrantType_Buy = 1,  //认购
+	Quote_WarrantType_Sell = 2, //认沽
+	Quote_WarrantType_Bull = 3, //牛
+	Quote_WarrantType_Bear = 4, //熊
+};
+
 // 股票的行情快照数据
 struct PluginStockSnapshot
 {
+	PluginStockSnapshot()
+	{
+		memset(this, 0, sizeof(*this));
+	}
 	INT64 stock_id;    // 股票id
 	int  ret;    // 是否找到快照记录，0为成功找到，snapshot有数据。其他值，snapshot无数据（可能是找不到股票）
-	char   stock_code[16];
+	//char   stock_code[16];
 	UINT instrument_type;
 	UINT market_code;
 
@@ -304,6 +327,47 @@ struct PluginStockSnapshot
 	double highest_price;
 	double lowest_price;
 	float  turnover_ratio;
+
+	//每手
+	UINT32  nLotSize;
+
+	//正股类型数据
+	struct tagEquitiesData
+	{
+		bool bDataValid; //数据是否有效
+		UINT64 nIssuedShares; //发行股本,即总股本
+		double dbNetAssetValue; //资产净值
+		double dbNetProfit; //盈利（亏损）
+		double dbEarningPerShare; //每股盈利
+		UINT64 nOutStandingShares; //流通股本
+		double dbNetAssetPerShare; //每股净资产
+		double dbEYRatio; //收益率
+		double dbPERatio; //市盈率
+		double dbPBRatio; //市净率 
+	}stEquitiesData;
+
+	//涡轮相关数据
+	struct tagWarrantsData
+	{
+		bool bDataValid;  //如果非涡轮 == 0
+		UINT32 nConversionRatio; //换股比率
+		int  nWarrantType;  //涡轮类型 Quote_WarrantType
+		double dbStrikePrice; //行使价
+		INT64  nMaturityDate; //到期日
+		INT64 nEndtradeDate;  //最后交易日
+		INT64 nWarrantOwnerID; //正股ID
+
+		UINT32 nIssuerCode; //发行商id
+		char  strIssuerName[64]; //发行商名字
+		double dbRecoveryPrice; //回收价
+		UINT64 nStreetVol;  //街货量
+		UINT64 nIssueVol;  //发行量
+		double dbOwnerStockPrice;  //正股价格
+		double dbStreetRatio; //街货占比
+		double dbDelta;	 //对冲值
+		double dbImpliedVolatility; //引伸波幅
+		double dbPremiun; //溢价		
+	}stWrtData;
 };
 
 typedef struct tagStockPushInfo
@@ -334,3 +398,13 @@ typedef struct tagStockPushInfo
 		dwRTTime = 0;
 	}
 }Stock_PushInfo, *LPStock_PushInfo;
+
+//经纪队列
+typedef struct tagQuoteBrokerItem
+{
+	bool bAskOrBid;
+	int nBrokerID;
+	int nBrokerPos;
+	char strBrokerName[32];
+}Quote_BrokerItem, *LPQuote_BrokerItem;
+

@@ -24,6 +24,9 @@
 #include "PluginPushTickerPrice.h"
 #include "PluginPushKLData.h"
 #include "PluginPushRTData.h"
+#include "PluginPlatesetIDs.h"
+#include "PluginPlateSubIDs.h"
+#include "PluginBrokerQueue.h"
 
 class CPluginNetwork;
 
@@ -62,27 +65,37 @@ public:
 	void SetQuoteReqData(int nCmdID, const Json::Value &jsnVal, SOCKET sock);
 	void ReplyQuoteReq(int nCmdID, const char *pBuf, int nLen, SOCKET sock);
 
-	StockSubErrCode SubscribeQuote(const std::string &strCode, StockMktType nMarketType,  StockSubType eStockSubType, bool bSubOrUnsub);
+	StockSubErrCode SubscribeQuote(const std::string &strCode, StockMktType nMarketType, StockSubType eStockSubType, bool bSubOrUnsub, SOCKET sock);
 	QueryDataErrCode QueryStockRTData(DWORD* pCookie, const std::string &strCode, StockMktType nMarketType, QuoteServerType type);
 	QueryDataErrCode QueryStockKLData(DWORD* pCookie, const std::string &strCode, StockMktType nMarketType, QuoteServerType type, int nKLType);
 	void CloseSocket(SOCKET sock);
+
+	QueryDataErrCode QueryPlatesetSubIDList(DWORD* pdwCookie, INT64 nPlatesetID);
+	QueryDataErrCode QueryPlateSubIDList(DWORD* pdwCookie, INT64 nPlateID);
+
 protected:
 	//IQuoteInfoCallback
 	virtual void  OnChanged_PriceBase(INT64  ddwStockHash); 
 	virtual void  OnChanged_OrderQueue(INT64 ddwStockHash); 
+	virtual void  OnChanged_BrokerQueue(INT64 ddwStockHash);
 	virtual void  OnChanged_RTData(INT64 ddwStockHash);
 	virtual void  OnChanged_KLData(INT64 ddwStockHash, int nKLType);
 	virtual void  OnReqStockSnapshot(DWORD dwCookie, PluginStockSnapshot *arSnapshot, int nSnapshotNum);
 
 	virtual void  OnPushPriceBase(INT64 ddwStockHash, SOCKET sock);
 	virtual void  OnPushGear(INT64 ddwStockHash, SOCKET sock);
-	virtual void  OnPushTicker(INT64 ddwStockHash, SOCKET sock, INT64 nSequence);
-	virtual void  OnPushKL(INT64  ddwStockHash, SOCKET sock, StockSubType eStockSubType, DWORD dwTime);
-	virtual void  OnPushRT(INT64  ddwStockHash, SOCKET sock, DWORD dwTime);
+	virtual void  OnPushTicker(INT64 ddwStockHash, SOCKET sock);
+	virtual void  OnPushKL(INT64  ddwStockHash, SOCKET sock, StockSubType eStockSubType);
+	virtual void  OnPushRT(INT64  ddwStockHash, SOCKET sock);
+	virtual void  OnPushBrokerQueue(INT64 ddwStockHash, SOCKET sock);
 
 	//IQuoteKLCallback
 	virtual void  OnQueryStockRTData(DWORD dwCookie, int nCSResult);
 	virtual void  OnQueryStockKLData(DWORD dwCookie, int nCSResult);
+
+	//°å¿éÇëÇó
+	virtual void  OnReqPlatesetIDs(int nCSResult, DWORD dwCookie);
+	virtual void  OnReqPlateStockIDs(int nCSResult, DWORD dwCookie);
 
 protected:
 	IFTPluginCore		*m_pPluginCore;
@@ -111,4 +124,8 @@ protected:
 	CPluginPushTickerPrice m_PushTickerPrice;
 	CPluginPushKLData	m_PushKLData;
 	CPluginPushRTData	m_PushRTData;
+	CPluginPlatesetIDs  m_platesetIDs;
+	CPluginPlateSubIDs  m_plateSubIDs;
+	CPluginBrokerQueue  m_BrokerQueue;
+
 };

@@ -2,6 +2,7 @@
 #include "PluginPushStockData.h"
 #include "PluginQuoteServer.h"
 #include "Protocol/ProtoPushStockData.h"
+#include "include/FTPluginQuoteDefine.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -89,7 +90,7 @@ void CPluginPushStockData::SetQuoteReqData(int nCmdID, const Json::Value &jsnVal
 		return;
 	}	
 	
-	if ( req.body.nStockPushType <=0 ||  req.body.nStockPushType >= 14 )
+	if (req.body.nStockPushType <= 0 || req.body.nStockPushType >= StockSubType_Max)
 	{
 		CHECK_OP(false, NOOP);
 		StockDataReq req_info;
@@ -139,8 +140,8 @@ void CPluginPushStockData::ReplyAllRequest()
 	{
 		StockDataReq *pReqData = *it;
 		CHECK_OP(pReqData, continue);
-
-		m_pQuoteData->RecordPushRequest(pReqData->sock, pReqData->nStockID, (StockSubType)pReqData->req.body.nStockPushType);
+		bool bUnpush = pReqData->req.body.nUnPush == 0 ? false : true;
+		m_pQuoteData->RecordPushRequest(pReqData->sock, pReqData->nStockID, (StockSubType)pReqData->req.body.nStockPushType, bUnpush);
 
 		CProtoQuote::ProtoAckBodyType ackBody;
 		ackBody.nStockMarket = pReqData->req.body.nStockMarket;

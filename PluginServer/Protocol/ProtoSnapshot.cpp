@@ -130,7 +130,15 @@ void CProtoSnapshot::GetStructField4ParseJson_v0(bool bReqOrAck, int nLevel, con
 
 			FALSE, FALSE, FALSE, 
 			FALSE, FALSE, FALSE, 
-			FALSE, FALSE,   
+			FALSE, FALSE, TRUE,
+			
+			TRUE, TRUE, TRUE,
+
+			TRUE, TRUE, TRUE,
+			TRUE, TRUE, TRUE,
+			TRUE, TRUE, TRUE,
+			TRUE, TRUE, TRUE,
+			TRUE, TRUE, TRUE,
 		};
 		static EProtoFildType arFieldType[] = {
 			ProtoFild_Int64, ProtoFild_StringA, ProtoFild_Int32,
@@ -139,16 +147,34 @@ void CProtoSnapshot::GetStructField4ParseJson_v0(bool bReqOrAck, int nLevel, con
 
 			ProtoFild_Int64, ProtoFild_Int64, ProtoFild_Int64,
 			ProtoFild_Int64, ProtoFild_Int64, ProtoFild_Int64,
-			ProtoFild_Int32, ProtoFild_Int32,
+			ProtoFild_Int32, ProtoFild_Int32, ProtoFild_Int64, 
+
+			ProtoFild_Int64, ProtoFild_Int32, ProtoFild_StringA,
+
+			ProtoFild_Int32, ProtoFild_Int32, ProtoFild_Int32,
+			ProtoFild_Int64, ProtoFild_StringA, ProtoFild_StringA,
+			ProtoFild_StringA, ProtoFild_Int32, ProtoFild_Int64,
+			ProtoFild_Int64, ProtoFild_Int64, ProtoFild_Int32,
+			ProtoFild_Int32, ProtoFild_Int32, ProtoFild_Int32,
+
 		};
-		static LPCSTR arFieldKey[] = {
+		static LPCSTR arFieldKey[] = { 
 			"StockID",	"StockCode",  "MarketType",
 			"InstrumentType", "LastClose",  "NominalPrice",
 			"OpenPrice",  "UpdateTime", "SuspendFlag",
 
 			"ListingStatus", "ListingDate", "SharesTraded",
 			"Turnover",  "HighestPrice", "LowestPrice",
-			"TurnoverRatio", "RetErrCode",
+			"TurnoverRatio", "RetErrCode", "TotalMarketVal",
+
+			"CircularMarketVal", "LotSize", "UpdateTimeStr",
+
+			//ÎÐÂÖÐÅÏ¢
+			"Wrt_Valid", "Wrt_Type", "Wrt_ConversionRatio", 
+			"Wrt_StrikePrice", "Wrt_MaturityDateStr", "Wrt_EndTradeDateStr", 
+			"Wrt_OwnerStockCode", "Wrt_OwnerMarketType", "Wrt_RecoveryPrice", 
+			"Wrt_StreetVol", "Wrt_IssueVol", "Wrt_StreetRatio",
+			"Wrt_Delta", "Wrt_ImpliedVolatility", "Wrt_Premium",
 		};
 
 		SnapshotAckItem *pAckItem = (SnapshotAckItem *)pStruct;
@@ -159,9 +185,16 @@ void CProtoSnapshot::GetStructField4ParseJson_v0(bool bReqOrAck, int nLevel, con
 
 			&pAckItem->listing_status, &pAckItem->listing_date, &pAckItem->shares_traded,
 			&pAckItem->turnover, &pAckItem->highest_price, &pAckItem->lowest_price,
-			&pAckItem->turnover_ratio, &pAckItem->ret_err,
-		};
+			&pAckItem->turnover_ratio, &pAckItem->ret_err, &pAckItem->nTatalMarketVal, 
+			
+			&pAckItem->nCircularMarketVal, &pAckItem->nLostSize, &pAckItem->strUpdateTime,
 
+			&pAckItem->stWrtData.bDataValid, &pAckItem->stWrtData.nWarrantType, &pAckItem->stWrtData.nConversionRatio,
+			&pAckItem->stWrtData.nStrikePrice, &pAckItem->stWrtData.strMaturityData, &pAckItem->stWrtData.strEndtradeDate,
+			&pAckItem->stWrtData.strOwnerStockCode, &pAckItem->stWrtData.nOwnerStockMarket, &pAckItem->stWrtData.nRecoveryPrice,
+			&pAckItem->stWrtData.nStreetVol, &pAckItem->stWrtData.nIssueVol, &pAckItem->stWrtData.nStreetRatio, 
+			&pAckItem->stWrtData.nDelta, &pAckItem->stWrtData.nImpliedVolatility, &pAckItem->stWrtData.nPremium,
+		};
 		CHECK_OP(_countof(arOptional) == _countof(arFieldType), NOOP);
 		CHECK_OP(_countof(arOptional) == _countof(arFieldKey), NOOP);
 		CHECK_OP(_countof(arOptional) == _countof(arPtr), NOOP);

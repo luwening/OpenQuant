@@ -8,18 +8,22 @@
 
 class CPluginQuoteServer;
 
-class CPluginPushStockData : public CMsgHandlerEventInterface
+class CPluginPlateSubIDs : public CTimerWndInterface, public CMsgHandlerEventInterface
 {
 public:
-	CPluginPushStockData();
-	virtual ~CPluginPushStockData();
+	CPluginPlateSubIDs();
+	virtual ~CPluginPlateSubIDs();
 
 	void Init(CPluginQuoteServer* pQuoteServer, IFTQuoteData*  pQuoteData);
 	void Uninit();	
 	void SetQuoteReqData(int nCmdID, const Json::Value &jsnVal, SOCKET sock);
-	void NotifyQuoteDataUpdate(int nCmdID, INT64 nStockID);
-
+	
+	void NotifyQueryPlateSubIDs(INT nCSResult, DWORD dwCookie);
+	
 protected:	
+	//CTimerWndInterface
+	virtual void OnTimeEvent(UINT nEventID);
+
 	//CMsgHandlerEventInterface
 	virtual void OnMsgEvent(int nEvent,WPARAM wParam,LPARAM lParam);
 
@@ -30,19 +34,31 @@ protected:
 		SOCKET	sock;
 		DWORD	dwReqTick;
 		INT64	nStockID;
-		PushStockData_Req req;
+		DWORD nReqCookie;
+		PlateSubIDs_Req req;
 	};
 	typedef std::vector<StockDataReq*>	VT_STOCK_DATA_REQ;
-	typedef PushStockDataAckBody	QuoteAckDataBody;	
+	typedef PlateSubIDsAckBody	QuoteAckDataBody;	
 
 protected:	
-	void ReplyAllRequest();
+	void HandleTimeoutReq();
+	void ReplyAllReadyReq();
 	void ReplyStockDataReq(StockDataReq *pReq, const QuoteAckDataBody &data);
 	void ReplyDataReqError(StockDataReq *pReq, int nErrCode, LPCWSTR pErrDesc);
+
+	void SetTimerHandleTimeout(bool bStartOrStop);
+
 	void ReleaseAllReqData();
+
+private:
+	
+
 protected:
 	CPluginQuoteServer* m_pQuoteServer;
-	IFTQuoteData*		m_pQuoteData;
-	CMsgHandler			m_MsgHandler;
-	VT_STOCK_DATA_REQ	m_vtReqData;
+	IFTQuoteData* m_pQuoteData;
+	CTimerMsgWndEx m_TimerWnd;
+	CMsgHandler m_MsgHandler;
+	BOOL m_bStartTimerHandleTimeout;
+
+	VT_STOCK_DATA_REQ m_vtReqData;
 };

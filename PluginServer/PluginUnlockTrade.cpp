@@ -124,7 +124,6 @@ void CPluginUnlockTrade::SetTradeReqData(int nCmdID, const Json::Value &jsnVal, 
 		return ;
 	}
 
-
 	SetTimerHandleTimeout(true);
 }
 
