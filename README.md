@@ -15,7 +15,7 @@
 
 ### 组织结构
 
-![image](https://github.com/FutunnOpen/OpenQuant/raw/master/Structure.png)
+![image](https://github.com/FutunnOpen/OpenQuant/raw/master/Resources/Structure.png)
 
 ​	最新版本在master分支。之前各版本在其他分支上。
 
@@ -23,7 +23,7 @@
 
 ### API与富途牛牛客户端架构
 
-![image](https://github.com/FutunnOpen/OpenQuant/raw/master/API.png)
+![image](https://github.com/FutunnOpen/OpenQuant/raw/master/Resources/API.png)
 
 ***
 
@@ -37,7 +37,7 @@
 
 ### 历史数据及除权除息下载问题
 
-- 在plugin文件下中有历史数据下载配置文件(ftplugin.ini)，请先详细阅读再进行操作。
+- 在富途牛牛安装目录的plugin文件夹内有历史数据下载配置文件(ftplugin.ini)，请先详细阅读再进行操作。
 - 如果不想下载新数据、可以将开始时间和暂停下载时间设置为相同时间。
 - 如果选择下载的数据越大，下载所需时间越长。如果中途退出，下次开启时将重新下载。请勿在下载过程中关闭牛牛客户端。
 
@@ -47,7 +47,7 @@
 
 * 富途开放API群(108534288)    群文件 >富途牛牛客户端(API接口专用版本)
 
-  ![image](https://github.com/FutunnOpen/OpenQuant/raw/master/Download.png)
+  ![image](https://github.com/FutunnOpen/OpenQuant/raw/master/Resources/Download.png)
 
 * <https://github.com/FutunnOpen/OpenQuant/issues>
 
