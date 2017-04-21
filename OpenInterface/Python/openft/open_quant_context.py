@@ -10,7 +10,6 @@ import pandas as pd
 import asyncore
 import socket as sock
 import time
-import struct
 
 
 class RspHandlerBase(object):
@@ -90,6 +89,42 @@ class TickerHandlerBase(RspHandlerBase):
         return error_str
 
 
+class RTDataHandlerBase(RspHandlerBase):
+
+    def on_recv_rsp(self, rsp_str):
+        ret_code, msg, rt_data_list = RtDataQuery.unpack_rsp(rsp_str)
+        if ret_code == RET_ERROR:
+            return ret_code, msg
+        else:
+
+            col_list = ['time', 'data_status', 'opened_mins', 'cur_price', "last_close", 'avg_price',
+                        'tdvolume', 'tdvalue']
+            rt_data_table = pd.DataFrame(rt_data_list, columns=col_list)
+
+            return RET_OK, rt_data_table
+
+    def on_error(self, error_str):
+        return error_str
+
+
+class BrokerHandlerBase(RspHandlerBase):
+    def on_recv_rsp(self, rsp_str):
+        ret_code_ask, msg_ask, ask_list = BrokerQueueQuery.unpack_rsp(rsp_str)
+        ret_code_bid, msg_bid, bid_list = BrokerQueueQuery.unpack_bid_rsp(rsp_str)
+        if ret_code_ask == RET_ERROR or ret_code_bid == RET_ERROR:
+            return ret_code_bid, ret_code_ask, msg_ask, msg_bid
+        else:
+            col_list = ['ask_broker_id', 'ask_broker_name', 'ask_broker_pos']
+            col_bid_list = ['bid_broker_id', 'bid_broker_name', 'bid_broker_pos']
+            broker_frame_table = pd.DataFrame(ask_list, columns=col_list)
+            broker_bid_frame_table = pd.DataFrame(bid_list, columns=col_bid_list)
+
+            return RET_OK, broker_frame_table, broker_bid_frame_table
+
+    def on_error(self, error_str):
+        return error_str
+
+
 class HandlerContext:
     def __init__(self):
         self._default_handler = RspHandlerBase()
@@ -97,6 +132,8 @@ class HandlerContext:
                                "1031": {"type": OrderBookHandlerBase,  "obj": OrderBookHandlerBase()},
                                "1032": {"type": CurKlineHandlerBase,  "obj": CurKlineHandlerBase()},
                                "1033": {"type": TickerHandlerBase, "obj": TickerHandlerBase()},
+                               "1034": {"type": RTDataHandlerBase, "obj": RTDataHandlerBase()},
+                               "1035": {"type": BrokerHandlerBase, "obj": BrokerHandlerBase()},
                                }
 
     def set_handler(self, handler):
@@ -160,8 +197,8 @@ class _SyncNetworkQueryCtx:
 
         s = sock.socket(sock.AF_INET, sock.SOCK_STREAM)
         s.setsockopt(sock.SOL_SOCKET, sock.SO_REUSEADDR, 1)
-        s.setsockopt(sock.SOL_SOCKET, sock.SO_LINGER, struct.pack('ii',0,0))
-        s.settimeout(10)
+        s.setsockopt(sock.SOL_SOCKET, sock.SO_LINGER, 0)
+        s.settimeout(5)
         self.s = s
 
         try:
@@ -388,7 +425,6 @@ class OpenQuoteContext:
                 return ret_code, msg, None
 
             ret_code, msg, rsp_str = send_req(req_str)
-
             if ret_code == RET_ERROR:
                 return ret_code, msg, None
 
@@ -460,7 +496,7 @@ class OpenQuoteContext:
         if ret_code == RET_ERROR:
             return ret_code, msg
 
-        col_list = ['code', 'name', 'lot_size', 'stock_type']
+        col_list = ['code', 'name', 'lot_size', 'stock_type', 'stock_child_type', "owner_stock_code"]
 
         basic_info_table = pd.DataFrame(basic_info_list, columns=col_list)
 
@@ -551,14 +587,119 @@ class OpenQuoteContext:
         if ret_code == RET_ERROR:
             return ret_code, msg
 
-        col_list = ['code', 'data_date', 'data_time', 'last_price', 'open_price',
+        col_list = ['code', 'update_time', 'last_price', 'open_price',
                     'high_price', 'low_price', 'prev_close_price',
-                    'volume', 'turnover', 'turnover_rate', 'suspension', 'listing_date'
+                    'volume', 'turnover', 'turnover_rate', 'suspension', 'listing_date',
+                    'circular_market_val', 'total_market_val', 'wrt_valid',
+                    'wrt_conversion_ratio', 'wrt_type', 'wrt_strike_price',
+                    'wrt_maturity_date', 'wrt_end_trade', 'wrt_code',
+                    'wrt_recovery_price', 'wrt_street_vol', 'wrt_issue_vol',
+                    'wrt_street_ratio', 'wrt_delta', 'wrt_implied_volatility', 'wrt_premium'
                     ]
 
         snapshot_frame_table = pd.DataFrame(snapshot_list, columns=col_list)
 
         return RET_OK, snapshot_frame_table
+
+    def get_rt_data(self, code):
+        if code is None or isinstance(code, str) is False:
+            error_str = ERROR_STR_PREFIX + "the type of param in code_list is wrong"
+            return RET_ERROR, error_str
+
+        query_processor = self._get_sync_query_processor(RtDataQuery.pack_req,
+                                                         RtDataQuery.unpack_rsp)
+        kargs = {"stock_str": code}
+
+        ret_code, msg, rt_data_list = query_processor(**kargs)
+        if ret_code == RET_ERROR:
+            return ret_code, msg
+
+        col_list = ['time', 'data_status', 'opened_mins', 'cur_price', 'last_close',
+                    'avg_price', 'tdvolume', 'tdvalue']
+
+        rt_data_table = pd.DataFrame(rt_data_list, columns=col_list)
+
+        return RET_OK, rt_data_table
+
+    def get_plate_list(self, market, plate_class):
+        param_table = {'market': market, 'plate_class': plate_class}
+        for x in param_table:
+            param = param_table[x]
+            if param is None or isinstance(market, str) is False:
+                error_str = ERROR_STR_PREFIX + "the type of market param is wrong"
+                return RET_ERROR, error_str
+
+        if market not in mkt_map:
+            error_str = ERROR_STR_PREFIX + "the value of market param is wrong "
+            return RET_ERROR, error_str
+
+        if plate_class not in plate_class_map:
+            error_str = ERROR_STR_PREFIX + "the class of plate is wrong"
+            return RET_ERROR, error_str
+
+        query_processor = self._get_sync_query_processor(SubplateQuery.pack_req,
+                                                         SubplateQuery.unpack_rsp)
+        kargs = {'market': market, 'plate_class': plate_class}
+
+        ret_code, msg, subplate_list = query_processor(**kargs)
+        if ret_code == RET_ERROR:
+            return ret_code, msg
+
+        col_list = ['market', 'plate_class', 'plate_code', 'plate_name', 'plate_id']
+
+        subplate_frame_table = pd.DataFrame(subplate_list, columns=col_list)
+
+        return RET_OK, subplate_frame_table
+
+    def get_plate_stock(self, market, stock_code):
+        param_table = {'market': market, 'stock_code': stock_code}
+        for x in param_table:
+            param = param_table[x]
+            if param is None or isinstance(param, str) is False:
+                error_str = ERROR_STR_PREFIX + "the type of %s is wrong" % x
+                return RET_ERROR, error_str
+
+        query_processor = self._get_sync_query_processor(PlateStockQuery.pack_req,
+                                                         PlateStockQuery.unpack_rsp)
+        kargs = {"market": market, "stock_code": stock_code}
+
+        ret_code, msg, plate_stock_list = query_processor(**kargs)
+        if ret_code == RET_ERROR:
+            return ret_code, msg
+
+        col_list = ['market', 'lot_size', 'stock_name', 'owner_market', 'stock_child_type', 'stock_type']
+
+        plate_stock_table = pd.DataFrame(plate_stock_list, columns=col_list)
+
+        return RET_OK, plate_stock_table
+
+    def get_broker_queue(self, code):
+        if code is None or isinstance(code, str) is False:
+            error_str = ERROR_STR_PREFIX + "the type of param in code_list is wrong"
+            return RET_ERROR, error_str
+
+        query_processor = self._get_sync_query_processor(BrokerQueueQuery.pack_req,
+                                                         BrokerQueueQuery.unpack_rsp)
+        kargs = {"stock_str": code}
+
+        ret_code, msg, broker_list = query_processor(**kargs)
+
+        query_bid_processor = self._get_sync_query_processor(BrokerQueueQuery.pack_req,
+                                                             BrokerQueueQuery.unpack_bid_rsp)
+
+        kargs_bid = {"stock_str": code}
+
+        ret_code, msg, broker_bid_list = query_bid_processor(**kargs_bid)
+
+        if ret_code == RET_ERROR:
+            return ret_code, msg
+
+        col_list = ['ask_broker_id', 'ask_broker_name', 'ask_broker_pos']
+        col_bid_list = ['bid_broker_id', 'bid_broker_name', 'bid_broker_pos']
+
+        broker_frame_table = pd.DataFrame(broker_list, columns=col_list)
+        broker_bid_frame_table = pd.DataFrame(broker_bid_list, columns=col_bid_list)
+        return RET_OK, broker_frame_table, broker_bid_frame_table
 
     def subscribe(self, stock_code, data_type, push=False):
         """
@@ -597,7 +738,7 @@ class OpenQuoteContext:
 
         return RET_OK, None
 
-    def unsubscribe(self, stock_code, data_type):
+    def unsubscribe(self, stock_code, data_type, unpush=True):
         """
         unsubcribe a sort of data for a stock
         :param stock_code: string stock_code . For instance, "HK.00700", "US.AAPL"
@@ -621,6 +762,16 @@ class OpenQuoteContext:
 
         if ret_code != RET_OK:
             return RET_ERROR, msg
+
+        if unpush:
+            ret_code, msg, unpush_req_str = SubscriptionQuery.pack_unpush_req(stock_code, data_type)
+
+            if ret_code != RET_OK:
+                return RET_ERROR, msg
+
+            ret_code, msg = self._send_async_req(unpush_req_str)
+            if ret_code != RET_OK:
+                return RET_ERROR, msg
 
         return RET_OK, None
 
@@ -762,6 +913,8 @@ class OpenQuoteContext:
 
 
 class OpenHKTradeContext:
+    cookie = 100000
+
     def __init__(self, host="127.0.0.1", sync_port=11111, async_port=11111):
         self.__host = host
         self.__sync_port = sync_port
@@ -881,7 +1034,7 @@ class OpenHKTradeContext:
             return RET_ERROR, msg
 
         col_list = ["stock_code", "stock_name", "dealt_avg_price", "dealt_qty",
-                    "localid", "orderid", "order_type", "price",
+                    "localid", "orderid", "order_type", "order_side", "price",
                     "status", "submited_time", "updated_time"]
 
         order_list_table = pd.DataFrame(order_list, columns=col_list)
@@ -926,7 +1079,10 @@ class OpenHKTradeContext:
 
         return RET_OK, deal_list_table
 
+
 class OpenUSTradeContext:
+    cookie = 100000
+
     def __init__(self, host="127.0.0.1", sync_port=11111, async_port=11111):
         self.__host = host
         self.__sync_port = sync_port
