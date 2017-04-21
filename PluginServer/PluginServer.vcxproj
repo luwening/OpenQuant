@@ -76,7 +76,7 @@
     </ResourceCompile>
     <Link>
       <AdditionalDependencies>uafxcwd.lib;Libcmtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>$(OutDir)$(ProjectName).dll</OutputFile>
+      <OutputFile>../../bin/debug/plugin/$(ProjectName).dll</OutputFile>
       <IgnoreSpecificDefaultLibraries>uafxcwd.lib;Libcmtd.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <ModuleDefinitionFile>.\PluginServer.def</ModuleDefinitionFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -140,6 +140,7 @@
     <ClInclude Include="MsgHandler.h" />
     <ClInclude Include="PluginBasicPrice.h" />
     <ClInclude Include="PluginBatchBasic.h" />
+    <ClInclude Include="PluginBrokerQueue.h" />
     <ClInclude Include="PluginChangeOrder_HK.h" />
     <ClInclude Include="PluginChangeOrder_US.h" />
     <ClInclude Include="PluginExRightInfo.h" />
@@ -151,6 +152,8 @@
     <ClInclude Include="PluginNetwork.h" />
     <ClInclude Include="PluginPlaceOrder_HK.h" />
     <ClInclude Include="PluginPlaceOrder_US.h" />
+    <ClInclude Include="PluginPlatesetIDs.h" />
+    <ClInclude Include="PluginPlateSubIDs.h" />
     <ClInclude Include="PluginPushBatchBasic.h" />
     <ClInclude Include="PluginPushGearPrice.h" />
     <ClInclude Include="PluginPushKLData.h" />
@@ -182,6 +185,7 @@
     <ClInclude Include="Protocol\CppJsonConv.h" />
     <ClInclude Include="Protocol\ProtoBasicPrice.h" />
     <ClInclude Include="Protocol\ProtoBatchBasic.h" />
+    <ClInclude Include="Protocol\ProtoBrokerQueue.h" />
     <ClInclude Include="Protocol\ProtoChangeOrder.h" />
     <ClInclude Include="Protocol\ProtoDataStruct.h" />
     <ClInclude Include="Protocol\ProtoDataStruct_Quote.h" />
@@ -194,6 +198,8 @@
     <ClInclude Include="Protocol\ProtoOrderUpdatePush.h" />
     <ClInclude Include="Protocol\ProtoParseBase.h" />
     <ClInclude Include="Protocol\ProtoPlaceOrder.h" />
+    <ClInclude Include="Protocol\ProtoPlatesetIDs.h" />
+    <ClInclude Include="Protocol\ProtoPlateSubIDs.h" />
     <ClInclude Include="Protocol\ProtoPushBatchBasic.h" />
     <ClInclude Include="Protocol\ProtoPushGearPrice.h" />
     <ClInclude Include="Protocol\ProtoPushKLData.h" />
@@ -265,6 +271,7 @@
     <ClCompile Include="MsgHandler.cpp" />
     <ClCompile Include="PluginBasicPrice.cpp" />
     <ClCompile Include="PluginBatchBasic.cpp" />
+    <ClCompile Include="PluginBrokerQueue.cpp" />
     <ClCompile Include="PluginChangeOrder_HK.cpp" />
     <ClCompile Include="PluginChangeOrder_US.cpp" />
     <ClCompile Include="PluginExRightInfo.cpp" />
@@ -276,6 +283,8 @@
     <ClCompile Include="PluginNetwork.cpp" />
     <ClCompile Include="PluginPlaceOrder_HK.cpp" />
     <ClCompile Include="PluginPlaceOrder_US.cpp" />
+    <ClCompile Include="PluginPlatesetIDs.cpp" />
+    <ClCompile Include="PluginPlateSubIDs.cpp" />
     <ClCompile Include="PluginPushBatchBasic.cpp" />
     <ClCompile Include="PluginPushGearPrice.cpp" />
     <ClCompile Include="PluginPushKLData.cpp" />
@@ -307,6 +316,7 @@
     <ClCompile Include="Protocol\CppJsonConv.cpp" />
     <ClCompile Include="Protocol\ProtoBasicPrice.cpp" />
     <ClCompile Include="Protocol\ProtoBatchBasic.cpp" />
+    <ClCompile Include="Protocol\ProtoBrokerQueue.cpp" />
     <ClCompile Include="Protocol\ProtoChangeOrder.cpp" />
     <ClCompile Include="Protocol\ProtoDataStruct.cpp" />
     <ClCompile Include="Protocol\ProtoExRightInfo.cpp" />
@@ -317,6 +327,8 @@
     <ClCompile Include="Protocol\ProtoOrderUpdatePush.cpp" />
     <ClCompile Include="Protocol\ProtoParseBase.cpp" />
     <ClCompile Include="Protocol\ProtoPlaceOrder.cpp" />
+    <ClCompile Include="Protocol\ProtoPlatesetIDs.cpp" />
+    <ClCompile Include="Protocol\ProtoPlateSubIDs.cpp" />
     <ClCompile Include="Protocol\ProtoPushBatchBasic.cpp" />
     <ClCompile Include="Protocol\ProtoPushGearPrice.cpp" />
     <ClCompile Include="Protocol\ProtoPushKLData.cpp" />

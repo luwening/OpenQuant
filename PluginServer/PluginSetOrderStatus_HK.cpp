@@ -78,7 +78,7 @@ void CPluginSetOrderStatus_HK::SetTradeReqData(int nCmdID, const Json::Value &js
 	CProtoQuote proto;
 	CProtoQuote::ProtoReqDataType	req;
 	proto.SetProtoData_Req(&req);
-	if ( !proto.ParseJson_Req(jsnVal) )
+	if (req.body.nEnvType == Trade_Env_Real && !proto.ParseJson_Req(jsnVal))
 	{
 		CHECK_OP(false, NORET);
 		TradeAckType ack;

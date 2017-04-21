@@ -21,11 +21,13 @@ static const GUID IID_IFTQuoteOperation =
 interface IFTQuoteOperation
 {
 	//行情定阅，返回错误码
-	virtual StockSubErrCode Subscribe_PriceBase(const GUID &guidPlugin, LPCWSTR wstrStockCode, StockMktType eType, bool bSubb) = 0;
-	virtual StockSubErrCode Subscribe_OrderQueue(const GUID &guidPlugin, LPCWSTR wstrStockCode, StockMktType eType, bool bSubb) = 0;
-	virtual StockSubErrCode Subscribe_Ticker(const GUID &guidPlugin, LPCWSTR wstrStockCode, StockMktType eType, bool bSubb) = 0;
-	virtual StockSubErrCode Subscribe_RTData(const GUID &guidPlugin, LPCWSTR wstrStockCode, StockMktType eType, bool bSubb) = 0;
-	virtual StockSubErrCode Subscribe_KLData(const GUID &guidPlugin, LPCWSTR wstrStockCode, StockMktType eType, bool bSubb, StockSubType eStockSubType) = 0;
+	virtual StockSubErrCode Subscribe_PriceBase(const GUID &guidPlugin, LPCWSTR wstrStockCode, StockMktType eType, bool bSubb, SOCKET sock) = 0;
+	virtual StockSubErrCode Subscribe_OrderQueue(const GUID &guidPlugin, LPCWSTR wstrStockCode, StockMktType eType, bool bSubb, SOCKET sock) = 0;
+	virtual StockSubErrCode Subscribe_Ticker(const GUID &guidPlugin, LPCWSTR wstrStockCode, StockMktType eType, bool bSubb, SOCKET sock) = 0;
+	virtual StockSubErrCode Subscribe_RTData(const GUID &guidPlugin, LPCWSTR wstrStockCode, StockMktType eType, bool bSubb, SOCKET sock) = 0;
+	virtual StockSubErrCode Subscribe_KLData(const GUID &guidPlugin, LPCWSTR wstrStockCode, StockMktType eType, bool bSubb, StockSubType eStockSubType, SOCKET sock) = 0;
+	virtual StockSubErrCode Subscribe_BrokerQueue(const GUID &guidPlugin, LPCWSTR wstrStockCode, StockMktType eType, bool bSubb, SOCKET sock) = 0;
+
 	virtual QueryDataErrCode QueryStockRTData(const GUID &guidPlugin, DWORD* pCookie, LPCWSTR wstrStockCode, StockMktType eType) = 0;
 	virtual QueryDataErrCode QueryStockKLData(const GUID &guidPlugin, DWORD* pCookie, LPCWSTR wstrStockCode, StockMktType eType, int nKLType) = 0;
 
@@ -33,7 +35,12 @@ interface IFTQuoteOperation
 	virtual QueryDataErrCode QueryStockSnapshot(const GUID &guidPlugin, INT64 *arStockHash, int nStockNum, DWORD &dwReqCookie) = 0;
 	virtual void  CancelQuerySnapshot(DWORD dwReqCookie) = 0;
 
-	virtual void  NotifyFTPluginSocketClosed(SOCKET sock) = 0;
+	//通知连接关闭
+	virtual void  NotifyFTPluginSocketClosed(const GUID &guidPlugin, SOCKET sock) = 0;
+
+	//请求板块及板块集合的列表
+	virtual QueryDataErrCode QueryPlatesetSubIDList(const GUID &guidPlugin, INT64 nPlatesetID, DWORD& dwCookie) = 0;
+	virtual QueryDataErrCode QueryPlateStockIDList(const GUID &guidPlugin, INT64 nPlateID, DWORD& dwCookie) = 0;
 };
 
 
@@ -46,7 +53,7 @@ static const GUID IID_IFTQuoteData =
 interface IFTQuoteData
 {
 	/**
-	* 当前是否订阅某只股票某个订阅位
+	* 当前是否订阅某只股票某个订阅位(针对所有连接)
 	*/
 	virtual bool   IsSubStockOneType(INT64 ddwStockHash, StockSubType eStockSubType) = 0;
 
@@ -63,7 +70,9 @@ interface IFTQuoteData
 	/**
 	* stock 的hash值, 回调接口方便
 	*/
-	virtual void  GetStockInfoByHashVal(INT64 ddwStockID, StockMktType& eMkt, wchar_t szStockCode[16]) = 0;
+	virtual bool  GetStockInfoByHashVal(INT64 ddwStockID, StockMktType& eMkt,
+		wchar_t szStockCode[16], wchar_t szStockName[128], int* pLotSize = NULL,
+		int* pSecurityType = NULL, int* pSubType = NULL, INT64* pnOwnerStockID = NULL) = 0;
 
 	/**
 	* 填充基础报价
@@ -77,8 +86,9 @@ interface IFTQuoteData
 
 	/**
 	*	填充内存逐笔数据，不会去server拉新的数据，返回实际fill的个数
+	*   当nLastSequence为0时，得到的是最近的逐笔数据、nLastSequence不为0时为大于nLastSequence的Ticker数据
 	*/
-	virtual int    FillTickArr(INT64 ddwStockHash, PluginTickItem *parTickBuf, int nTickBufCount) = 0;
+	virtual int    FillTickArr(INT64 ddwStockHash, PluginTickItem *parTickBuf, int nTickBufCount, INT64 nLastSequence = 0) = 0;
 
 	/**
 	* 填充分时数据
@@ -126,7 +136,7 @@ interface IFTQuoteData
 	//返回值： 如果参数错误或者数据未下载，则返回false；返回的数量满足或不足都返回true
 	//pszDateTimeFrom,pszDateTimeTo: 不能为null, 日期字符串格式为YYYY-MM-DD HH:MM:SS
 	virtual bool  GetHistoryKLineTimeStr(StockMktType mkt, INT64 ddwStockHash, int nKLType, int nRehabType, LPCWSTR pszDateTimeFrom, LPCWSTR pszDateTimeTo, Quote_StockKLData* &arKLData, int &nKLNum) = 0;
-	virtual bool  GetHistoryKLineTimestamp(INT64 ddwStockHash, int nKLType, int nRehabType, INT64 nTimestampFrom, INT64 nTimestampTo, Quote_StockKLData *&arKLData, int &nKLNum) = 0;
+	virtual bool  GetHistoryKLineTimestamp(StockMktType mkt, INT64 ddwStockHash, int nKLType, int nRehabType, INT64 nTimestampFrom, INT64 nTimestampTo, Quote_StockKLData *&arKLData, int &nKLNum) = 0;
 
 	/**
 	* dwTime转成wstring 日期+时间
@@ -145,8 +155,9 @@ interface IFTQuoteData
 
 	/**
 	* 得到股票订阅情况
+	* sock为0时得到的结果是所有连接的订阅信息，当sock不为0时，返回的是当前sock连接的订阅信息
 	*/
-	virtual bool GetStockSubInfoList(Quote_SubInfo* &pSubInfoArr, int &nSubInfoLen) = 0;
+	virtual bool GetStockSubInfoList(Quote_SubInfo* &pSubInfoArr, int &nSubInfoLen, SOCKET sock = 0) = 0;
 
 	/**
 	* 填充批量报价数据
@@ -155,8 +166,36 @@ interface IFTQuoteData
 
 	/**
 	* 股票数据推送
+	* bUnPush = true 不再需要推送
 	*/
-	virtual bool RecordPushRequest(SOCKET sock, INT64 ddwStockHash, StockSubType nStockPushType) = 0;
+	virtual bool RecordPushRequest(SOCKET sock, INT64 ddwStockHash, StockSubType nStockPushType, bool bUnPush = true) = 0;
+
+	/**
+	* 板块集合的列表
+	@GetPlatesetIDList 板块集合ID
+	@parID ID列表返回，由调用方分配空间, 先传NULL得到nCount
+	@nCount ID个数
+	@返回值：flase表示数据不存在， 需要请求
+	*/
+	virtual bool GetPlatesetIDList(INT64 nPlatesetID, INT64* parID, int& nCount) = 0;
+
+	/**
+	* 二级板块的股票列表
+	@GetPlateStockIDList 板块的股票列表ID
+	@parID ID列表返回，由调用方分配空间, 先传NULL得到nCount
+	@nCount ID个数
+	@返回值：flase表示数据不存在， 需要请求
+	*/
+	virtual bool GetPlateStockIDList(INT64 nPlateID, INT64* parID, int& nCount) = 0;
+
+	/**
+	* 经纪队列
+	@GetBrokerQueueList  经纪队列列表
+	@parID ID列表返回，由调用方分配空间, 先传NULL得到nCount
+	@nCount ID个数
+	@返回值：flase表示数据不存在， 需要定阅等待数据push
+	*/
+	virtual bool GetBrokerQueueList(INT64 nStockID, Quote_BrokerItem* parID, int& nCount) = 0;
 };
 
 /**
@@ -184,8 +223,23 @@ interface IQuoteInfoCallback
 	*/
 	virtual void  OnChanged_KLData(INT64 ddwStockHash, int nKLType) = 0;
 
+	/**
+	* 经纪队列变更
+	*/
+	virtual void  OnChanged_BrokerQueue(INT64 ddwStockHash) = 0;
+
 	//请求股票快照返回
 	virtual void OnReqStockSnapshot(DWORD dwCookie, PluginStockSnapshot *arSnapshot, int nSnapshotNum) = 0;
+
+	/**
+	* 请求板块集合的子项返回
+	*/
+	virtual void  OnReqPlatesetIDs(int nCSResult, DWORD dwCookie) = 0;
+
+	/**
+	* 请求板块的子项返回
+	*/
+	virtual void  OnReqPlateStockIDs(int nCSResult, DWORD dwCookie) = 0;
 
 	/**
 	* 推送基础报价
@@ -200,17 +254,22 @@ interface IQuoteInfoCallback
 	/**
 	* 推送逐笔
 	*/
-	virtual void  OnPushTicker(INT64  ddwStockHash, SOCKET sock, INT64 nSequence) = 0;
+	virtual void  OnPushTicker(INT64  ddwStockHash, SOCKET sock) = 0;
 
 	/**
 	* 推送K线
 	*/
-	virtual void  OnPushKL(INT64  ddwStockHash, SOCKET sock, StockSubType eStockSubType, DWORD dwTime) = 0;
+	virtual void  OnPushKL(INT64  ddwStockHash, SOCKET sock, StockSubType eStockSubType) = 0;
 
 	/**
 	* 推送分时
 	*/
-	virtual void  OnPushRT(INT64  ddwStockHash, SOCKET sock, DWORD dwTime) = 0;
+	virtual void  OnPushRT(INT64  ddwStockHash, SOCKET sock) = 0;
+
+	/**
+	* 推送经纪队列
+	*/
+	virtual void  OnPushBrokerQueue(INT64  ddwStockHash, SOCKET sock) = 0;
 };
 
 interface IQuoteKLCallback

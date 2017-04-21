@@ -6,7 +6,7 @@
 #include <vector> 
 #include <shlobj.h>
 #include <math.h> 
-
+#include "CA_Lock.h"
 
 _CA_BEGIN
 
@@ -65,7 +65,10 @@ static void  Unicode2UTF(const WCHAR*wcsCnt,std::string&strRet)
 
 static void  UTF2Unicode(LPCSTR pstr, std::wstring & strContext)
 {
+	static CA::CCriticalSection  s_lock;
 	static std::vector<wchar_t> s_vtTemp;   
+
+	CA::CAutoLock<CA::CCriticalSection>  lock(&s_lock);
 
 	int nStrLen = pstr? strlen(pstr):0; 
 	strContext.clear(); 

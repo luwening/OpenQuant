@@ -86,7 +86,7 @@ void CPluginQueryHKOrder::SetTradeReqData(int nCmdID, const Json::Value &jsnVal,
 		return;
 	}
 
-	if (!IManage_SecurityNum::IsSafeSocket(sock))
+	if (req.body.nEnvType == Trade_Env_Real && !IManage_SecurityNum::IsSafeSocket(sock))
 	{
 		CHECK_OP(false, NORET);
 		TradeAckType ack;
