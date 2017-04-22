@@ -20,8 +20,8 @@ Ver: 1.2
 
 enum Trade_Env
 {
-	Trade_Env_Real = 0, //真实环境（实盘交易）
-	Trade_Env_Virtual = 1, //虚拟环境（仿真交易或模拟交易）
+	Trade_Env_Real = 0, //真实环境（实盘交易, 目前支持港股/美股）
+	Trade_Env_Virtual = 1, //虚拟环境（仿真交易或模拟交易, 目前仅支持港股）
 };
 
 enum Trade_SvrResult

@@ -136,10 +136,25 @@ void CPluginStockList::ReplyAllRequest()
 			CA::Unicode2UTF(pInfo->chCodeSig, strCode);
 			CA::Unicode2UTF(pInfo->chSimpName, strName);
 			stkItem.strStockCode = strCode;
+			stkItem.nStockMarket = ackBody.nStockMarket;
 			stkItem.strSimpName = strName;
+			stkItem.nSubType = pInfo->nSubType;
+			stkItem.nOwnerStockID = pInfo->nOwnerStockID;
+			if (stkItem.nOwnerStockID != 0)
+			{
+				StockMktType eMktType = StockMkt_None;
+				wchar_t wstrCode[16] = { 0 }, szStockName[128] = { 0 };
+				m_pQuoteData->GetStockInfoByHashVal(stkItem.nOwnerStockID, eMktType, wstrCode, szStockName);
+				CA::Unicode2UTF(wstrCode, stkItem.strOwnerStockCode);
+				stkItem.nOwnerMarketType = (int)eMktType;
+			}
+			else
+			{
+				stkItem.nOwnerMarketType = 0;
+				stkItem.strOwnerStockCode = "";
+			}
 			ackBody.vtStockList.push_back(stkItem);
 		}
-		
 		ReplyStockDataReq(pReqData, ackBody);
 	}
 }

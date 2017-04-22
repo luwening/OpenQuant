@@ -365,6 +365,24 @@
     <ClInclude Include="PluginPushRTData.h">
       <Filter>Server\quote</Filter>
     </ClInclude>
+    <ClInclude Include="PluginPlatesetIDs.h">
+      <Filter>Server\quote</Filter>
+    </ClInclude>
+    <ClInclude Include="Protocol\ProtoPlatesetIDs.h">
+      <Filter>Protocol\quote</Filter>
+    </ClInclude>
+    <ClInclude Include="Protocol\ProtoPlateSubIDs.h">
+      <Filter>Protocol\quote</Filter>
+    </ClInclude>
+    <ClInclude Include="PluginPlateSubIDs.h">
+      <Filter>Server\quote</Filter>
+    </ClInclude>
+    <ClInclude Include="Protocol\ProtoBrokerQueue.h">
+      <Filter>Protocol\quote</Filter>
+    </ClInclude>
+    <ClInclude Include="PluginBrokerQueue.h">
+      <Filter>Server\quote</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="JsonCpp\json_internalarray.inl">
@@ -655,6 +673,24 @@
       <Filter>Protocol\quote</Filter>
     </ClCompile>
     <ClCompile Include="PluginPushRTData.cpp">
+      <Filter>Server\quote</Filter>
+    </ClCompile>
+    <ClCompile Include="Protocol\ProtoPlatesetIDs.cpp">
+      <Filter>Protocol\quote</Filter>
+    </ClCompile>
+    <ClCompile Include="PluginPlatesetIDs.cpp">
+      <Filter>Server\quote</Filter>
+    </ClCompile>
+    <ClCompile Include="Protocol\ProtoPlateSubIDs.cpp">
+      <Filter>Protocol\quote</Filter>
+    </ClCompile>
+    <ClCompile Include="PluginPlateSubIDs.cpp">
+      <Filter>Server\quote</Filter>
+    </ClCompile>
+    <ClCompile Include="Protocol\ProtoBrokerQueue.cpp">
+      <Filter>Protocol\quote</Filter>
+    </ClCompile>
+    <ClCompile Include="PluginBrokerQueue.cpp">
       <Filter>Server\quote</Filter>
     </ClCompile>
   </ItemGroup>

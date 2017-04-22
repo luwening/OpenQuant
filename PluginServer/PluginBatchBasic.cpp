@@ -169,7 +169,7 @@ void CPluginBatchBasic::SetQuoteReqData(int nCmdID, const Json::Value &jsnVal, S
 					Item.nStockMarket = req.body.vtReqBatchBasic[i].nStockMarket;
 					Item.strStockCode = req.body.vtReqBatchBasic[i].strStockCode;
 					Item.nHigh = batchprice.dwHigh;
-					Item.nOpen = batchprice.dwLastClose;
+					Item.nOpen = batchprice.dwOpen;
 					Item.nLastClose = batchprice.dwLastClose;
 					Item.nLow = batchprice.dwLow;
 					Item.nCur = batchprice.dwCur;

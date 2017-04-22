@@ -4,7 +4,7 @@ import sys
 import json
 from datetime import datetime
 from datetime import timedelta
-
+import pandas as pd
 
 '''
  parameter relation Mappings between PLS and Python programs
@@ -17,6 +17,20 @@ mkt_map = {"HK": 1,
            }
 rev_mkt_map = {mkt_map[x]: x for x in mkt_map}
 
+
+wrt_type_map = {"CALL": 1,
+                "PUT": 2,
+                "BULL": 3,
+                "BEAR": 4
+                }
+rev_wrt_type_map = {wrt_type_map[x]: x for x in wrt_type_map}
+
+plate_class_map = {"ALL": 0,
+                   "INDUSTRY": 1,
+                   "REGION": 2,
+                   "CONCEPT": 3
+                   }
+rev_plate_class_map = {plate_class_map[x]: x for x in plate_class_map}
 
 sec_type_map = {"STOCK": 3,
                 "IDX": 6,
@@ -37,7 +51,9 @@ subtype_map = {"TICKER": 4,
                "K_60M":   10,
                "K_DAY":    6,
                "K_WEEK":  12,
-               "K_MON":   13
+               "K_MON":   13,
+               "RT_DATA": 5,
+               "BROKER": 14
                }
 rev_subtype_map = {subtype_map[x]: x for x in subtype_map}
 
@@ -143,7 +159,8 @@ def merge_stock_str(market, partial_stock_str):
     :return: unified representation of a stock code. i.e. "US.AAPL", "HK.00700", "SZ.000001"
 
     """
-
+    if (market not in mkt_map) and (market not in rev_mkt_map):
+        return ""
     market_str = rev_mkt_map[market]
     stock_str = '.'.join([market_str, partial_stock_str])
     return stock_str
@@ -314,12 +331,10 @@ class StockBasicInfoQuery:
                                            % (stock_type, ",".join([x for x in sec_type_map]))
             return RET_ERROR, error_str, None
 
-        mkt_str = str(mkt_map[market])
-        stock_type_str = str(sec_type_map[stock_type])
         req = {"Protocol": "1014",
                "Version": "1",
-               "ReqParam": {"Market": mkt_str,
-                            "StockType": stock_type_str,
+               "ReqParam": {"Market": str(mkt_map[market]),
+                            "StockType": str(sec_type_map[stock_type]),
                             }
                }
         req_str = json.dumps(req) + '\r\n'
@@ -374,7 +389,11 @@ class StockBasicInfoQuery:
         basic_info_list = [{"code": merge_stock_str(int(market), record['StockCode']),
                             "name": record["Name"],
                             "lot_size": int(record["LotSize"]),
-                            "stock_type": rev_sec_type_map[int(record["StockType"])]
+                            "stock_type": rev_sec_type_map[int(record["StockType"])],
+                            "stock_child_type": (rev_wrt_type_map[int(record["StockChildType"])] if
+                                                 rev_sec_type_map[int(record["StockType"])] == 5 else 0),
+                            "owner_stock_code": (merge_stock_str(int(record["OwnerMarketType"]), record["OwnerStockCode"])
+                                                 if rev_sec_type_map[int(record["StockType"])] == 5 else 0)
                             }
                            for record in raw_basic_info_list]
         return RET_OK, "", basic_info_list
@@ -388,7 +407,6 @@ class MarketSnapshotQuery:
     @classmethod
     def pack_req(cls, stock_list):
         """
-
         :param stock_list:
         :return:
         """
@@ -434,22 +452,251 @@ class MarketSnapshotQuery:
             return RET_OK, "", []
 
         snapshot_list = [{'code': merge_stock_str(int(record['MarketType']), record['StockCode']),
-                          'data_date': datetime.fromtimestamp(int(record['UpdateTime'])).strftime("%Y-%m-%d"),
-                          'data_time': datetime.fromtimestamp(int(record['UpdateTime'])).strftime("%H:%M:%S"),
-                          'last_price': float(record['NominalPrice'])/1000,
-                          'open_price': float(record['OpenPrice'])/1000,
-                          'high_price': float(record['HighestPrice'])/1000,
-                          'low_price': float(record['LowestPrice'])/1000,
-                          'prev_close_price': float(record['LastClose'])/1000,
+                          # 'data_date': datetime.fromtimestamp(int(record['UpdateTime'])).strftime("%Y-%m-%d"),
+                          # 'data_time': datetime.fromtimestamp(int(record['UpdateTime'])).strftime("%H:%M:%S"),
+                          'update_time': str(record['UpdateTimeStr']),
+                          'last_price': float(record['NominalPrice']) / 1000,
+                          'open_price': float(record['OpenPrice']) / 1000,
+                          'high_price': float(record['HighestPrice']) / 1000,
+                          'low_price': float(record['LowestPrice']) / 1000,
+                          'prev_close_price': float(record['LastClose']) / 1000,
                           'volume': int(record['SharesTraded']),
-                          'turnover':  float(record['Turnover'])/1000,
-                          'turnover_rate': float(record['TurnoverRatio'])/1000,
+                          'turnover': float(record['Turnover']) / 1000,
+                          'turnover_rate': float(record['TurnoverRatio']) / 1000,
                           'suspension': True if int(record['SuspendFlag']) == 2 else False,
-                          'listing_date': datetime.fromtimestamp(int(record['ListingDate'])).strftime("%Y-%m-%d")
-                          }
-                         for record in raw_snapshot_list if int(record['RetErrCode']) == 0]
+                          'listing_date': datetime.fromtimestamp(int(record['ListingDate'])).strftime("%Y-%m-%d"),
+                          'circular_market_val': float(record['CircularMarketVal']) / 1000,
+                          'total_market_val': float(record['TotalMarketVal']) / 1000,
+                          'wrt_valid': True if int(record['Wrt_Valid']) == 1 else False,
+                          'wrt_conversion_ratio': float(record['Wrt_ConversionRatio']) / 1000,
+                          'wrt_type': rev_wrt_type_map[int(record['Wrt_Type'])] if int(record['Wrt_Valid']) == 1 else 0,
+                          'wrt_strike_price': float(record['Wrt_StrikePrice']) / 1000,
+                          'wrt_maturity_date': str(record['Wrt_MaturityDateStr']),
+                          'wrt_end_trade': str(record['Wrt_EndTradeDateStr']),
+                          'wrt_code': merge_stock_str(int(record['Wrt_OwnerMarketType']),
+                                                      record['Wrt_OwnerStockCode']),
+                          'wrt_recovery_price': float(record['Wrt_RecoveryPrice']) / 1000,
+                          'wrt_street_vol': float(record['Wrt_StreetVol']) / 1000,
+                          'wrt_issue_vol': float(record['Wrt_IssueVol']) / 1000,
+                          'wrt_street_ratio': float(record['Wrt_StreetRatio']) / 100000,
+                          'wrt_delta': float(record['Wrt_Delta']) / 1000,
+                          'wrt_implied_volatility': float(record['Wrt_ImpliedVolatility']) / 1000,
+                          'wrt_premium': float(record['Wrt_Premium']) / 1000
+                          } for record in raw_snapshot_list]
 
         return RET_OK, "", snapshot_list
+
+
+class RtDataQuery:
+
+    def __init__(self):
+        pass
+
+    @classmethod
+    def pack_req(cls, stock_str):
+        ret, content = split_stock_str(stock_str)
+        if ret == RET_ERROR:
+            error_str = content
+            return RET_ERROR, error_str, None
+
+        market_code, stock_code = content
+        req = {"Protocol": "1010",
+               "Version": "1",
+               "ReqParam": {'Market': str(market_code), 'StockCode': stock_code}
+               }
+        req_str = json.dumps(req) + '\r\n'
+        return RET_OK, "", req_str
+
+    @classmethod
+    def unpack_rsp(cls, rsp_str):
+        ret, msg, rsp = extract_pls_rsp(rsp_str)
+        if ret != RET_OK:
+            return RET_ERROR, msg, None
+
+        rsp_data = rsp['RetData']
+        if "RTDataArr" not in rsp_data:
+            error_str = ERROR_STR_PREFIX + "cannot find RTDataArr in client rsp. Response: %s" % rsp_str
+            return RET_ERROR, error_str, None
+
+        rt_data_list = rsp_data["RTDataArr"]
+        if rt_data_list is None or len(rt_data_list) == 0:
+            return RET_OK, "", []
+
+        # stock_code = merge_stock_str(int(rsp_data['Market']), rsp_data['StockCode'])
+        rt_list = [{# "stock_code": stock_code,
+                    "time": record['Time'],
+                    "data_status": True if int(record['DataStatus']) == 1 else False,
+                    "opened_mins": record['OpenedMins'],
+                    "cur_price": float(record['Cur']) / 1000,
+                    "last_close": float(record['LastClose']) / 1000,
+                    "avg_price": float(record['AvgPrice']) / 1000,
+                    "tdvolume": record['TDVolume'],
+                    "tdvalue": float(record['TDValue'])/1000
+                    } for record in rt_data_list]
+
+        return RET_OK, "", rt_list
+
+
+class SubplateQuery:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def pack_req(cls, market, plate_class):
+
+        if market not in mkt_map:
+            error_str = ERROR_STR_PREFIX + "market is %s, which is not valid. (%s)" \
+                                           % (market, ",".join([x for x in mkt_map]))
+            return RET_ERROR, error_str, None
+
+        if plate_class not in plate_class_map:
+            error_str = ERROR_STR_PREFIX + "the class of plate is %s, which is not valid. (%s)" \
+                                           % (plate_class, ",".join([x for x in mkt_map]))
+            return RET_ERROR, error_str, None
+
+        req = {"Protocol": "1026",
+               "Version": "1",
+               "ReqParam": {"Market": str(mkt_map[market]),
+                            "PlateClass": str(plate_class_map[plate_class])}
+               }
+        req_str = json.dumps(req) + '\r\n'
+        return RET_OK, "", req_str
+
+    @classmethod
+    def unpack_rsp(cls, rsp_str):
+        ret, msg, rsp = extract_pls_rsp(rsp_str)
+        if ret != RET_OK:
+            return RET_ERROR, msg, None
+
+        rsp_data = rsp['RetData']
+        if "PlatesetIDsArr" not in rsp_data:
+            error_str = ERROR_STR_PREFIX + "cannot find PlatesetIDsArr in client rsp. Response: %s" % rsp_str
+            return RET_ERROR, error_str, None
+
+        raw_plate_list = rsp_data["PlatesetIDsArr"]
+
+        if raw_plate_list is None or len(raw_plate_list) == 0:
+            return RET_OK, "", []
+
+        plate_class = str(rev_plate_class_map[int(rsp_data['PlateClass'])])
+        plate_list = [{"market": str(rev_mkt_map[int(record['Market'])]),
+                       "plate_class": plate_class,
+                       "plate_code": str(record['StockCode']),
+                       "plate_name": record['StockName'],
+                       "plate_id": record['StockID']
+                       }for record in raw_plate_list]
+
+        return RET_OK, "", plate_list
+
+
+class PlateStockQuery:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def pack_req(cls, market, stock_code):
+        if market not in mkt_map:
+            error_str = ERROR_STR_PREFIX + "market is %s which not valid. (%s)" % (market, ",".join(x for x in mkt_map))
+            return RET_ERROR, error_str, None
+
+        if stock_code is None or isinstance(stock_code, str) is False:
+            error_str = ERROR_STR_PREFIX + "stock_code is %s which not valid." % stock_code
+            return RET_ERROR, error_str, None
+
+        req = {"Protocol": "1027",
+               "Version": "1",
+               "ReqParam": {"Market": str(mkt_map[market]),
+                            "StockCode": str(stock_code)}
+               }
+        req_str = json.dumps(req) + '\r\n'
+        return RET_OK, "", req_str
+
+    @classmethod
+    def unpack_rsp(cls, rsp_str):
+        ret, msg, rsp = extract_pls_rsp(rsp_str)
+        if ret != RET_OK:
+            return RET_ERROR, msg, None
+
+        rsp_data = rsp['RetData']
+
+        if "PlateSubIDsArr" not in rsp_data:
+            error_str = ERROR_STR_PREFIX + "cannot find PlateSubIDsArr in client rsp. Response: %s" % rsp_str
+            return RET_ERROR, error_str, None
+
+        if rsp_data["PlateSubIDsArr"] is None or len(rsp_data["PlateSubIDsArr"]) == 0:
+            return RET_OK, "", []
+
+        raw_stock_list = rsp_data["PlateSubIDsArr"]
+        stock_list = [{"lot_size": int(record['LotSize']),
+                       "market": str(rev_mkt_map[int(record['Market'])]),
+                       "stock_name": record['StockName'],
+                       "owner_market": merge_stock_str(int(record['OwnerMarketType']), record['OwnerStockCode']),
+                       "stock_child_type": (str(rev_wrt_type_map['StockChildType'])
+                                            if int(record['OwnerMarketType']) != 0 else 0),
+                       "stock_type": rev_sec_type_map[int(record['StockType'])]
+                       }for record in raw_stock_list]
+
+        return RET_OK, "", stock_list
+
+
+class BrokerQueueQuery:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def pack_req(cls, stock_str):
+        ret_code, content = split_stock_str(stock_str)
+        if ret_code == RET_ERROR:
+            error_str = content
+            return RET_ERROR, error_str, None
+
+        market_code, stock_code = content
+
+        req = {"Protocol": "1028",
+               "Version": "1",
+               "ReqParam": {"Market": str(market_code),
+                            "StockCode": stock_code}
+               }
+        req_str = json.dumps(req) + '\r\n'
+        return RET_OK, "", req_str
+
+    @classmethod
+    def unpack_rsp(cls, rsp_str):
+        ret, msg, rsp = extract_pls_rsp(rsp_str)
+        if ret != RET_OK:
+            return RET_ERROR, msg, None
+
+        rsp_data = rsp['RetData']
+        if "BrokerAskArr" not in rsp_data:
+            error_str = ERROR_STR_PREFIX + "cannot find BrokerAskArr in client rsp. Response: %s" % rsp_str
+            return RET_ERROR, error_str, None
+
+        raw_broker_ask = rsp_data["BrokerAskArr"]
+        broker_list = [{"ask_broker_id": record['BrokerID'],
+                        "ask_broker_name": record['BrokerName'],
+                        "ask_broker_pos": record['BrokerPos'],
+                        } for record in raw_broker_ask]
+
+        return RET_OK, "", broker_list
+
+    @classmethod
+    def unpack_bid_rsp(cls, rsp_str):
+        ret, msg, rsp = extract_pls_rsp(rsp_str)
+        if ret != RET_OK:
+            return RET_ERROR, msg, None
+
+        rsp_data = rsp['RetData']
+        if "BrokerAskArr" not in rsp_data:
+            error_str = ERROR_STR_PREFIX + "cannot find BrokerAskArr in client rsp. Response: %s" % rsp_str
+            return RET_ERROR, error_str, None
+
+        raw_broker_bid = rsp_data["BrokerBidArr"]
+        broker_list = [{"bid_broker_id": record['BrokerID'],
+                        "bid_broker_name": record['BrokerName'],
+                        "bid_broker_pos": record['BrokerPos']
+                        }for record in raw_broker_bid]
+
+        return RET_OK, "", broker_list
 
 
 class HistoryKlineQuery:
@@ -749,7 +996,13 @@ class SubscriptionQuery:
         return RET_OK, "", req_str
 
     @classmethod
-    def pack_push_req(cls, stock_str, data_type):
+    def pack_unpush_req(cls, stock_str, data_type):
+        """
+        by lily --------------------
+        :param stock_str:
+        :param data_type:
+        :return:
+        """
         ret, content = split_stock_str(stock_str)
         if ret == RET_ERROR:
             error_str = content
@@ -767,7 +1020,8 @@ class SubscriptionQuery:
                "Version": "1",
                "ReqParam": {"Market": str(market_code),
                             "StockCode": stock_code,
-                            "StockPushType": str(subtype)
+                            "StockPushType": str(subtype),
+                            "UnPush": str(int(True))
                             }
                }
         req_str = json.dumps(req) + '\r\n'
@@ -835,7 +1089,7 @@ class StockQuoteQuery:
                        'turnover':  float(record['TDVal'])/1000,
                        'turnover_rate': float(record['Turnover'])/1000,
                        'amplitude': float(record['Amplitude'])/1000,
-                       'suspension': True if int(record['Suspension']) != 2 else False,
+                       'suspension': True if int(record['Suspension']) == 2 else False,
                        'listing_date': record['ListTime']
                        }
                       for record in raw_quote_list]
