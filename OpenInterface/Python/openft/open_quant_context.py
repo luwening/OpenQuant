@@ -775,15 +775,16 @@ class OpenQuoteContext:
 
         return RET_OK, None
 
-    def query_subscription(self):
+    def query_subscription(self, query=0):
         """
         get the current subscription table
         :return:
         """
         query_processor = self._get_sync_query_processor(SubscriptionQuery.pack_subscription_query_req,
                                                          SubscriptionQuery.unpack_subscription_query_rsp)
+        kargs = {"query": query}
 
-        ret_code, msg, subscription_table = query_processor()
+        ret_code, msg, subscription_table = query_processor(**kargs)
         if ret_code == RET_ERROR:
             return ret_code, msg
 
@@ -947,13 +948,13 @@ class OpenHKTradeContext:
 
         return sync_query_processor
 
-    def unlock_trade(self, cookie, password):
+    def unlock_trade(self, password):
 
         query_processor = self._get_sync_query_processor(UnlockTrade.pack_req,
                                                          UnlockTrade.unpack_rsp)
 
         # the keys of kargs should be corresponding to the actual function arguments
-        kargs = {'cookie': str(cookie), 'password': str(password)}
+        kargs = {'cookie': str(self.cookie), 'password': str(password)}
         ret_code, msg, ret = query_processor(**kargs)
 
         if ret_code != RET_OK:
@@ -961,12 +962,12 @@ class OpenHKTradeContext:
 
         return RET_OK, ret
 
-    def place_order(self, cookie, price, qty, strcode, orderside, ordertype=0, envtype=0):
+    def place_order(self, price, qty, strcode, orderside, ordertype=0, envtype=0):
         query_processor = self._get_sync_query_processor(PlaceOrder.hk_pack_req,
                                                          PlaceOrder.hk_unpack_rsp)
 
         # the keys of kargs should be corresponding to the actual function arguments
-        kargs = {'cookie': str(cookie), 'envtype': str(envtype), 'orderside': str(orderside),
+        kargs = {'cookie': str(self.cookie), 'envtype': str(envtype), 'orderside': str(orderside),
                  'ordertype': str(ordertype), 'price': str(price), 'qty': str(qty), 'strcode': str(strcode)}
         ret_code, msg, ret = query_processor(**kargs)
 
@@ -975,12 +976,12 @@ class OpenHKTradeContext:
 
         return RET_OK, ret
 
-    def set_order_status(self, cookie, status, localid=0, orderid=0, envtype=0):
+    def set_order_status(self, status, localid=0, orderid=0, envtype=0):
         query_processor = self._get_sync_query_processor(SetOrderStatus.hk_pack_req,
                                                          SetOrderStatus.hk_unpack_rsp)
 
         # the keys of kargs should be corresponding to the actual function arguments
-        kargs = {'cookie': str(cookie), 'envtype': str(envtype), 'localid': str(localid),
+        kargs = {'cookie': str(self.cookie), 'envtype': str(envtype), 'localid': str(localid),
                  'orderid': str(orderid), 'status': str(status)}
         ret_code, msg, ret = query_processor(**kargs)
 
@@ -989,12 +990,12 @@ class OpenHKTradeContext:
 
         return RET_OK, ret
 
-    def change_order(self, cookie, price, qty, localid=0, orderid=0, envtype=0):
+    def change_order(self, price, qty, localid=0, orderid=0, envtype=0):
         query_processor = self._get_sync_query_processor(ChangeOrder.hk_pack_req,
                                                          ChangeOrder.hk_unpack_rsp)
 
         # the keys of kargs should be corresponding to the actual function arguments
-        kargs = {'cookie': str(cookie), 'envtype': str(envtype), 'localid': str(localid),
+        kargs = {'cookie': str(self.cookie), 'envtype': str(envtype), 'localid': str(localid),
                  'orderid': str(orderid), 'price': str(price), 'qty': str(qty)}
         ret_code, msg, ret = query_processor(**kargs)
 
@@ -1003,7 +1004,7 @@ class OpenHKTradeContext:
 
         return RET_OK, ret
 
-    def accinfo_query(self, cookie, envtype=0):
+    def accinfo_query(self, envtype=0):
         """
         query account information
         :param cookie: request operation flag
@@ -1014,7 +1015,7 @@ class OpenHKTradeContext:
                                                          AccInfoQuery.hk_unpack_rsp)
 
         # the keys of kargs should be corresponding to the actual function arguments
-        kargs = {'cookie': str(cookie), 'envtype': str(envtype)}
+        kargs = {'cookie': str(self.cookie), 'envtype': str(envtype)}
         ret_code, msg, ret = query_processor(**kargs)
 
         if ret_code != RET_OK:
@@ -1022,12 +1023,12 @@ class OpenHKTradeContext:
 
         return RET_OK, ret
 
-    def order_list_query(self, cookie, envtype=0):
+    def order_list_query(self, envtype=0):
         query_processor = self._get_sync_query_processor(OrderListQuery.hk_pack_req,
                                                          OrderListQuery.hk_unpack_rsp)
 
         # the keys of kargs should be corresponding to the actual function arguments
-        kargs = {'cookie': str(cookie), 'envtype': str(envtype)}
+        kargs = {'cookie': str(self.cookie), 'envtype': str(envtype)}
         ret_code, msg, order_list = query_processor(**kargs)
 
         if ret_code != RET_OK:
@@ -1041,12 +1042,12 @@ class OpenHKTradeContext:
 
         return RET_OK, order_list_table
 
-    def position_list_query(self, cookie, envtype=0):
+    def position_list_query(self, envtype=0):
         query_processor = self._get_sync_query_processor(PositionListQuery.hk_pack_req,
                                                          PositionListQuery.hk_unpack_rsp)
 
         # the keys of kargs should be corresponding to the actual function arguments
-        kargs = {'cookie': str(cookie), 'envtype': str(envtype)}
+        kargs = {'cookie': str(self.cookie), 'envtype': str(envtype)}
         ret_code, msg, position_list = query_processor(**kargs)
 
         if ret_code != RET_OK:
@@ -1061,12 +1062,12 @@ class OpenHKTradeContext:
 
         return RET_OK, position_list_table
 
-    def deal_list_query(self, cookie, envtype=0):
+    def deal_list_query(self, envtype=0):
         query_processor = self._get_sync_query_processor(DealListQuery.hk_pack_req,
                                                          DealListQuery.hk_unpack_rsp)
 
         # the keys of kargs should be corresponding to the actual function arguments
-        kargs = {'cookie': str(cookie), 'envtype': str(envtype)}
+        kargs = {'cookie': str(self.cookie), 'envtype': str(envtype)}
         ret_code, msg, deal_list = query_processor(**kargs)
 
         if ret_code != RET_OK:
@@ -1115,13 +1116,13 @@ class OpenUSTradeContext:
 
         return sync_query_processor
 
-    def unlock_trade(self, cookie, password):
+    def unlock_trade(self, password):
 
         query_processor = self._get_sync_query_processor(UnlockTrade.pack_req,
                                                          UnlockTrade.unpack_rsp)
 
         # the keys of kargs should be corresponding to the actual function arguments
-        kargs = {'cookie': str(cookie), 'password': str(password)}
+        kargs = {'cookie': str(self.cookie), 'password': str(password)}
         ret_code, msg, ret = query_processor(**kargs)
 
         if ret_code != RET_OK:
@@ -1129,12 +1130,12 @@ class OpenUSTradeContext:
 
         return RET_OK, ret
 
-    def place_order(self, cookie, price, qty, strcode, orderside, ordertype=2):
+    def place_order(self, price, qty, strcode, orderside, ordertype=2):
         query_processor = self._get_sync_query_processor(PlaceOrder.us_pack_req,
                                                          PlaceOrder.us_unpack_rsp)
 
         # the keys of kargs should be corresponding to the actual function arguments
-        kargs = {'cookie': str(cookie), 'envtype': '0', 'orderside': str(orderside),
+        kargs = {'cookie': str(self.cookie), 'envtype': '0', 'orderside': str(orderside),
                  'ordertype': str(ordertype), 'price': str(price), 'qty': str(qty), 'strcode': str(strcode)}
         ret_code, msg, ret = query_processor(**kargs)
 
@@ -1143,12 +1144,12 @@ class OpenUSTradeContext:
 
         return RET_OK, ret
 
-    def set_order_status(self, cookie, localid=0, orderid=0):
+    def set_order_status(self, localid=0, orderid=0):
         query_processor = self._get_sync_query_processor(SetOrderStatus.us_pack_req,
                                                          SetOrderStatus.us_unpack_rsp)
 
         # the keys of kargs should be corresponding to the actual function arguments
-        kargs = {'cookie': str(cookie), 'envtype': '0', 'localid': str(localid),
+        kargs = {'cookie': str(self.cookie), 'envtype': '0', 'localid': str(localid),
                  'orderid': str(orderid), 'status': '0'}
         ret_code, msg, ret = query_processor(**kargs)
 
@@ -1157,12 +1158,12 @@ class OpenUSTradeContext:
 
         return RET_OK, ret
 
-    def change_order(self, cookie, price, qty, localid=0, orderid=0):
+    def change_order(self, price, qty, localid=0, orderid=0):
         query_processor = self._get_sync_query_processor(ChangeOrder.us_pack_req,
                                                          ChangeOrder.us_unpack_rsp)
 
         # the keys of kargs should be corresponding to the actual function arguments
-        kargs = {'cookie': str(cookie), 'envtype': '0', 'localid': str(localid),
+        kargs = {'cookie': str(self.cookie), 'envtype': '0', 'localid': str(localid),
                  'orderid': str(orderid), 'price': str(price), 'qty': str(qty)}
         ret_code, msg, ret = query_processor(**kargs)
 
@@ -1171,12 +1172,12 @@ class OpenUSTradeContext:
 
         return RET_OK, ret
 
-    def accinfo_query(self, cookie):
+    def accinfo_query(self):
         query_processor = self._get_sync_query_processor(AccInfoQuery.us_pack_req,
                                                          AccInfoQuery.us_unpack_rsp)
 
          # the keys of kargs should be corresponding to the actual function arguments
-        kargs = {'cookie': str(cookie), 'envtype': '0'}
+        kargs = {'cookie': str(self.cookie), 'envtype': '0'}
         ret_code, msg, ret = query_processor(**kargs)
 
         if ret_code != RET_OK:
@@ -1184,12 +1185,12 @@ class OpenUSTradeContext:
 
         return RET_OK, ret
 
-    def order_list_query(self, cookie):
+    def order_list_query(self):
         query_processor = self._get_sync_query_processor(OrderListQuery.us_pack_req,
                                                          OrderListQuery.us_unpack_rsp)
 
         # the keys of kargs should be corresponding to the actual function arguments
-        kargs = {'cookie': str(cookie), 'envtype': '0'}
+        kargs = {'cookie': str(self.cookie), 'envtype': '0'}
         ret_code, msg, order_list = query_processor(**kargs)
 
         if ret_code != RET_OK:
@@ -1203,12 +1204,12 @@ class OpenUSTradeContext:
 
         return RET_OK, order_list_table
 
-    def position_list_query(self, cookie):
+    def position_list_query(self):
         query_processor = self._get_sync_query_processor(PositionListQuery.us_pack_req,
                                                          PositionListQuery.us_unpack_rsp)
 
         # the keys of kargs should be corresponding to the actual function arguments
-        kargs = {'cookie': str(cookie), 'envtype': '0'}
+        kargs = {'cookie': str(self.cookie), 'envtype': '0'}
         ret_code, msg, position_list = query_processor(**kargs)
 
         if ret_code != RET_OK:
@@ -1223,12 +1224,12 @@ class OpenUSTradeContext:
 
         return RET_OK, position_list_table
 
-    def deal_list_query(self, cookie):
+    def deal_list_query(self):
         query_processor = self._get_sync_query_processor(DealListQuery.us_pack_req,
                                                          DealListQuery.us_unpack_rsp)
 
         # the keys of kargs should be corresponding to the actual function arguments
-        kargs = {'cookie': str(cookie), 'envtype': '0'}
+        kargs = {'cookie': str(self.cookie), 'envtype': '0'}
         ret_code, msg, deal_list = query_processor(**kargs)
 
         if ret_code != RET_OK:
