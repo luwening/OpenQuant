@@ -86,6 +86,7 @@ void CPluginPushStockData::SetQuoteReqData(int nCmdID, const Json::Value &jsnVal
 		req_info.nStockID = nStockID;
 		req_info.sock = sock;
 		req_info.req = req;
+		req_info.dwReqTick = ::GetTickCount();
 		ReplyDataReqError(&req_info, PROTO_ERR_STOCK_NOT_FIND, L"’“≤ªµΩπ…∆±£°");
 		return;
 	}	

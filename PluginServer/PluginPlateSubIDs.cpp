@@ -89,6 +89,7 @@ void CPluginPlateSubIDs::SetQuoteReqData(int nCmdID, const Json::Value &jsnVal, 
 		req_info.nStockID = nPlateID;
 		req_info.sock = sock;
 		req_info.req = req;
+		req_info.dwReqTick = ::GetTickCount();
 		ReplyDataReqError(&req_info, PROTO_ERR_STOCK_NOT_FIND, L"ÕÒ²»µ½°å¿é£¡");
 		return;
 	}	

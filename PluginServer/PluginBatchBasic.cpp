@@ -84,6 +84,7 @@ void CPluginBatchBasic::SetQuoteReqData(int nCmdID, const Json::Value &jsnVal, S
 		StockDataReq req_info;
 		req_info.sock = sock;
 		req_info.req = req;
+		req_info.dwReqTick = ::GetTickCount();
 		ReplyDataReqError(&req_info, PROTO_ERR_PARAM_ERR, L"参数错误！");
 		return;
 	}
@@ -97,6 +98,7 @@ void CPluginBatchBasic::SetQuoteReqData(int nCmdID, const Json::Value &jsnVal, S
 		//req_info.nStockID = nStockID;
 		req_info.sock = sock;
 		req_info.req = req;
+		req_info.dwReqTick = ::GetTickCount();
 		ReplyDataReqError(&req_info, PROTO_ERR_PARAM_ERR, L"参数错误！");
 		return;
 	}
@@ -114,6 +116,7 @@ void CPluginBatchBasic::SetQuoteReqData(int nCmdID, const Json::Value &jsnVal, S
 
 			req_info.sock = sock;
 			req_info.req = req;
+			req_info.dwReqTick = ::GetTickCount();
 			ReplyDataReqError(&req_info, PROTO_ERR_STOCK_NOT_FIND, L"找不到股票！");
 			return;
 		}
@@ -129,10 +132,11 @@ void CPluginBatchBasic::SetQuoteReqData(int nCmdID, const Json::Value &jsnVal, S
 	StockDataReq *pReqInfo = new StockDataReq;
 	CHECK_RET(pReqInfo, NORET);
 
+	DWORD dwTime = ::GetTickCount();
 	pReqInfo->sock = sock;
 	pReqInfo->req = req;
+	pReqInfo->dwReqTick = dwTime;
 
-	DWORD dwTime = ::GetTickCount();
 	VT_STOCK_DATA_REQ &vtReq = m_mapReqInfo[std::make_pair(sock, dwTime)];
 	bool bNeedSub = vtReq.empty();	
 	vtReq.push_back(pReqInfo);
@@ -155,6 +159,8 @@ void CPluginBatchBasic::SetQuoteReqData(int nCmdID, const Json::Value &jsnVal, S
 		if ( bIsSub )
 		{
 			QuoteAckDataBody &ack = m_mapCacheData[std::make_pair(sock, dwTime)];
+			//fix:同一毫秒发来的请求，可能导致vtAckBatchBasic重复添加 
+			ack.vtAckBatchBasic.clear();
 			Quote_BatchBasic batchprice;
 			bool bFillSuccess = false;
 			for (int i = 0; i < (int)req.body.vtReqBatchBasic.size(); i++)

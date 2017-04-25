@@ -21,7 +21,8 @@ rev_mkt_map = {mkt_map[x]: x for x in mkt_map}
 wrt_type_map = {"CALL": 1,
                 "PUT": 2,
                 "BULL": 3,
-                "BEAR": 4
+                "BEAR": 4,
+                "N/A": 0
                 }
 rev_wrt_type_map = {wrt_type_map[x]: x for x in wrt_type_map}
 
@@ -36,7 +37,8 @@ sec_type_map = {"STOCK": 3,
                 "IDX": 6,
                 "ETF": 4,
                 "WARRANT": 5,
-                "BOND": 1
+                "BOND": 1,
+                "N/A": 0
                 }
 rev_sec_type_map = {sec_type_map[x]: x for x in sec_type_map}
 
@@ -391,9 +393,9 @@ class StockBasicInfoQuery:
                             "lot_size": int(record["LotSize"]),
                             "stock_type": rev_sec_type_map[int(record["StockType"])],
                             "stock_child_type": (rev_wrt_type_map[int(record["StockChildType"])] if
-                                                 rev_sec_type_map[int(record["StockType"])] == 5 else 0),
+                                                 int(record["StockType"]) == 5 else 0),
                             "owner_stock_code": (merge_stock_str(int(record["OwnerMarketType"]), record["OwnerStockCode"])
-                                                 if rev_sec_type_map[int(record["StockType"])] == 5 else 0)
+                                                 if int(record["StockType"]) == 5 else 0)
                             }
                            for record in raw_basic_info_list]
         return RET_OK, "", basic_info_list
@@ -473,8 +475,7 @@ class MarketSnapshotQuery:
                           'wrt_strike_price': float(record['Wrt_StrikePrice']) / 1000,
                           'wrt_maturity_date': str(record['Wrt_MaturityDateStr']),
                           'wrt_end_trade': str(record['Wrt_EndTradeDateStr']),
-                          'wrt_code': merge_stock_str(int(record['Wrt_OwnerMarketType']),
-                                                      record['Wrt_OwnerStockCode']),
+                          'wrt_code': merge_stock_str(int(record['Wrt_OwnerMarketType']), record['Wrt_OwnerStockCode']),
                           'wrt_recovery_price': float(record['Wrt_RecoveryPrice']) / 1000,
                           'wrt_street_vol': float(record['Wrt_StreetVol']) / 1000,
                           'wrt_issue_vol': float(record['Wrt_IssueVol']) / 1000,

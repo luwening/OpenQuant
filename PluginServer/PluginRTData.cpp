@@ -84,6 +84,7 @@ void CPluginRTData::SetQuoteReqData(int nCmdID, const Json::Value &jsnVal, SOCKE
 		StockDataReq req_info;
 		req_info.sock = sock;
 		req_info.req = req;
+		req_info.dwReqTick = ::GetTickCount();
 		ReplyDataReqError(&req_info, PROTO_ERR_PARAM_ERR, L"参数错误！");
 		return;
 	}
@@ -100,6 +101,7 @@ void CPluginRTData::SetQuoteReqData(int nCmdID, const Json::Value &jsnVal, SOCKE
 		req_info.nStockID = nStockID;
 		req_info.sock = sock;
 		req_info.req = req;
+		req_info.dwReqTick = ::GetTickCount();
 		ReplyDataReqError(&req_info, PROTO_ERR_STOCK_NOT_FIND, L"找不到股票！");
 		return;
 	}	

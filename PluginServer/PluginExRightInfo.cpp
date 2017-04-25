@@ -90,6 +90,7 @@ void CPluginExRightInfo::SetQuoteReqData(int nCmdID, const Json::Value &jsnVal, 
 			StockDataReq req_info;			
 			req_info.sock = sock;
 			req_info.req = req;
+			req_info.dwReqTick = ::GetTickCount();
 			ReplyDataReqError(&req_info, PROTO_ERR_STOCK_NOT_FIND, L"’“≤ªµΩπ…∆±£°");
 			return;
 		}

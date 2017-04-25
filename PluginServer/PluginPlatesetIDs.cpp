@@ -86,6 +86,7 @@ void CPluginPlatesetIDs::SetQuoteReqData(int nCmdID, const Json::Value &jsnVal, 
 		req_info.nStockID = nPlatesetID;
 		req_info.sock = sock;
 		req_info.req = req;
+		req_info.dwReqTick = ::GetTickCount();
 		ReplyDataReqError(&req_info, PROTO_ERR_STOCK_NOT_FIND, L"找不到对应的板块集合！");
 		return;
 	}	

@@ -88,6 +88,7 @@ void CPluginSnapshot::SetQuoteReqData(int nCmdID, const Json::Value &jsnVal, SOC
 		StockDataReq req_info;		
 		req_info.sock = sock;
 		req_info.req = req;
+		req_info.dwReqTick = ::GetTickCount();
 		ReplyDataReqError(&req_info, PROTO_ERR_PARAM_ERR, L"参数错误！");
 		return;
 	}
@@ -105,6 +106,7 @@ void CPluginSnapshot::SetQuoteReqData(int nCmdID, const Json::Value &jsnVal, SOC
 			StockDataReq req_info;			
 			req_info.sock = sock;
 			req_info.req = req;
+			req_info.dwReqTick = ::GetTickCount();
 			ReplyDataReqError(&req_info, PROTO_ERR_STOCK_NOT_FIND, L"找不到股票！");
 			return;
 		}
@@ -118,7 +120,7 @@ void CPluginSnapshot::SetQuoteReqData(int nCmdID, const Json::Value &jsnVal, SOC
 	CHECK_RET(pReqInfo, NORET);	
 	pReqInfo->sock = sock;
 	pReqInfo->req = req;
-
+	pReqInfo->dwReqTick = ::GetTickCount();
 
 	QueryDataErrCode queryErr = m_pQuoteOperator->QueryStockSnapshot(PLUGIN_GUID, _vect2Ptr(vtReqStockID), _vectIntSize(vtReqStockID), pReqInfo->nReqCookie);
 	if ( queryErr != QueryData_Suc || pReqInfo->nReqCookie == 0 )

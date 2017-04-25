@@ -18,13 +18,12 @@ tradehk_ctx = OpenHKTradeContext(host='127.0.0.1', sync_port=11111)
 ### 解锁接口 unlock_trade
 
 ```python
-ret_code, ret_data = tradehk_ctx.unlock_trade(cookie, password)
+ret_code, ret_data = tradehk_ctx.unlock_trade(password)
 ```
 
 **功能**：港股交易解锁。
 
 **参数**：
-**cookie**: 本地cookie，用来区分回包。
 **password**: 用户交易密码。
 
 **返回**：
@@ -41,14 +40,12 @@ ret_code失败时，ret_data返回为错误描述字符串；
 ### 下单接口 place_order
 
 ```python
-ret_code, ret_data = tradehk_ctx.place_order(cookie, price, qty, strcode, orderside, ordertype=0, envtype=0)
+ret_code, ret_data = tradehk_ctx.place_order(price, qty, strcode, orderside, ordertype=0, envtype=0)
 ```
 
 **功能**：港股下单接口。
 
 **参数**：
-
-**cookie**: 本地cookie，用来区分回包。
 
 **price**: 交易价格。
 
@@ -96,14 +93,12 @@ ret_code失败时，ret_data返回为错误描述字符串；
 ### 设置订单状态 set_order_status
 
 ```python
-ret_code, ret_data = tradehk_ctx.set_order_status(cookie, status, localid=0, orderid=0, envtype=0)
+ret_code, ret_data = tradehk_ctx.set_order_status(status, localid=0, orderid=0, envtype=0)
 ```
 
 **功能**：更改某指定港股订单状态。
 
 **参数**：
-
-**cookie**: 本地cookie，用来区分回包。
 
 **status**: 更改状态的类型。如下表所示。
 
@@ -143,14 +138,12 @@ ret_code失败时，ret_data返回为错误描述字符串；
 ### 修改订单 change_order
 
 ```python
-ret_code, ret_data = tradehk_ctx.change_order(cookie, price, qty, localid=0, orderid=0, envtype=0)
+ret_code, ret_data = tradehk_ctx.change_order(price, qty, localid=0, orderid=0, envtype=0)
 ```
 
 **功能**：修改某指定港股订单。
 
 **参数**：
-
-**cookie**: 本地cookie，用来区分回包
 
 **price**: 交易价格。
 
@@ -185,14 +178,12 @@ ret_code失败时，ret_data返回为错误描述字符串；
 ### 查询账户信息 accinfo_query
 
 ```python
-ret_code, ret_data = tradehk_ctx.accinfo_query(cookie, envtype=0)
+ret_code, ret_data = tradehk_ctx.accinfo_query(envtype=0)
 ```
 
 **功能**：查询港股账户信息。
 
 **参数**：
-
-**cookie**: 本地cookie，用来区分回包
 
 **envtype**: 交易环境参数。如下表所示。
 
@@ -224,14 +215,12 @@ ret_code失败时，ret_data返回为错误描述字符串；
 ### 查询订单列表 order_list_query
 
 ```python
-ret_code, ret_data = tradehk_ctx.order_list_query(cookie, envtype=0)
+ret_code, ret_data = tradehk_ctx.order_list_query(envtype=0)
 ```
 
 **功能**：查询港股今日订单列表。
 
 **参数**：
-
-**cookie**:本地cookie，用来区分回包
 
 **envtype**: 交易环境参数。如下表所示。
 
@@ -252,7 +241,7 @@ ret_code失败时，ret_data返回为错误描述字符串；
 | localid         | 订单本地标识       | orderid       | 订单ID |
 | order_type      | 交易类型         | price         | 交易价格 |
 | status          | 订单状态(具体状态如下) | submited_time | 提交时间 |
-| updated_time    | 更新时间         |               |      |
+| updated_time    | 更新时间         |      order_side         |    交易方向  |
 
 | status | 订单类型                  | status | 订单类型  |
 | :----- | :-------------------- | :----- | :---- |
@@ -274,14 +263,12 @@ ret_code失败时，ret_data返回为错误描述字符串；
 ### 查询持仓列表 position_list_query
 
 ```python
-ret_code, ret_data = tradehk_ctx.position_list_query(cookie, envtype=0)
+ret_code, ret_data = tradehk_ctx.position_list_query(envtype=0)
 ```
 
 **功能**：查询港股持仓列表。
 
 **参数**：
-
-**cookie**:本地cookie，用来区分回包。
 
 **envtype**: 交易环境参数。如下表所示。
 
@@ -317,14 +304,12 @@ ret_code失败时，ret_data返回为错误描述字符串；
 ### 查询成交列表 deal_list_query
 
 ```python
-ret_code, ret_data = tradehk_ctx.deal_list_query(cookie, envtype=0)
+ret_code, ret_data = tradehk_ctx.deal_list_query(envtype=0)
 ```
 
 **功能**：查询港股今日成交列表。
 
 **参数**：
-
-**cookie**:本地cookie，用来区分回包。
 
 **envtype**: 交易环境参数。如下表所示。
 
@@ -384,13 +369,13 @@ tradeus_ctx = OpenUSTradeContext(host='127.0.0.1', sync_port=11111)
 ### 解锁接口 unlock_trade
 
 ```python
-ret_code, ret_data = tradeus_ctx.unlock_trade(cookie, password)
+ret_code, ret_data = tradeus_ctx.unlock_trade(password)
 ```
 
 **功能**：交易解锁。
 
 **参数**：
-**cookie**: 本地cookie，用来区分回包。
+
 **password**: 用户交易密码。
 
 **返回**：
@@ -407,14 +392,12 @@ ret_code失败时，ret_data返回为错误描述字符串；
 ### 下单接口 place_order
 
 ```python
-ret_code, ret_data = tradeus_ctx.place_order(cookie, price, qty, strcode, orderside, ordertype=2)
+ret_code, ret_data = tradeus_ctx.place_order(price, qty, strcode, orderside, ordertype=2)
 ```
 
 **功能**：美股下单接口。
 
 **参数**：
-
-**cookie**: 本地cookie，用来区分回包。
 
 **price**: 交易价格。
 
@@ -456,14 +439,12 @@ ret_code失败时，ret_data返回为错误描述字符串；
 ### 设置订单状态 set_order_status
 
 ```python
-ret_code, ret_data = tradeus_ctx.set_order_status(cookie, localid=0, orderid=0)
+ret_code, ret_data = tradeus_ctx.set_order_status(localid=0, orderid=0)
 ```
 
 **功能**：更改某指定美股订单状态。
 
 **参数**：
-
-**cookie**: 本地cookie，用来区分回包。
 
 **localid**: 订单的本地标识。
 
@@ -489,14 +470,12 @@ ret_code失败时，ret_data返回为错误描述字符串；
 ### 修改订单 change_order
 
 ```python
-ret_code, ret_data = tradeus_ctx.change_order(cookie, price, qty, localid=0, orderid=0)
+ret_code, ret_data = tradeus_ctx.change_order(price, qty, localid=0, orderid=0)
 ```
 
 **功能**：修改某指定美股订单。
 
 **参数**：
-
-**cookie**: 本地cookie，用来区分回包。
 
 **price**: 交易价格。
 
@@ -524,14 +503,10 @@ ret_code失败时，ret_data返回为错误描述字符串；
 ### 查询账户信息 accinfo_query
 
 ```python
-ret_code, ret_data = tradeus_ctx.accinfo_query(cookie)
+ret_code, ret_data = tradeus_ctx.accinfo_query()
 ```
 
 **功能**：查询美股账户信息。
-
-**参数**：
-
-**cookie**: 本地cookie，用来区分回包
 
 **返回:**
 
@@ -556,14 +531,10 @@ ret_code失败时，ret_data返回为错误描述字符串；
 ### 查询订单列表 order_list_query
 
 ```python
-ret_code, ret_data = tradeus_ctx.order_list_query(cookie)
+ret_code, ret_data = tradeus_ctx.order_list_query()
 ```
 
 **功能**：查询美股今日订单列表。
-
-**参数**：
-
-**cookie**:本地cookie，用来区分回包。
 
 **返回:**
 
@@ -577,7 +548,7 @@ ret_code失败时，ret_data返回为错误描述字符串；
 | localid         | 订单本地标识       | orderid       | 订单ID |
 | order_type      | 交易类型         | price         | 交易价格 |
 | status          | 订单状态(具体状态如下) | submited_time | 提交时间 |
-| updated_time    | 更新时间         |               |      |
+| updated_time    | 更新时间         |      order_side         |   交易方向   |
 
 | status | 订单类型                  | status | 订单类型  |
 | :----- | :-------------------- | :----- | :---- |
@@ -599,14 +570,10 @@ ret_code失败时，ret_data返回为错误描述字符串；
 ### 查询持仓列表 position_list_query
 
 ```python
-ret_code, ret_data = tradeus_ctx.position_list_query(cookie)
+ret_code, ret_data = tradeus_ctx.position_list_query()
 ```
 
 **功能**：查询美股持仓列表。
-
-**参数**：
-
-**cookie**:本地cookie，用来区分回包
 
 **返回:**
 
@@ -635,14 +602,10 @@ ret_code失败时，ret_data返回为错误描述字符串；
 ### 查询成交列表 deal_list_query
 
 ```python
-ret_code, ret_data = tradeus_ctx.deal_list_query(cookie)
+ret_code, ret_data = tradeus_ctx.deal_list_query()
 ```
 
 **功能**：查询美股今日成交列表。
-
-**参数**：
-
-**cookie**:本地cookie，用来区分回包。
 
 **返回:**
 

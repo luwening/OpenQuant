@@ -175,7 +175,54 @@ bool CProtoQueryStockSub::MakeProtoBody_Ack(Json::Value &jsnVal, const ProtoAckD
 //tomodify 7
 void CProtoQueryStockSub::GetProtoBodyField_Req(VT_PROTO_FIELD &vtField, const ProtoReqBodyType &reqData)
 {
+	static BOOL arOptional[] = {
+		TRUE,
+	};
+	static EProtoFildType arFieldType[] = {
+		ProtoFild_Int32,
+	};
+	static LPCSTR arFieldKey[] = {
+		"QueryAllSocket", 
+	};
 
+	ProtoReqBodyType &body = const_cast<ProtoReqBodyType &>(reqData);
+	void *arPtr[] = {
+		&body.nQueryAllSocket
+	};
+
+	CHECK_OP(_countof(arOptional) == _countof(arFieldType), NOOP);
+	CHECK_OP(_countof(arOptional) == _countof(arFieldKey), NOOP);
+	CHECK_OP(_countof(arOptional) == _countof(arPtr), NOOP);
+
+	vtField.clear();
+	PROTO_FIELD field;
+	body.nQueryAllSocket = 0;
+
+	for (int n = 0; n < _countof(arOptional); n++)
+	{
+		field.bOptional = arOptional[n];
+		field.eFieldType = arFieldType[n];
+		field.strFieldKey = arFieldKey[n];
+		switch (field.eFieldType)
+		{
+		case ProtoFild_Int32:
+			field.pInt32 = (int*)arPtr[n];
+			break;
+		case ProtoFild_Int64:
+			field.pInt64 = (INT64*)arPtr[n];
+			break;
+		case ProtoFild_StringA:
+			field.pStrA = (std::string*)arPtr[n];
+			break;
+		case ProtoFild_StringW:
+			field.pStrW = (std::wstring*)arPtr[n];
+			break;
+		default:
+			CHECK_OP(FALSE, NOOP);
+			break;
+		}
+		vtField.push_back(field);
+	}
 }
 
 //tomodify 8

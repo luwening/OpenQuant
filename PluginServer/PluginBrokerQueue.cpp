@@ -82,6 +82,7 @@ void CPluginBrokerQueue::SetQuoteReqData(int nCmdID, const Json::Value &jsnVal, 
 		StockDataReq req_info;
 		req_info.sock = sock;
 		req_info.req = req;
+		req_info.dwReqTick = ::GetTickCount();
 		ReplyDataReqError(&req_info, PROTO_ERR_PARAM_ERR, L"参数错误！");
 		return;
 	}
@@ -98,6 +99,7 @@ void CPluginBrokerQueue::SetQuoteReqData(int nCmdID, const Json::Value &jsnVal, 
 		req_info.nStockID = nStockID;
 		req_info.sock = sock;
 		req_info.req = req;
+		req_info.dwReqTick = ::GetTickCount();
 		ReplyDataReqError(&req_info, PROTO_ERR_STOCK_NOT_FIND, L"找不到股票！");
 		return;
 	}	
@@ -108,6 +110,7 @@ void CPluginBrokerQueue::SetQuoteReqData(int nCmdID, const Json::Value &jsnVal, 
 		req_info.nStockID = nStockID;
 		req_info.sock = sock;
 		req_info.req = req;
+		req_info.dwReqTick = ::GetTickCount();
 		ReplyDataReqError(&req_info, PROTO_ERR_VER_NOT_SUPPORT, L"股票未订阅！");
 		return;
 	}
