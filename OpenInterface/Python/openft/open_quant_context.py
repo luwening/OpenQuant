@@ -17,7 +17,7 @@ class RspHandlerBase(object):
         pass
 
     def on_recv_rsp(self, rsp_content):
-        pass
+        return 0, None
 
     def on_error(self, error_str):
         pass
@@ -299,7 +299,6 @@ class _AsyncNetworkManager(asyncore.dispatcher_with_send):
                 rsp_str = binary2str(rsp_binary)
 
                 self.handler_ctx.recv_func(rsp_str)
-                self.rsp_buf = b''
         except Exception:
             err = sys.exc_info()[1]
             self.handler_ctx.error_func(str(err))
