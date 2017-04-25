@@ -88,6 +88,18 @@ void CPluginUnlockTrade::SetTradeReqData(int nCmdID, const Json::Value &jsnVal, 
 
 	CHECK_RET(req.head.nProtoID == nCmdID && req.body.nCookie, NORET);
 
+	if (IManage_SecurityNum::IsSafeSocket(sock))
+	{
+		TradeAckType ack;
+		ack.head = req.head;
+		ack.head.ddwErrCode = 0;
+		CA::Unicode2UTF(L"", ack.head.strErrDesc);
+		ack.body.nCookie = req.body.nCookie;
+		ack.body.nSvrResult = Trade_SvrResult_Succeed;
+		HandleTradeAck(&ack, sock);
+		return;
+	}
+
 	StockDataReq *pReq = new StockDataReq;
 	CHECK_RET(pReq, NORET);
 	pReq->sock = sock;

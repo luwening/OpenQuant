@@ -240,7 +240,11 @@ struct StockUnSub_Ack
 ////查询订阅接口PROTO_ID_QT_QueryStockSub
 struct QueryStockSubReqBody
 {
-
+	QueryStockSubReqBody()
+	{
+		nQueryAllSocket = 0;
+	}
+	int nQueryAllSocket;//是否请求所有连接的定阅信息 0：1
 };
 
 struct SubInfoAckItem

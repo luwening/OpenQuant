@@ -84,6 +84,7 @@ void CPluginTickerPrice::SetQuoteReqData(int nCmdID, const Json::Value &jsnVal, 
 		StockDataReq req_info;		
 		req_info.sock = sock;
 		req_info.req = req;
+		req_info.dwReqTick = ::GetTickCount();
 		ReplyDataReqError(&req_info, PROTO_ERR_PARAM_ERR, L"参数错误！");
 		return;
 	}
@@ -101,6 +102,7 @@ void CPluginTickerPrice::SetQuoteReqData(int nCmdID, const Json::Value &jsnVal, 
 		req_info.nStockID = nStockID;
 		req_info.sock = sock;
 		req_info.req = req;
+		req_info.dwReqTick = ::GetTickCount();
 		ReplyDataReqError(&req_info, PROTO_ERR_STOCK_NOT_FIND, L"找不到股票！");
 		return;
 	}	
@@ -117,6 +119,7 @@ void CPluginTickerPrice::SetQuoteReqData(int nCmdID, const Json::Value &jsnVal, 
 	pReqInfo->nStockID = nStockID;
 	pReqInfo->sock = sock;
 	pReqInfo->req = req;
+	pReqInfo->dwReqTick = ::GetTickCount();
 
 	VT_STOCK_DATA_REQ &vtReq = m_mapReqInfo[nStockID];	
 	vtReq.push_back(pReqInfo);

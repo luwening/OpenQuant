@@ -85,6 +85,7 @@ void CPluginQueryStockSub::SetQuoteReqData(int nCmdID, const Json::Value &jsnVal
 		StockDataReq req_info;
 		req_info.sock = sock;
 		req_info.req = req;
+		req_info.dwReqTick = ::GetTickCount();
 		ReplyDataReqError(&req_info, PROTO_ERR_PARAM_ERR, L"参数错误！");
 		return;
 	}
@@ -106,8 +107,11 @@ void CPluginQueryStockSub::SetQuoteReqData(int nCmdID, const Json::Value &jsnVal
 	{
 		Quote_SubInfo* pSubInfo = NULL;
 		int nSubInfoLen = 0;
-		m_pQuoteData->GetStockSubInfoList(pSubInfo, nSubInfoLen, sock);
+		bool bQueryAllSocket = (req.body.nQueryAllSocket != 0);
+		m_pQuoteData->GetStockSubInfoList(pSubInfo, nSubInfoLen, bQueryAllSocket? 0: sock);
 		QuoteAckDataBody &ack = m_mapCacheData[dwReqTick];
+		//fix:同一毫秒发来的请求，可能导致vtSubInfo重复添加 
+		ack.vtSubInfo.clear();
 		for ( int n = 0; n < nSubInfoLen; n++ )
 		{
 			SubInfoAckItem item;
