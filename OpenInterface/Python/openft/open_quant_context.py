@@ -291,7 +291,7 @@ class _AsyncNetworkManager(asyncore.dispatcher_with_send):
             recv_buf = self.recv(5 * 1024 * 1024)
             self.rsp_buf += recv_buf
             loc = self.rsp_buf.find(delimiter)
-            if loc >= 0:
+            while loc >= 0:
                 loc += len(delimiter)
                 rsp_binary = self.rsp_buf[0:loc]
                 self.rsp_buf = self.rsp_buf[loc:]
@@ -299,6 +299,7 @@ class _AsyncNetworkManager(asyncore.dispatcher_with_send):
                 rsp_str = binary2str(rsp_binary)
 
                 self.handler_ctx.recv_func(rsp_str)
+                loc = self.rsp_buf.find(delimiter)
         except Exception:
             err = sys.exc_info()[1]
             self.handler_ctx.error_func(str(err))
