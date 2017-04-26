@@ -1197,7 +1197,7 @@ class OpenUSTradeContext:
             return RET_ERROR, msg
 
         col_list = ["stock_code", "stock_name", "dealt_avg_price", "dealt_qty",
-                    "localid", "orderid", "order_type", "price",
+                    "localid", "orderid", "order_type", "order_side","price",
                     "status", "submited_time", "updated_time"]
 
         order_list_table = pd.DataFrame(order_list, columns=col_list)
