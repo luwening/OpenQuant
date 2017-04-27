@@ -211,6 +211,11 @@ void CPluginQueryHKOrder::NotifyOnQueryHKOrder(Trade_Env enEnv, UINT32 nCookie, 
 	delete pFindReq;
 }
 
+void CPluginQueryHKOrder::NotifySocketClosed(SOCKET sock)
+{
+	DoClearReqInfo(sock);
+}
+
 void CPluginQueryHKOrder::OnTimeEvent(UINT nEventID)
 {
 	if ( TIMER_ID_HANDLE_TIMEOUT_REQ == nEventID )
@@ -323,4 +328,24 @@ void CPluginQueryHKOrder::ClearAllReqAckData()
 	}
 
 	m_vtReqData.clear();
+}
+
+void CPluginQueryHKOrder::DoClearReqInfo(SOCKET socket)
+{
+	VT_REQ_TRADE_DATA& vtReq = m_vtReqData;
+
+	//清掉socket对应的请求信息
+	auto itReq = vtReq.begin();
+	while (itReq != vtReq.end())
+	{
+		if (*itReq && (*itReq)->sock == socket)
+		{
+			delete *itReq;
+			itReq = vtReq.erase(itReq);
+		}
+		else
+		{
+			++itReq;
+		}
+	}
 }

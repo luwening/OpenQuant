@@ -200,11 +200,13 @@ void CPluginChangeOrder_HK::NotifyOnChangeOrder(Trade_Env enEnv, UINT nCookie,
 	TradeAckType ack;
 	ack.head = pFindReq->req.head;
 	ack.head.ddwErrCode = nErrCode;
-	if ( nErrCode )
+	if (nErrCode != 0 || enSvrRet != Trade_SvrResult_Succeed)
 	{
-		WCHAR szErr[256] = L"";
-		if ( m_pTradeOp->GetErrDescV2(nErrCode, szErr) )
-			CA::Unicode2UTF(szErr, ack.head.strErrDesc);
+		WCHAR szErr[256] = L"发送请求失败!";
+		if (nErrCode != 0)
+			m_pTradeOp->GetErrDescV2(nErrCode, szErr);
+
+		CA::Unicode2UTF(szErr, ack.head.strErrDesc);
 	}
 
 	//tomodify 4
@@ -218,6 +220,11 @@ void CPluginChangeOrder_HK::NotifyOnChangeOrder(Trade_Env enEnv, UINT nCookie,
 
 	m_vtReqData.erase(itReq);
 	delete pFindReq;
+}
+
+void CPluginChangeOrder_HK::NotifySocketClosed(SOCKET sock)
+{
+	DoClearReqInfo(sock);
 }
 
 void CPluginChangeOrder_HK::OnTimeEvent(UINT nEventID)
@@ -394,5 +401,25 @@ void CPluginChangeOrder_HK::OnCvtOrderID_Local2Svr( int nResult, Trade_Env eEnv,
 			DoTryProcessTradeOpt(pItem);
 		}
 		++it; 
+	}
+}
+
+void CPluginChangeOrder_HK::DoClearReqInfo(SOCKET socket)
+{
+	VT_REQ_TRADE_DATA& vtReq = m_vtReqData;
+
+	//清掉socket对应的请求信息
+	auto itReq = vtReq.begin();
+	while (itReq != vtReq.end())
+	{
+		if (*itReq && (*itReq)->sock == socket)
+		{
+			delete *itReq;
+			itReq = vtReq.erase(itReq);
+		}
+		else
+		{
+			++itReq;
+		}
 	}
 }

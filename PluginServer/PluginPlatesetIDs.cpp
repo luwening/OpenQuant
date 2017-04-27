@@ -152,6 +152,11 @@ void CPluginPlatesetIDs::NotifyQueryPlatesetIDs(INT nCSResult, DWORD dwCookie)
 	}
 }
 
+void CPluginPlatesetIDs::NotifySocketClosed(SOCKET sock)
+{
+	DoClearReqInfo(sock);
+}
+
 void CPluginPlatesetIDs::OnMsgEvent(int nEvent,WPARAM wParam,LPARAM lParam)
 {
 	if ( EVENT_ID_ACK_REQUEST == nEvent )
@@ -421,3 +426,22 @@ INT64 CPluginPlatesetIDs::DoCalReqPlatesetID(StockMktType eMkt, PlateClass eClas
 	return nPlatesetID;
 }
 
+void CPluginPlatesetIDs::DoClearReqInfo(SOCKET socket)
+{
+	VT_STOCK_DATA_REQ& vtReq = m_vtReqData;
+
+	//清掉socket对应的请求信息
+	auto itReq = vtReq.begin();
+	while (itReq != vtReq.end())
+	{
+		if (*itReq && (*itReq)->sock == socket)
+		{
+			delete *itReq;
+			itReq = vtReq.erase(itReq);
+		}
+		else
+		{
+			++itReq;
+		}
+	}
+}

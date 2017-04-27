@@ -425,7 +425,7 @@ interface ITradeCallBack_HK
 	* @param nCookie 请求时的Cookie.
 	* @param accInfo 账户信息结构体.
 	*/
-	virtual void OnQueryAccInfo(Trade_Env enEnv, UINT32 nCookie, const Trade_AccInfo& accInfo) = 0;
+	virtual void OnQueryAccInfo(Trade_Env enEnv, UINT32 nCookie, const Trade_AccInfo& accInfo, int nResult) = 0;
 
 	/**
 	* 查询持仓列表回调
@@ -609,7 +609,7 @@ interface ITradeCallBack_US
 	* @param nCookie 请求时的Cookie.
 	* @param accInfo 账户信息结构体.
 	*/
-	virtual void OnQueryAccInfo(UINT32 nCookie, const Trade_AccInfo& accInfo) = 0;
+	virtual void OnQueryAccInfo(UINT32 nCookie, const Trade_AccInfo& accInfo, int nResult) = 0;
 
 	/**
 	* 查询持仓列表回调

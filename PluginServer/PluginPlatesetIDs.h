@@ -17,9 +17,10 @@ public:
 	void Init(CPluginQuoteServer* pQuoteServer, IFTQuoteData*  pQuoteData);
 	void Uninit();	
 	void SetQuoteReqData(int nCmdID, const Json::Value &jsnVal, SOCKET sock);
-	
 	void NotifyQueryPlatesetIDs(INT nCSResult, DWORD dwCookie);
-	
+
+	void NotifySocketClosed(SOCKET sock);
+
 protected:	
 	//CTimerWndInterface
 	virtual void OnTimeEvent(UINT nEventID);
@@ -52,6 +53,7 @@ protected:
 
 private:
 	INT64 DoCalReqPlatesetID(StockMktType eMkt, PlateClass eClass);
+	void DoClearReqInfo(SOCKET socket);
 
 protected:
 	CPluginQuoteServer* m_pQuoteServer;

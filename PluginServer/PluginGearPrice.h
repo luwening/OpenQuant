@@ -20,6 +20,7 @@ public:
 	void SetQuoteReqData(int nCmdID, const Json::Value &jsnVal, SOCKET sock);
 	void NotifyQuoteDataUpdate(int nCmdID, INT64 nStockID);
 
+	void NotifySocketClosed(SOCKET sock);
 protected:
 	//CTimerWndInterface
 	virtual void OnTimeEvent(UINT nEventID);
@@ -61,7 +62,10 @@ protected:
 	void SetTimerClearCache(bool bStartOrStop);
 	bool GetStockMktCode(INT64 nStockID, StockMktCode &stkMktCode);
 	void ClearAllReqCache();
-	
+
+private:
+	void DoClearReqInfo(SOCKET socket);
+
 protected:
 	CPluginQuoteServer* m_pQuoteServer;
 	IFTQuoteData*		m_pQuoteData;

@@ -424,3 +424,28 @@ void CPluginBrokerQueue::PushStockData(INT64 nStockID, SOCKET sock)
 	}
 
 }
+
+void CPluginBrokerQueue::NotifySocketClosed(SOCKET sock)
+{
+	DoClearReqInfo(sock);
+}
+
+void CPluginBrokerQueue::DoClearReqInfo(SOCKET socket)
+{
+	VT_STOCK_DATA_REQ& vtReq = m_vtReqData;
+
+	//清掉socket对应的请求信息
+	auto itReq = vtReq.begin();
+	while (itReq != vtReq.end())
+	{
+		if (*itReq && (*itReq)->sock == socket)
+		{
+			delete *itReq;
+			itReq = vtReq.erase(itReq);
+		}
+		else
+		{
+			++itReq;
+		}
+	}
+}

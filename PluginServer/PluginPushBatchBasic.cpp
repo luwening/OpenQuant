@@ -113,3 +113,8 @@ void CPluginPushBatchBasic::PushStockData(INT64 nStockID, SOCKET sock)
 		}
 	}
 }
+
+void CPluginPushBatchBasic::NotifySocketClosed(SOCKET sock)
+{
+	 
+}

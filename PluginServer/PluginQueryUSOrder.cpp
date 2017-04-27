@@ -211,6 +211,11 @@ void CPluginQueryUSOrder::NotifyOnQueryUSOrder(UINT32 nCookie, INT32 nCount, con
 	delete pFindReq;
 }
 
+void CPluginQueryUSOrder::NotifySocketClosed(SOCKET sock)
+{
+	DoClearReqInfo(sock);
+}
+
 void CPluginQueryUSOrder::OnTimeEvent(UINT nEventID)
 {
 	if ( TIMER_ID_HANDLE_TIMEOUT_REQ == nEventID )
@@ -323,4 +328,25 @@ void CPluginQueryUSOrder::ClearAllReqAckData()
 	}
 
 	m_vtReqData.clear();
+}
+
+
+void CPluginQueryUSOrder::DoClearReqInfo(SOCKET socket)
+{
+	VT_REQ_TRADE_DATA& vtReq = m_vtReqData;
+
+	//清掉socket对应的请求信息
+	auto itReq = vtReq.begin();
+	while (itReq != vtReq.end())
+	{
+		if (*itReq && (*itReq)->sock == socket)
+		{
+			delete *itReq;
+			itReq = vtReq.erase(itReq);
+		}
+		else
+		{
+			++itReq;
+		}
+	}
 }

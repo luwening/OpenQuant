@@ -9,6 +9,8 @@
 
 #define EVENT_ID_ON_RECEIVE_DATA	984
 #define EVENT_ID_ON_SEND_DATA		985
+#define EVENT_ID_ON_CLOSE			986
+
 
 
 
@@ -151,19 +153,22 @@ void CPluginModule::GetPluginCallback_QuoteKL(IQuoteKLCallback** pCallback)
 	*pCallback = &m_QuoteServer;
 }
 
+//!!OnReceive多线程事件
 void CPluginModule::OnReceive(SOCKET sock)
 {
 	m_MsgHandler.SendEvent(EVENT_ID_ON_RECEIVE_DATA, sock, 0);
 }
 
+//!!OnSend多线程事件
 void CPluginModule::OnSend(SOCKET sock)
 {
 	//m_MsgHandler.SendEvent(EVENT_ID_ON_SEND_DATA, 0, 0);
 }
 
+//!!OnClose多线程事件
 void CPluginModule::OnClose(SOCKET sock)
 {
-	m_QuoteServer.CloseSocket(sock);
+	m_MsgHandler.SendEvent(EVENT_ID_ON_CLOSE, sock, 0);
 }
 
 void CPluginModule::OnMsgEvent(int nEvent,WPARAM wParam,LPARAM lParam)
@@ -171,6 +176,12 @@ void CPluginModule::OnMsgEvent(int nEvent,WPARAM wParam,LPARAM lParam)
 	if ( EVENT_ID_ON_RECEIVE_DATA == nEvent )
 	{
 		OnRecvNetData(wParam);
+	}
+	else if (EVENT_ID_ON_CLOSE == nEvent)
+	{
+		m_QuoteServer.CloseSocket(wParam);
+		m_HKTradeServer.CloseSocket(wParam);
+		m_USTradeServer.CloseSocket(wParam);
 	}
 }
 

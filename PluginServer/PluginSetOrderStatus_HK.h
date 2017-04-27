@@ -22,6 +22,8 @@ public:
 	void SetTradeReqData(int nCmdID, const Json::Value &jsnVal, SOCKET sock);
 	void NotifyOnSetOrderStatus(Trade_Env enEnv, UINT nCookie, Trade_SvrResult enSvrRet, UINT64 nOrderID, UINT16 nErrCode);
 
+	void NotifySocketClosed(SOCKET sock);
+
 protected:
 	//CTimerWndInterface 
 	virtual void OnTimeEvent(UINT nEventID);
@@ -60,6 +62,9 @@ private:
 	bool	IsReqDataExist(StockDataReq* pReq); 
 	void	DoRemoveReqData(StockDataReq* pReq);
 	void	DoTryProcessTradeOpt(StockDataReq* pReq);
+
+private:
+	void DoClearReqInfo(SOCKET socket);
 
 protected:
 	CPluginHKTradeServer	*m_pTradeServer;

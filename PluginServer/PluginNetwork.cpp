@@ -6,7 +6,7 @@
 #define new DEBUG_NEW
 #endif
 
-#define TIMEOUT_MILISECONDS		5
+#define TIMEOUT_MILISECONDS		1
 #define MIN_BUF_ALLOC_SIZE		1024*1024
 
 CPluginNetwork::CPluginNetwork()
@@ -573,8 +573,7 @@ void CPluginNetwork::AccpetLoop()
 		return;
 	}	
 
-	WSAEVENT hAccpt = WSACreateEvent();
-	WSAEventSelect(sock_lstn, hAccpt, FD_ACCEPT);
+	WSAEVENT hAccpt = WSACreateEvent();	
 	
 	//accept		
 	while ( true )
@@ -590,6 +589,8 @@ void CPluginNetwork::AccpetLoop()
 
 		ClearClosedSocket();
 
+		WSAResetEvent(hAccpt);
+		WSAEventSelect(sock_lstn, hAccpt, FD_ACCEPT);
 		DWORD dwRet = WaitForSingleObject((HANDLE)hAccpt, TIMEOUT_MILISECONDS);
 
 		if ( WAIT_OBJECT_0 == dwRet )
@@ -603,10 +604,7 @@ void CPluginNetwork::AccpetLoop()
 					closesocket(sock_accpt);
 				else
 					SetNewConnectSocket(sock_accpt);
-			}
-			WSACloseEvent(hAccpt);
-			WSAEVENT hAccpt = WSACreateEvent();
-			WSAEventSelect(sock_lstn, hAccpt, FD_ACCEPT);
+			}						
 			continue;
 		}
 		else if ( WAIT_TIMEOUT == dwRet )
@@ -620,6 +618,7 @@ void CPluginNetwork::AccpetLoop()
 		}
 	}
 
+	WSACloseEvent(hAccpt);
 	closesocket(sock_lstn);
 }
 
@@ -633,9 +632,10 @@ DWORD WINAPI CPluginNetwork::ThreadSend(LPVOID lParam)
 
 void CPluginNetwork::SendLoop()
 {
+	DWORD dwNextWaitExitTime = 0;
 	while ( true )
 	{
-		if ( WaitForSingleObject(m_hEvtNotifyExit, TIMEOUT_MILISECONDS) == WAIT_OBJECT_0 )
+		if ( WaitForSingleObject(m_hEvtNotifyExit, dwNextWaitExitTime) == WAIT_OBJECT_0 )
 		{
 			CloseHandle(m_hThreadSend);
 			m_hThreadSend = NULL;
@@ -643,6 +643,7 @@ void CPluginNetwork::SendLoop()
 		}
 		//切换线程
 		Sleep(0);
+		dwNextWaitExitTime = TIMEOUT_MILISECONDS;
 
 		//投递新数据
 		CSingleLock lock(&m_csSend, TRUE);
@@ -685,7 +686,7 @@ void CPluginNetwork::SendLoop()
 					int nErr = WSAGetLastError();
 					if ( nErr != WSA_IO_PENDING )
 					{
-						CHECK_OP(false, NOOP);
+						OutputDebugStringA("CPluginNetwork::SendLoop - nErr != WSA_IO_PENDING !\n");
 					}
 				}
 			}
@@ -713,6 +714,7 @@ void CPluginNetwork::SendLoop()
 			continue;
 		}
 		
+		dwNextWaitExitTime = 0;
 		CHECK_OP(vtEvent.size() == vtSocket.size(), NOOP);
 		DWORD dwRet = WSAWaitForMultipleEvents((DWORD)vtEvent.size(), _vect2Ptr(vtEvent), FALSE, TIMEOUT_MILISECONDS, FALSE);
 		if ( dwRet == WSA_WAIT_TIMEOUT )
@@ -780,9 +782,10 @@ DWORD WINAPI CPluginNetwork::ThreadRecv(LPVOID lParam)
 
 void CPluginNetwork::RecvLoop()
 {
+	DWORD dwNextWaitExitTime = 0;
 	while ( true )
-	{
-		if ( WaitForSingleObject(m_hEvtNotifyExit, TIMEOUT_MILISECONDS) == WAIT_OBJECT_0 )
+	{		
+		if ( WaitForSingleObject(m_hEvtNotifyExit, dwNextWaitExitTime) == WAIT_OBJECT_0 )
 		{
 			CloseHandle(m_hThreadRecv);
 			m_hThreadRecv = NULL;
@@ -790,6 +793,7 @@ void CPluginNetwork::RecvLoop()
 		}
 		//切换线程
 		Sleep(0);
+		dwNextWaitExitTime = TIMEOUT_MILISECONDS;
 
 		//投递新的接收请求
 		CSingleLock lock(&m_csRecv, TRUE);
@@ -843,7 +847,7 @@ void CPluginNetwork::RecvLoop()
 			{				
 				if ( nErr != WSA_IO_PENDING )
 				{
-					CHECK_OP(false, NOOP);
+					OutputDebugStringA("CPluginNetwork::RecvLoop -  nErr != WSA_IO_PENDING! \n");
 				}
 			}
 		}
@@ -870,7 +874,8 @@ void CPluginNetwork::RecvLoop()
 		{			
 			continue;
 		}
-
+		
+		dwNextWaitExitTime = 0;
 		CHECK_OP(vtEvent.size() == vtSocket.size(), NOOP);
 		DWORD dwRet = WSAWaitForMultipleEvents((DWORD)vtEvent.size(), _vect2Ptr(vtEvent), FALSE, TIMEOUT_MILISECONDS, FALSE);
 		if ( dwRet == WSA_WAIT_TIMEOUT )
@@ -921,7 +926,11 @@ void CPluginNetwork::RecvLoop()
 		}
 
 		VT_TRANS_DATA &vtFinishData = pInfo->vtDeliverData;
-		CHECK_OP(vtFinishData.size() == 1, NOOP);
+		if (vtFinishData.size() != 1)
+		{
+			OutputDebugStringA("PluginNetork - Check Err vtFinishData.size() !\n");
+		}
+		//CHECK_OP(vtFinishData.size() == 1, NOOP);
 		if ( !vtFinishData.empty() )
 		{
 			TransDataInfo *pData = vtFinishData[0];

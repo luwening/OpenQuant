@@ -20,6 +20,8 @@ public:
 	void SetTradeReqData(int nCmdID, const Json::Value &jsnVal, SOCKET sock);
 	void NotifyOnQueryUSOrder(UINT32 nCookie, INT32 nCount, const Trade_OrderItem* pArrOrder);
 
+	void NotifySocketClosed(SOCKET sock);
+
 protected:
 	//CTimerWndInterface 
 	virtual void OnTimeEvent(UINT nEventID);
@@ -51,6 +53,9 @@ protected:
 	
 private: 
 	bool	DoDeleteReqData(StockDataReq* pReq); 
+
+private:
+	void DoClearReqInfo(SOCKET socket);
 
 protected:
 	CPluginUSTradeServer	*m_pTradeServer;

@@ -155,6 +155,11 @@ void CPluginPlateSubIDs::NotifyQueryPlateSubIDs(INT nCSResult, DWORD dwCookie)
 	}
 }
 
+void CPluginPlateSubIDs::NotifySocketClosed(SOCKET sock)
+{
+	DoClearReqInfo(sock);
+}
+
 void CPluginPlateSubIDs::OnMsgEvent(int nEvent,WPARAM wParam,LPARAM lParam)
 {
 	if ( EVENT_ID_ACK_REQUEST == nEvent )
@@ -384,4 +389,24 @@ void CPluginPlateSubIDs::ReleaseAllReqData()
 		delete pReqData;
 	}
 	m_vtReqData.clear();
+}
+
+void CPluginPlateSubIDs::DoClearReqInfo(SOCKET socket)
+{
+	VT_STOCK_DATA_REQ& vtReq = m_vtReqData;
+
+	//清掉socket对应的请求信息
+	auto itReq = vtReq.begin();
+	while (itReq != vtReq.end())
+	{
+		if (*itReq && (*itReq)->sock == socket)
+		{
+			delete *itReq;
+			itReq = vtReq.erase(itReq);
+		}
+		else
+		{
+			++itReq;
+		}
+	}
 }

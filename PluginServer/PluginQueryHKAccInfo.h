@@ -19,7 +19,9 @@ public:
 	void Init(CPluginHKTradeServer* pTradeServer, ITrade_HK*  pTradeOp);
 	void Uninit();	
 	void SetTradeReqData(int nCmdID, const Json::Value &jsnVal, SOCKET sock);
-	void NotifyOnQueryHKAccInfo(Trade_Env enEnv, UINT32 nCookie, const Trade_AccInfo& accInfo);
+	void NotifyOnQueryHKAccInfo(Trade_Env enEnv, UINT32 nCookie, const Trade_AccInfo& accInfo, int nResult);
+
+	void NotifySocketClosed(SOCKET sock);
 
 protected:
 	//CTimerWndInterface 
@@ -27,6 +29,9 @@ protected:
 
 	//CMsgHandlerEventInterface
 	virtual void OnMsgEvent(int nEvent,WPARAM wParam,LPARAM lParam);
+
+private:
+	void DoClearReqInfo(SOCKET socket);
 
 protected:
 	//tomodify 1

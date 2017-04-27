@@ -20,6 +20,8 @@ public:
 	void SetTradeReqData(int nCmdID, const Json::Value &jsnVal, SOCKET sock);
 	void NotifyOnPlaceOrder(Trade_Env enEnv, UINT32 nCookie, Trade_SvrResult enSvrRet, UINT64 nLocalID, INT64 nErrCode);
 
+	void NotifySocketClosed(SOCKET sock);
+
 protected:
 	//CTimerWndInterface 
 	virtual void OnTimeEvent(UINT nEventID);
@@ -42,13 +44,15 @@ protected:
 	
 	typedef std::vector<StockDataReq*>		VT_REQ_TRADE_DATA;	
 	
-
 protected:	
 	void HandleTimeoutReq();
 	void HandleTradeAck(TradeAckType *pAck, SOCKET	sock);
 	void SetTimerHandleTimeout(bool bStartOrStop);
 	void ClearAllReqAckData();
 	
+private:
+	void DoClearReqInfo(SOCKET socket);
+
 protected:
 	CPluginUSTradeServer	*m_pTradeServer;
 	ITrade_US				*m_pTradeOp;	

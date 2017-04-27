@@ -255,6 +255,11 @@ void CPluginBatchBasic::NotifyQuoteDataUpdate(int nCmdID, INT64 nStockID)
 	CHECK_RET(m_pQuoteData, NORET);
 }
 
+void CPluginBatchBasic::NotifySocketClosed(SOCKET sock)
+{
+	DoClearReqInfo(sock);
+}
+
 void CPluginBatchBasic::OnTimeEvent(UINT nEventID)
 {
 	if ( TIMER_ID_CLEAR_CACHE == nEventID )
@@ -552,4 +557,36 @@ void CPluginBatchBasic::ClearAllReqCache()
 	m_mapCacheData.clear();
 	m_mapCacheToDel.clear();
 	m_mapStockIDCode.clear();
+}
+
+void CPluginBatchBasic::DoClearReqInfo(SOCKET socket)
+{
+	auto itmap = m_mapReqInfo.begin();
+	while (itmap != m_mapReqInfo.end())
+	{
+		VT_STOCK_DATA_REQ& vtReq = itmap->second;
+
+		//清掉socket对应的请求信息
+		auto itReq = vtReq.begin();
+		while (itReq != vtReq.end())
+		{
+			if (*itReq && (*itReq)->sock == socket)
+			{
+				delete *itReq;
+				itReq = vtReq.erase(itReq);
+			}
+			else
+			{
+				++itReq;
+			}
+		}
+		if (vtReq.size() == 0)
+		{
+			itmap = m_mapReqInfo.erase(itmap);
+		}
+		else
+		{
+			++itmap;
+		}
+	}
 }

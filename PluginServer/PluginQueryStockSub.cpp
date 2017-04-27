@@ -146,6 +146,11 @@ void CPluginQueryStockSub::NotifyQuoteDataUpdate(int nCmdID, INT64 nStockID)
 
 }
 
+void CPluginQueryStockSub::NotifySocketClosed(SOCKET sock)
+{
+	DoClearReqInfo(sock);
+}
+
 void CPluginQueryStockSub::OnTimeEvent(UINT nEventID)
 {
 	if ( TIMER_ID_CLEAR_CACHE == nEventID )
@@ -425,4 +430,36 @@ void CPluginQueryStockSub::ClearAllReqCache()
 	m_mapReqInfo.clear();
 	m_mapCacheData.clear();
 	m_mapCacheToDel.clear();
+}
+
+void CPluginQueryStockSub::DoClearReqInfo(SOCKET socket)
+{
+	auto itmap = m_mapReqInfo.begin();
+	while (itmap != m_mapReqInfo.end())
+	{
+		VT_STOCK_DATA_REQ& vtReq = itmap->second;
+
+		//清掉socket对应的请求信息
+		auto itReq = vtReq.begin();
+		while (itReq != vtReq.end())
+		{
+			if (*itReq && (*itReq)->sock == socket)
+			{
+				delete *itReq;
+				itReq = vtReq.erase(itReq);
+			}
+			else
+			{
+				++itReq;
+			}
+		}
+		if (vtReq.size() == 0)
+		{
+			itmap = m_mapReqInfo.erase(itmap);
+		}
+		else
+		{
+			++itmap;
+		}
+	}
 }

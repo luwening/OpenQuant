@@ -26,6 +26,8 @@ public:
 	void SetTradeReqData(int nCmdID, const Json::Value &jsnVal, SOCKET sock);
 	void ReplyTradeReq(int nCmdID, const char *pBuf, int nLen, SOCKET sock);	
 
+	void CloseSocket(SOCKET sock);
+
 protected:
 	//ITradeCallBack_US
 	virtual void OnPlaceOrder(UINT32 nCookie, Trade_SvrResult enSvrRet, UINT64 nLocalID, INT64 nErrHash);
@@ -37,7 +39,7 @@ protected:
 	//virtual void OnOrderErrNotify(Trade_Env enEnv, UINT64 nOrderID, Trade_OrderErrNotify_HK enErrNotify, UINT16 nErrCode);
 	virtual void OnQueryOrderList(UINT32 nCookie, INT32 nCount, const Trade_OrderItem* pArrOrder);
 	virtual void OnQueryDealList(UINT32 nCookie, INT32 nCount, const Trade_DealItem* pArrOrder);
-	virtual void OnQueryAccInfo(UINT32 nCookie, const Trade_AccInfo& accInfo);
+	virtual void OnQueryAccInfo(UINT32 nCookie, const Trade_AccInfo& accInfo, int nResult);
 	virtual void OnQueryPositionList(UINT32 nCookie, INT32 nCount, const Trade_PositionItem* pArrPosition);
 
 protected:
@@ -45,11 +47,14 @@ protected:
 	ITrade_US			*m_pTradeOp;	
 	IFTDataReport		*m_pDataReport;
 	CPluginNetwork		*m_pNetwork;
+
 	CPluginPlaceOrder_US	m_PlaceOrder;
 	CPluginChangeOrder_US  m_ChangeOrder;
 	CPluginSetOrderStatus_US m_SetOrderStatus;
+
 	CPluginQueryUSOrder		m_QueryUSOrder;
 	CPluginQueryUSAccInfo	m_QueryUSAcc;
 	CPluginQueryUSPosition	m_QueryPos;
+
 	CPluginQueryUSDeal		m_QueryUSDeal;
 };

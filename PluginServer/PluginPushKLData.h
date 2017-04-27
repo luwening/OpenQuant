@@ -17,6 +17,7 @@ public:
 	void Uninit();	
 	void PushStockData(INT64 nStockID, SOCKET sock, StockSubType eStockSubType);
 
+	void NotifySocketClosed(SOCKET sock);
 protected:
 	struct	StockDataReq
 	{

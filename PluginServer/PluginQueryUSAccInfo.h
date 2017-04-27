@@ -18,7 +18,9 @@ public:
 	void Init(CPluginUSTradeServer* pTradeServer, ITrade_US*  pTradeOp);
 	void Uninit();	
 	void SetTradeReqData(int nCmdID, const Json::Value &jsnVal, SOCKET sock);
-	void NotifyOnQueryUSAccInfo(Trade_Env enEnv, UINT32 nCookie, const Trade_AccInfo& accInfo);
+	void NotifyOnQueryUSAccInfo(Trade_Env enEnv, UINT32 nCookie, const Trade_AccInfo& accInfo, int nResult);
+
+	void NotifySocketClosed(SOCKET sock);
 
 protected:
 	//CTimerWndInterface 
@@ -51,6 +53,9 @@ protected:
 	
 private: 
 	bool	DoDeleteReqData(StockDataReq* pReq); 
+
+private:
+	void DoClearReqInfo(SOCKET socket);
 
 protected:
 	CPluginUSTradeServer	*m_pTradeServer;

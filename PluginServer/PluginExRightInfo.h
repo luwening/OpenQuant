@@ -19,6 +19,8 @@ public:
 	void SetQuoteReqData(int nCmdID, const Json::Value &jsnVal, SOCKET sock);
 	void NotifyQuoteDataUpdate(int nCmdID, INT64 nStockID);
 
+	void NotifySocketClosed(SOCKET sock);
+
 protected:	
 	//CMsgHandlerEventInterface
 	virtual void OnMsgEvent(int nEvent,WPARAM wParam,LPARAM lParam);
@@ -52,6 +54,9 @@ protected:
 	int  GetMarketTimezone(StockMktType eMkt);
 	void FormatTimestampToDate(int nTimestamp, int nTimezone, std::string &strFmtTime);
 	
+private:
+	void DoClearReqInfo(SOCKET socket);
+
 protected:
 	CPluginQuoteServer* m_pQuoteServer;
 	IFTQuoteData*		m_pQuoteData;

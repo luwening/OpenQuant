@@ -21,6 +21,8 @@ public:
 	void NotifyQuoteDataUpdate(int nCmdID, INT64 nStockID);
 	void PushStockData(INT64 nStockID, SOCKET sock);
 
+	void NotifySocketClosed(SOCKET sock);
+
 protected:
 	//CTimerWndInterface
 	virtual void OnTimeEvent(UINT nEventID);
@@ -56,6 +58,7 @@ protected:
 	
 private:
 	bool DoFillAckDataBody(INT64 nStockID, QuoteAckDataBody& ackbody);
+	void DoClearReqInfo(SOCKET socket);
 
 protected:
 	CPluginQuoteServer* m_pQuoteServer;

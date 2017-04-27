@@ -78,7 +78,7 @@ void CPluginSetOrderStatus_HK::SetTradeReqData(int nCmdID, const Json::Value &js
 	CProtoQuote proto;
 	CProtoQuote::ProtoReqDataType	req;
 	proto.SetProtoData_Req(&req);
-	if (req.body.nEnvType == Trade_Env_Real && !proto.ParseJson_Req(jsnVal))
+	if (!proto.ParseJson_Req(jsnVal))
 	{
 		CHECK_OP(false, NORET);
 		TradeAckType ack;
@@ -91,7 +91,7 @@ void CPluginSetOrderStatus_HK::SetTradeReqData(int nCmdID, const Json::Value &js
 		return;
 	}
 
-	if (!IManage_SecurityNum::IsSafeSocket(sock))
+	if (req.body.nEnvType == Trade_Env_Real && !IManage_SecurityNum::IsSafeSocket(sock))
 	{
 		CHECK_OP(false, NORET);
 		TradeAckType ack;
@@ -204,11 +204,13 @@ void CPluginSetOrderStatus_HK::NotifyOnSetOrderStatus(Trade_Env enEnv, UINT nCoo
 	TradeAckType ack;
 	ack.head = pFindReq->req.head;
 	ack.head.ddwErrCode = nErrCode;
-	if ( nErrCode )
+	if (nErrCode != 0 || enSvrRet != Trade_SvrResult_Succeed)
 	{
-		WCHAR szErr[256] = L"";
-		if ( m_pTradeOp->GetErrDescV2(nErrCode, szErr) )
-			CA::Unicode2UTF(szErr, ack.head.strErrDesc);
+		WCHAR szErr[256] = L"发送请求失败!";
+		if (nErrCode != 0)
+			m_pTradeOp->GetErrDescV2(nErrCode, szErr);
+
+		CA::Unicode2UTF(szErr, ack.head.strErrDesc);
 	}
 
 	//tomodify 4
@@ -222,6 +224,11 @@ void CPluginSetOrderStatus_HK::NotifyOnSetOrderStatus(Trade_Env enEnv, UINT nCoo
 
 	m_vtReqData.erase(itReq);
 	delete pFindReq;
+}
+
+void CPluginSetOrderStatus_HK::NotifySocketClosed(SOCKET sock)
+{
+	DoClearReqInfo(sock);
 }
 
 void CPluginSetOrderStatus_HK::OnTimeEvent(UINT nEventID)
@@ -394,5 +401,25 @@ void CPluginSetOrderStatus_HK::OnCvtOrderID_Local2Svr( int nResult, Trade_Env eE
 			DoTryProcessTradeOpt(pItem);
 		}
 		++it; 
+	}
+}
+
+void CPluginSetOrderStatus_HK::DoClearReqInfo(SOCKET socket)
+{
+	VT_REQ_TRADE_DATA& vtReq = m_vtReqData;
+
+	//清掉socket对应的请求信息
+	auto itReq = vtReq.begin();
+	while (itReq != vtReq.end())
+	{
+		if (*itReq && (*itReq)->sock == socket)
+		{
+			delete *itReq;
+			itReq = vtReq.erase(itReq);
+		}
+		else
+		{
+			++itReq;
+		}
 	}
 }
