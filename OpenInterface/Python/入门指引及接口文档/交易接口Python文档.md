@@ -415,7 +415,7 @@ ret_code, ret_data = tradeus_ctx.place_order(price, qty, strcode, orderside, ord
 | 0         | 买入   |
 | 1         | 卖出   |
 
-| ordertype | 交易方向    |
+| ordertype | 交易类型    |
 | --------- | ------- |
 | 1         | 市价单     |
 | 2         | 限价      |
@@ -486,7 +486,7 @@ ret_code, ret_data = tradeus_ctx.change_order(price, qty, localid=0, orderid=0)
 
 **orderid**: 订单ID。
 
-**注**: orderid、localid只用设一个非0的有效值即可。
+**注**: orderid、localid只用设一个非0的有效值即可。美股只支持撤单，无需输入status参数。
 
 **返回:**
 
