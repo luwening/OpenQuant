@@ -934,10 +934,10 @@ class SubscriptionQuery:
         return RET_OK, "", None
 
     @classmethod
-    def pack_subscription_query_req(cls):
+    def pack_subscription_query_req(cls, query):
         req = {"Protocol": "1007",
                "Version": "1",
-               "ReqParam": {}
+               "ReqParam": {"QueryAllSocket": str(query)}
                }
         req_str = json.dumps(req) + '\r\n'
         return RET_OK, "", req_str
