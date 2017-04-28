@@ -52,7 +52,8 @@ protected:
 	void ClearAllReqAckData();
 	
 private: 
-	bool	DoDeleteReqData(StockDataReq* pReq); 
+	bool DoDeleteReqData(StockDataReq* pReq); 
+	void DoGetFilterStatus(const std::string& strFilter, std::vector<int>& arStatus);
 
 private:
 	void DoClearReqInfo(SOCKET socket);
