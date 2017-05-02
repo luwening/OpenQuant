@@ -210,9 +210,6 @@ class UnlockTrade:
             error_str = ERROR_STR_PREFIX + rsp['ErrDesc']
             return RET_ERROR, error_str, None
 
-        if "Cookie" not in rsp_data:
-            return RET_ERROR, msg, None
-
         unlock_list = [{"svr_result": rsp_data["SvrResult"]}]
 
         return RET_OK, "", unlock_list
@@ -271,12 +268,7 @@ class PlaceOrder:
             error_str = ERROR_STR_PREFIX + "cannot find EnvType in client rsp: %s" % rsp_str
             return RET_ERROR, error_str, None
 
-        if 'LocalID' not in rsp_data:
-            error_str = ERROR_STR_PREFIX + "cannot find LocalID in client rsp: %s" % rsp_str
-            return RET_ERROR, error_str, None
-
-        place_order_list = [{'envtype': rsp_data['EnvType'],
-                             'localID': rsp_data['LocalID']
+        place_order_list = [{'envtype': rsp_data['EnvType']
                              }]
 
         return RET_OK, "", place_order_list
@@ -326,12 +318,7 @@ class PlaceOrder:
             error_str = ERROR_STR_PREFIX + "cannot find EnvType in client rsp: %s" % rsp_str
             return RET_ERROR, error_str, None
 
-        if 'LocalID' not in rsp_data:
-            error_str = ERROR_STR_PREFIX + "cannot find LocalID in client rsp: %s" % rsp_str
-            return RET_ERROR, error_str, None
-
-        place_order_list = [{'envtype': rsp_data['EnvType'],
-                             'localID': rsp_data['LocalID']
+        place_order_list = [{'envtype': rsp_data['EnvType']
                              }]
 
         return RET_OK, "", place_order_list
@@ -384,16 +371,11 @@ class SetOrderStatus:
             error_str = ERROR_STR_PREFIX + "cannot find EnvType in client rsp: %s" % rsp_str
             return RET_ERROR, error_str, None
 
-        if 'LocalID' not in rsp_data:
-            error_str = ERROR_STR_PREFIX + "cannot find LocalID in client rsp: %s" % rsp_str
-            return RET_ERROR, error_str, None
-
         if 'OrderID' not in rsp_data:
             error_str = ERROR_STR_PREFIX + "cannot find OrderID in client rsp: %s" % rsp_str
             return RET_ERROR, error_str, None
 
         set_order_list = [{'envtype': rsp_data['EnvType'],
-                           'localID': rsp_data['LocalID'],
                            'orderID': rsp_data['OrderID']
                            }]
 
@@ -434,16 +416,11 @@ class SetOrderStatus:
             error_str = ERROR_STR_PREFIX + "cannot find EnvType in client rsp: %s" % rsp_str
             return RET_ERROR, error_str, None
 
-        if 'LocalID' not in rsp_data:
-            error_str = ERROR_STR_PREFIX + "cannot find LocalID in client rsp: %s" % rsp_str
-            return RET_ERROR, error_str, None
-
         if 'OrderID' not in rsp_data:
             error_str = ERROR_STR_PREFIX + "cannot find OrderID in client rsp: %s" % rsp_str
             return RET_ERROR, error_str, None
 
         set_order_list = [{'envtype': rsp_data['EnvType'],
-                           'localID': rsp_data['LocalID'],
                            'orderID': rsp_data['OrderID']
                            }]
 
@@ -494,16 +471,11 @@ class ChangeOrder:
             error_str = ERROR_STR_PREFIX + "cannot find EnvType in client rsp: %s" % rsp_str
             return RET_ERROR, error_str, None
 
-        if 'LocalID' not in rsp_data:
-            error_str = ERROR_STR_PREFIX + "cannot find LocalID in client rsp: %s" % rsp_str
-            return RET_ERROR, error_str, None
-
         if 'OrderID' not in rsp_data:
             error_str = ERROR_STR_PREFIX + "cannot find OrderID in client rsp: %s" % rsp_str
             return RET_ERROR, error_str, None
 
         change_order_list = [{'envtype': rsp_data['EnvType'],
-                              'localID': rsp_data['LocalID'],
                               'orderID': rsp_data['OrderID']
                               }]
 
@@ -545,16 +517,11 @@ class ChangeOrder:
             error_str = ERROR_STR_PREFIX + "cannot find EnvType in client rsp: %s" % rsp_str
             return RET_ERROR, error_str, None
 
-        if 'LocalID' not in rsp_data:
-            error_str = ERROR_STR_PREFIX + "cannot find LocalID in client rsp: %s" % rsp_str
-            return RET_ERROR, error_str, None
-
         if 'OrderID' not in rsp_data:
             error_str = ERROR_STR_PREFIX + "cannot find OrderID in client rsp: %s" % rsp_str
             return RET_ERROR, error_str, None
 
         change_order_list = [{'envtype': rsp_data['EnvType'],
-                              'localID': rsp_data['LocalID'],
                               'orderID': rsp_data['OrderID']
                               }]
 
@@ -696,12 +663,11 @@ class OrderListQuery:
         if raw_order_list is None or len(raw_order_list) == 0:
             return RET_OK, "", []
 
-        order_list = [{"stock_code": merge_stock_str(1, order['StockCode']),
+        order_list = [{"code": merge_stock_str(1, order['StockCode']),
                        "stock_name": order["StockName"],
                        "dealt_avg_price": float(order['DealtAvgPrice'])/1000,
                        "dealt_qty": order['DealtQty'],
                        "qty": order['Qty'],
-                       "localid": order['LocalID'],
                        "orderid": order['OrderID'],
                        "order_type": order['OrderType'],
                        "order_side": order['OrderSide'],
@@ -743,12 +709,11 @@ class OrderListQuery:
         if raw_order_list is None or len(raw_order_list) == 0:
             return RET_OK, "", []
 
-        order_list = [{"stock_code": merge_stock_str(2, order['StockCode']),
+        order_list = [{"code": merge_stock_str(2, order['StockCode']),
                        "stock_name": order["StockName"],
                        "dealt_avg_price": float(order['DealtAvgPrice'])/1000,
                        "dealt_qty": order['DealtQty'],
                        "qty": order['Qty'],
-                       "localid": order['LocalID'],
                        "orderid": order['OrderID'],
                        "order_type": order['OrderType'],
                        "order_side": order['OrderSide'],
@@ -801,7 +766,7 @@ class PositionListQuery:
         if raw_position_list is None or len(raw_position_list) == 0:
             return RET_OK, "", []
 
-        position_list = [{"stock_code": merge_stock_str(1, position['StockCode']),
+        position_list = [{"code": merge_stock_str(1, position['StockCode']),
                           "stock_name": position["StockName"],
                           "qty": position['Qty'],
                           "can_sell_qty": position['CanSellQty'],
@@ -851,7 +816,7 @@ class PositionListQuery:
         if raw_position_list is None or len(raw_position_list) == 0:
             return RET_OK, "", []
 
-        position_list = [{"stock_code": merge_stock_str(2, position['StockCode']),
+        position_list = [{"code": merge_stock_str(2, position['StockCode']),
                           "stock_name": position["StockName"],
                           "qty": position['Qty'],
                           "can_sell_qty": position['CanSellQty'],
@@ -913,7 +878,7 @@ class DealListQuery:
         if raw_deal_list is None or len(raw_deal_list) == 0:
             return RET_OK, "", []
 
-        deal_list = [{"stock_code": merge_stock_str(1, deal['StockCode']),
+        deal_list = [{"code": merge_stock_str(1, deal['StockCode']),
                       "stock_name": deal["StockName"],
                       "dealid": deal['DealID'],
                       "orderid": deal['OrderID'],
@@ -954,7 +919,7 @@ class DealListQuery:
         if raw_deal_list is None or len(raw_deal_list) == 0:
             return RET_OK, "", []
 
-        deal_list = [{"stock_code": merge_stock_str(2, deal['StockCode']),
+        deal_list = [{"code": merge_stock_str(2, deal['StockCode']),
                       "stock_name": deal["StockName"],
                       "dealid": deal['DealID'],
                       "orderid": deal['OrderID'],

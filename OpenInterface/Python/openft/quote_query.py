@@ -1149,7 +1149,7 @@ class TickerQuery:
             return RET_OK, "", []
 
         stock_code = merge_stock_str(int(rsp_data['Market']), rsp_data['StockCode'])
-        ticker_list = [{"stock_code": stock_code,
+        ticker_list = [{"code": stock_code,
                         "time":  record['Time'],
                         "price": float(record['Price'])/1000,
                         "volume": record['Volume'],

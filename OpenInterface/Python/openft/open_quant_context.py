@@ -80,7 +80,7 @@ class TickerHandlerBase(RspHandlerBase):
             return ret_code, msg
         else:
 
-            col_list = ['stock_code', 'time', 'price', 'volume', 'turnover', "ticker_direction", 'sequence']
+            col_list = ['code', 'time', 'price', 'volume', 'turnover', "ticker_direction", 'sequence']
             ticker_frame_table = pd.DataFrame(ticker_list, columns=col_list)
 
             return RET_OK, ticker_frame_table
@@ -853,7 +853,7 @@ class OpenQuoteContext:
         if ret_code == RET_ERROR:
             return ret_code, msg
 
-        col_list = ['stock_code', 'time', 'price', 'volume', 'turnover', "ticker_direction", 'sequence']
+        col_list = ['code', 'time', 'price', 'volume', 'turnover', "ticker_direction", 'sequence']
         ticker_frame_table = pd.DataFrame(ticker_list, columns=col_list)
 
         return RET_OK, ticker_frame_table
@@ -986,12 +986,12 @@ class OpenHKTradeContext:
         if ret_code != RET_OK:
             return RET_ERROR, msg
 
-        col_list = ['envtype', 'localID']
+        col_list = ['envtype']
         place_order_table = pd.DataFrame(place_order_list, columns=col_list)
 
         return RET_OK, place_order_table
 
-    def set_order_status(self, status, localid=0, orderid=0, envtype=0):
+    def set_order_status(self, status, orderid=0, envtype=0):
         if int(status) not in rev_order_status:
             error_str = ERROR_STR_PREFIX + "the type of status is wrong "
             return RET_ERROR, error_str
@@ -1004,19 +1004,19 @@ class OpenHKTradeContext:
                                                          SetOrderStatus.hk_unpack_rsp)
 
         # the keys of kargs should be corresponding to the actual function arguments
-        kargs = {'cookie': str(self.cookie), 'envtype': str(envtype), 'localid': str(localid),
+        kargs = {'cookie': str(self.cookie), 'envtype': str(envtype), 'localid': str(0),
                  'orderid': str(orderid), 'status': str(status)}
 
         ret_code, msg, set_order_list = query_processor(**kargs)
         if ret_code != RET_OK:
             return RET_ERROR, msg
 
-        col_list = ['envtype', 'localID', 'orderID']
+        col_list = ['envtype', 'orderID']
         set_order_table = pd.DataFrame(set_order_list, columns=col_list)
 
         return RET_OK, set_order_table
 
-    def change_order(self, price, qty, localid=0, orderid=0, envtype=0):
+    def change_order(self, price, qty, orderid=0, envtype=0):
         if int(envtype) not in rev_envtype_map:
             error_str = ERROR_STR_PREFIX + "the type of environment param is wrong "
             return RET_ERROR, error_str
@@ -1025,14 +1025,14 @@ class OpenHKTradeContext:
                                                          ChangeOrder.hk_unpack_rsp)
 
         # the keys of kargs should be corresponding to the actual function arguments
-        kargs = {'cookie': str(self.cookie), 'envtype': str(envtype), 'localid': str(localid),
+        kargs = {'cookie': str(self.cookie), 'envtype': str(envtype), 'localid': str(0),
                  'orderid': str(orderid), 'price': str(price), 'qty': str(qty)}
 
         ret_code, msg, change_order_list = query_processor(**kargs)
         if ret_code != RET_OK:
             return RET_ERROR, msg
 
-        col_list = ['envtype', 'localID', 'orderID']
+        col_list = ['envtype', 'orderID']
         change_order_table = pd.DataFrame(change_order_list, columns=col_list)
 
         return RET_OK, change_order_table
@@ -1078,8 +1078,8 @@ class OpenHKTradeContext:
         if ret_code != RET_OK:
             return RET_ERROR, msg
 
-        col_list = ["stock_code", "stock_name", "dealt_avg_price", "dealt_qty", "qty",
-                    "localid", "orderid", "order_type", "order_side", "price",
+        col_list = ["code", "stock_name", "dealt_avg_price", "dealt_qty", "qty",
+                    "orderid", "order_type", "order_side", "price",
                     "status", "submited_time", "updated_time"]
 
         order_list_table = pd.DataFrame(order_list, columns=col_list)
@@ -1101,7 +1101,7 @@ class OpenHKTradeContext:
         if ret_code != RET_OK:
             return RET_ERROR, msg
 
-        col_list = ["stock_code", "stock_name", "qty", "can_sell_qty", "cost_price",
+        col_list = ["code", "stock_name", "qty", "can_sell_qty", "cost_price",
                     "cost_price_valid", "market_val", "nominal_price", "pl_ratio",
                     "pl_ratio_valid", "pl_val", "pl_val_valid", "today_buy_qty",
                     "today_buy_val", "today_pl_val", "today_sell_qty", "today_sell_val"]
@@ -1125,7 +1125,7 @@ class OpenHKTradeContext:
         if ret_code != RET_OK:
             return RET_ERROR, msg
 
-        col_list = ["stock_code", "stock_name", "dealid", "orderid",
+        col_list = ["code", "stock_name", "dealid", "orderid",
                     "qty", "price", "orderside", "time"]
 
         deal_list_table = pd.DataFrame(deal_list, columns=col_list)
@@ -1206,12 +1206,12 @@ class OpenUSTradeContext:
         if ret_code != RET_OK:
             return RET_ERROR, msg
 
-        col_list = ['envtype', 'localID']
+        col_list = ['envtype']
         place_order_table = pd.DataFrame(place_order_list, columns=col_list)
 
         return RET_OK, place_order_table
 
-    def set_order_status(self, status=0, localid=0, orderid=0, envtype=0):
+    def set_order_status(self, status=0, orderid=0, envtype=0):
         if int(envtype) != 0:
             error_str = ERROR_STR_PREFIX + "us stocks temporarily only support real trading "
             return RET_ERROR, error_str
@@ -1224,19 +1224,19 @@ class OpenUSTradeContext:
                                                          SetOrderStatus.us_unpack_rsp)
 
         # the keys of kargs should be corresponding to the actual function arguments
-        kargs = {'cookie': str(self.cookie), 'envtype': '0', 'localid': str(localid),
+        kargs = {'cookie': str(self.cookie), 'envtype': '0', 'localid': str(0),
                  'orderid': str(orderid), 'status': '0'}
 
         ret_code, msg, set_order_list = query_processor(**kargs)
         if ret_code != RET_OK:
             return RET_ERROR, msg
 
-        col_list = ['envtype', 'localID', 'orderID']
+        col_list = ['envtype', 'orderID']
         set_order_table = pd.DataFrame(set_order_list, columns=col_list)
 
         return RET_OK, set_order_table
 
-    def change_order(self, price, qty, localid=0, orderid=0, envtype=0):
+    def change_order(self, price, qty, orderid=0, envtype=0):
         if int(envtype) != 0:
             error_str = ERROR_STR_PREFIX + "us stocks temporarily only support real trading "
             return RET_ERROR, error_str
@@ -1245,14 +1245,14 @@ class OpenUSTradeContext:
                                                          ChangeOrder.us_unpack_rsp)
 
         # the keys of kargs should be corresponding to the actual function arguments
-        kargs = {'cookie': str(self.cookie), 'envtype': '0', 'localid': str(localid),
+        kargs = {'cookie': str(self.cookie), 'envtype': '0', 'localid': str(0),
                  'orderid': str(orderid), 'price': str(price), 'qty': str(qty)}
 
         ret_code, msg, change_order_list = query_processor(**kargs)
         if ret_code != RET_OK:
             return RET_ERROR, msg
 
-        col_list = ['envtype', 'localID', 'orderID']
+        col_list = ['envtype', 'orderID']
         change_order_table = pd.DataFrame(change_order_list, columns=col_list)
 
         return RET_OK, change_order_table
@@ -1292,8 +1292,8 @@ class OpenUSTradeContext:
         if ret_code != RET_OK:
             return RET_ERROR, msg
 
-        col_list = ["stock_code", "stock_name", "dealt_avg_price", "dealt_qty", "qty",
-                    "localid", "orderid", "order_type", "order_side", "price",
+        col_list = ["code", "stock_name", "dealt_avg_price", "dealt_qty", "qty",
+                    "orderid", "order_type", "order_side", "price",
                     "status", "submited_time", "updated_time"]
 
         order_list_table = pd.DataFrame(order_list, columns=col_list)
@@ -1315,7 +1315,7 @@ class OpenUSTradeContext:
         if ret_code != RET_OK:
             return RET_ERROR, msg
 
-        col_list = ["stock_code", "stock_name", "qty", "can_sell_qty", "cost_price",
+        col_list = ["code", "stock_name", "qty", "can_sell_qty", "cost_price",
                     "cost_price_valid", "market_val", "nominal_price", "pl_ratio",
                     "pl_ratio_valid", "pl_val", "pl_val_valid", "today_buy_qty",
                     "today_buy_val", "today_pl_val", "today_sell_qty", "today_sell_val"]
@@ -1339,7 +1339,7 @@ class OpenUSTradeContext:
         if ret_code != RET_OK:
             return RET_ERROR, msg
 
-        col_list = ["stock_code", "stock_name", "dealid", "orderid",
+        col_list = ["code", "stock_name", "dealid", "orderid",
                     "qty", "price", "orderside", "time"]
 
         deal_list_table = pd.DataFrame(deal_list, columns=col_list)
