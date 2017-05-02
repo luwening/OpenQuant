@@ -436,7 +436,6 @@ ret_code失败时，ret_data返回为错误描述字符串；
 **volume**：	成交数量； long
 **turnover**：	成交金额；float
 **turnover_rate**：	换手率；float
-**amplitude**：	  振幅；float 
 **suspension**：	  是否停牌(True表示停牌)；bool
 **listing_date** ：  上市日期 (yyyy-MM-dd)；string
 **circular_market_val**：  流通市值；float
