@@ -82,7 +82,6 @@ ret_code失败时，ret_data返回为错误描述字符串；
 
 **envtype**: 交易环境参数。0是真实交易，1是仿真交易
 
-**localid**：订单的本地标识。用户自己管理，用来改单、设置订单状态等。
 
 **失败情况**：
 
@@ -95,7 +94,7 @@ ret_code失败时，ret_data返回为错误描述字符串；
 ### 设置订单状态 set_order_status
 
 ```python
-ret_code, ret_data = tradehk_ctx.set_order_status(status, localid=0, orderid=0, envtype=0)
+ret_code, ret_data = tradehk_ctx.set_order_status(status, orderid=0, envtype=0)
 ```
 
 **功能**：更改某指定港股订单状态。
@@ -104,13 +103,10 @@ ret_code, ret_data = tradehk_ctx.set_order_status(status, localid=0, orderid=0, 
 
 **status**: 更改状态的类型。如下表所示。
 
-**localid**: 订单的本地标识。
-
 **orderid**: 订单ID。
 
 **envtype**: 交易环境参数。如下表所示。
 
-**注**: orderid、localid只用设一个非0的有效值即可。
 
 | status | 更改状态的类型 |
 | ------ | ------- |
@@ -131,8 +127,6 @@ ret_code失败时，ret_data返回为错误描述字符串；
 
 **envtype**: 交易环境参数。0是真实交易，1是仿真交易
 
-**localid**: 订单的本地标识。
-
 **orderid**: 订单ID。
 
 **失败情况**：
@@ -146,7 +140,7 @@ ret_code失败时，ret_data返回为错误描述字符串；
 ### 修改订单 change_order
 
 ```python
-ret_code, ret_data = tradehk_ctx.change_order(price, qty, localid=0, orderid=0, envtype=0)
+ret_code, ret_data = tradehk_ctx.change_order(price, qty, orderid=0, envtype=0)
 ```
 
 **功能**：修改某指定港股订单。
@@ -157,13 +151,9 @@ ret_code, ret_data = tradehk_ctx.change_order(price, qty, localid=0, orderid=0, 
 
 **qty**: 交易数量。
 
-**localid**: 订单的本地标识。
-
 **orderid**: 订单ID。
 
 **envtype**: 交易环境参数。如下表所示。
-
-**注**: orderid、localid只用设一个非0的有效值即可。
 
 | envtype | 交易环境参数 |
 | ------- | ------ |
@@ -176,8 +166,6 @@ ret_code失败时，ret_data返回为错误描述字符串；
 正常情况下，ret_code为0，ret_data为一个dataframe, 其中包括：
 
 **envtype**: 交易环境参数。0是真实交易，1是仿真交易
-
-**localid**: 订单的本地标识。
 
 **orderid**: 订单ID。
 
@@ -229,14 +217,14 @@ ret_code失败时，ret_data返回为错误描述字符串；
 ### 查询订单列表 order_list_query
 
 ```python
-ret_code, ret_data = tradehk_ctx.order_list_query(statusfilter="0,1,2", envtype=0)
+ret_code, ret_data = tradehk_ctx.order_list_query(statusfilter="", envtype=0)
 ```
 
 **功能**：查询港股今日订单列表。
 
 **参数**：
 
-**statusfilter**: 状态过滤字符串，为空返回全部订单，","分隔需要返回的状态，如下表所示
+**statusfilter**: 状态过滤字符串，为空返回全部订单，","分隔需要返回的状态，如"1,2,3"返回的是等待成交，部分成交以及全部成交的订单，状态如下表所示
 
 | statusfilter | 返回订单的状态                  | statusfilter | 返回订单的状态  |
 | :----- | :------------------------------------ | :----- | :---- |
@@ -262,7 +250,7 @@ ret_code失败时，ret_data返回为错误描述字符串；
 
 | 返回字符串           | 说明           | 返回字符串         | 说明   |
 | :-------------- | :----------- | :------------ | :--- |
-| stock_code      | 股票ID哈希值      | stock_name    | 股票名称 |
+| code      | 股票ID                 | stock_name    | 股票名称 |
 | dealt_avg_price | 成交均价         | dealt_qty     | 成交数量 |
 | localid         | 订单本地标识       | orderid       | 订单ID |
 | order_type      | 交易类型         | price         | 交易价格 |
@@ -322,7 +310,7 @@ ret_code失败时，ret_data返回为错误描述字符串；
 
 | 返回字符串          | 说明      | 返回字符串            | 说明             |
 | :------------- | :------ | :--------------- | :------------- |
-| stock_code     | 股票ID哈希值 | stock_name       | 股票名称           |
+| code     | 股票ID            | stock_name       | 股票名称           |
 | qty            | 持有数量    | can_sell_qty     | 可卖数量           |
 | cost_price     | 成本价     | cost_price_valid | 成本价是否有效(非0有效)  |
 | market_val     | 市值      | nominal_price    | 市价             |
@@ -361,7 +349,7 @@ ret_code, ret_data = tradehk_ctx.deal_list_query(envtype=0)
 ret_code失败时，ret_data返回为错误描述字符串；
 正常情况下，ret_code为0，ret_data为一个dataframe, 其中包括：
 
-**stock_code**: 股票代码。
+**code**: 股票代码。
 
 **stock_name**: 股票名称。
 
@@ -465,8 +453,6 @@ ret_code失败时，ret_data返回为错误描述字符串；
 
 **envtype**: 环境参数，0是真实环境，1是仿真环境。
 
-**localid**：订单的本地标识。用户自己管理，用来改单、设置订单状态等。
-
 **失败情况**：
 
 1. 参数错误
@@ -478,7 +464,7 @@ ret_code失败时，ret_data返回为错误描述字符串；
 ### 设置订单状态 set_order_status
 
 ```python
-ret_code, ret_data = tradeus_ctx.set_order_status(status=0, localid=0, orderid=0, envtype=0)
+ret_code, ret_data = tradeus_ctx.set_order_status(status=0, orderid=0, envtype=0)
 ```
 
 **功能**：更改某指定美股订单状态。美股暂时不支持仿真交易。
@@ -487,13 +473,9 @@ ret_code, ret_data = tradeus_ctx.set_order_status(status=0, localid=0, orderid=0
 
 **status**: 美股暂时只支持撤单，status的值只能为0。
 
-**localid**: 订单的本地标识。
-
 **orderid**: 订单ID。
 
 **envtype**: 环境参数，0是真实环境，1是仿真环境。
-
-**注**: orderid、localid只用设一个非0的有效值即可。
 
 **返回:**
 
@@ -501,8 +483,6 @@ ret_code失败时，ret_data返回为错误描述字符串；
 正常情况下，ret_code为0，ret_data为一个dataframe, 其中包括：
 
 **envtype**: 环境参数，0是真实环境，1是仿真环境。
-
-**localid**: 订单的本地标识。
 
 **orderid**: 订单ID。
 
@@ -519,7 +499,7 @@ ret_code失败时，ret_data返回为错误描述字符串；
 ### 修改订单 change_order
 
 ```python
-ret_code, ret_data = tradeus_ctx.change_order(price, qty, localid=0, orderid=0, envtype=0)
+ret_code, ret_data = tradeus_ctx.change_order(price, qty, orderid=0, envtype=0)
 ```
 
 **功能**：修改某指定美股订单。美股暂时不支持仿真交易。
@@ -530,13 +510,9 @@ ret_code, ret_data = tradeus_ctx.change_order(price, qty, localid=0, orderid=0, 
 
 **qty**: 交易数量。
 
-**localid**: 订单的本地标识。
-
 **orderid**: 订单ID。
 
 **envtype**: 环境参数，0是真实环境，1是仿真环境。
-
-**注**: orderid、localid只用设一个非0的有效值即可。美股只支持撤单，无需输入status参数。
 
 **返回:**
 
@@ -544,8 +520,6 @@ ret_code失败时，ret_data返回为错误描述字符串；
 正常情况下，ret_code为0，ret_data为一个dataframe, 其中包括：
 
 **envtype**: 环境参数，0是真实环境，1是仿真环境。
-
-**localid**: 订单的本地标识。
 
 **orderid**: 订单ID。
 
@@ -563,11 +537,11 @@ ret_code失败时，ret_data返回为错误描述字符串；
 ret_code, ret_data = tradeus_ctx.accinfo_query(envtype=0)
 ```
 
-**功能**：查询美股账户信息。
+**功能**：查询美股账户信息。美股暂时不支持仿真环境
 
 **参数**：
 
-**envtype**: 环境参数，0是真实环境，1是仿真环境，美股暂时不支持仿真环境。
+**envtype**: 环境参数，0是真实环境，1是仿真环境。
 
 **返回:**
 
@@ -592,14 +566,14 @@ ret_code失败时，ret_data返回为错误描述字符串；
 ### 查询订单列表 order_list_query
 
 ```python
-ret_code, ret_data = tradeus_ctx.order_list_query(statusfilter="0,1,2", envtype=0)
+ret_code, ret_data = tradeus_ctx.order_list_query(statusfilter="", envtype=0)
 ```
 
 **功能**：查询美股今日订单列表。美股暂时不支持仿真环境。
 
 **参数**：
 
-**statusfilter**: 状态过滤字符串，默认为空返回全部订单，","分隔需要返回的状态，如下表所示
+**statusfilter**: 状态过滤字符串，默认为空返回全部订单，","分隔需要返回的状态，如"1,2,3"返回的是等待成交，部分成交以及全部成交的订单，如下表所示
 
 | statusfilter | 返回订单的状态                  | statusfilter | 返回订单的状态  |
 | :----- | :------------------------------------ | :----- | :---- |
@@ -620,7 +594,7 @@ ret_code失败时，ret_data返回为错误描述字符串；
 
 | 返回字符串           | 说明           | 返回字符串         | 说明   |
 | :-------------- | :----------- | :------------ | :--- |
-| stock_code      | 股票ID哈希值      | stock_name    | 股票名称 |
+| code      | 股票ID                 | stock_name    | 股票名称 |
 | dealt_avg_price | 成交均价         | dealt_qty     | 成交数量 |
 | localid         | 订单本地标识       | orderid       | 订单ID |
 | order_type      | 交易类型         | price         | 交易价格 |
@@ -676,7 +650,7 @@ ret_code失败时，ret_data返回为错误描述字符串；
 
 | 返回字符串          | 说明      | 返回字符串            | 说明             |
 | :------------- | :------ | :--------------- | :------------- |
-| stock_code     | 股票ID哈希值 | stock_name       | 股票名称           |
+| code     | 股票ID            | stock_name       | 股票名称           |
 | qty            | 持有数量    | can_sell_qty     | 可卖数量           |
 | cost_price     | 成本价     | cost_price_valid | 成本价是否有效(非0有效)  |
 | market_val     | 市值      | nominal_price    | 市价             |
@@ -710,7 +684,7 @@ ret_code, ret_data = tradeus_ctx.deal_list_query(envtype=0)
 ret_code失败时，ret_data返回为错误描述字符串；
 正常情况下，ret_code为0，ret_data为一个dataframe, 其中包括：
 
-**stock_code**: 股票代码。
+**code**: 股票代码。
 
 **stock_name**: 股票名称。
 
