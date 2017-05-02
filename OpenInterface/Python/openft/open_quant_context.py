@@ -198,7 +198,7 @@ class _SyncNetworkQueryCtx:
         s = sock.socket(sock.AF_INET, sock.SOCK_STREAM)
         s.setsockopt(sock.SOL_SOCKET, sock.SO_REUSEADDR, 1)
         s.setsockopt(sock.SOL_SOCKET, sock.SO_LINGER, 0)
-        s.settimeout(5)
+        s.settimeout(10)
         self.s = s
 
         try:
@@ -928,7 +928,6 @@ class OpenHKTradeContext:
         return RET_OK, msg, content
 
     def _get_sync_query_processor(self, pack_func, unpack_func):
-
         send_req = self._send_sync_req
 
         def sync_query_processor(**kargs):
@@ -949,60 +948,94 @@ class OpenHKTradeContext:
         return sync_query_processor
 
     def unlock_trade(self, password):
-
         query_processor = self._get_sync_query_processor(UnlockTrade.pack_req,
                                                          UnlockTrade.unpack_rsp)
 
         # the keys of kargs should be corresponding to the actual function arguments
         kargs = {'cookie': str(self.cookie), 'password': str(password)}
-        ret_code, msg, ret = query_processor(**kargs)
 
+        ret_code, msg, unlock_list = query_processor(**kargs)
         if ret_code != RET_OK:
             return RET_ERROR, msg
 
-        return RET_OK, ret
+        return RET_OK, None
 
     def place_order(self, price, qty, strcode, orderside, ordertype=0, envtype=0):
+        if int(envtype) not in rev_envtype_map:
+            error_str = ERROR_STR_PREFIX + "the type of environment param is wrong "
+            return RET_ERROR, error_str
+
+        ret_code, content = split_stock_str(strcode)
+        if ret_code == RET_ERROR:
+            error_str = content
+            return RET_ERROR, error_str, None
+
+        market_code, stock_code = content
+        if int(market_code) != 1:
+            error_str = ERROR_STR_PREFIX + "the type of stocks is wrong "
+            return RET_ERROR, error_str
+
         query_processor = self._get_sync_query_processor(PlaceOrder.hk_pack_req,
                                                          PlaceOrder.hk_unpack_rsp)
 
         # the keys of kargs should be corresponding to the actual function arguments
         kargs = {'cookie': str(self.cookie), 'envtype': str(envtype), 'orderside': str(orderside),
-                 'ordertype': str(ordertype), 'price': str(price), 'qty': str(qty), 'strcode': str(strcode)}
-        ret_code, msg, ret = query_processor(**kargs)
+                 'ordertype': str(ordertype), 'price': str(price), 'qty': str(qty), 'strcode': str(stock_code)}
 
+        ret_code, msg, place_order_list = query_processor(**kargs)
         if ret_code != RET_OK:
             return RET_ERROR, msg
 
-        return RET_OK, ret
+        col_list = ['envtype', 'localID']
+        place_order_table = pd.DataFrame(place_order_list, columns=col_list)
+
+        return RET_OK, place_order_table
 
     def set_order_status(self, status, localid=0, orderid=0, envtype=0):
+        if int(status) not in rev_order_status:
+            error_str = ERROR_STR_PREFIX + "the type of status is wrong "
+            return RET_ERROR, error_str
+
+        if int(envtype) not in rev_envtype_map:
+            error_str = ERROR_STR_PREFIX + "the type of environment param is wrong "
+            return RET_ERROR, error_str
+
         query_processor = self._get_sync_query_processor(SetOrderStatus.hk_pack_req,
                                                          SetOrderStatus.hk_unpack_rsp)
 
         # the keys of kargs should be corresponding to the actual function arguments
         kargs = {'cookie': str(self.cookie), 'envtype': str(envtype), 'localid': str(localid),
                  'orderid': str(orderid), 'status': str(status)}
-        ret_code, msg, ret = query_processor(**kargs)
 
+        ret_code, msg, set_order_list = query_processor(**kargs)
         if ret_code != RET_OK:
             return RET_ERROR, msg
 
-        return RET_OK, ret
+        col_list = ['envtype', 'localID', 'orderID']
+        set_order_table = pd.DataFrame(set_order_list, columns=col_list)
+
+        return RET_OK, set_order_table
 
     def change_order(self, price, qty, localid=0, orderid=0, envtype=0):
+        if int(envtype) not in rev_envtype_map:
+            error_str = ERROR_STR_PREFIX + "the type of environment param is wrong "
+            return RET_ERROR, error_str
+
         query_processor = self._get_sync_query_processor(ChangeOrder.hk_pack_req,
                                                          ChangeOrder.hk_unpack_rsp)
 
         # the keys of kargs should be corresponding to the actual function arguments
         kargs = {'cookie': str(self.cookie), 'envtype': str(envtype), 'localid': str(localid),
                  'orderid': str(orderid), 'price': str(price), 'qty': str(qty)}
-        ret_code, msg, ret = query_processor(**kargs)
 
+        ret_code, msg, change_order_list = query_processor(**kargs)
         if ret_code != RET_OK:
             return RET_ERROR, msg
 
-        return RET_OK, ret
+        col_list = ['envtype', 'localID', 'orderID']
+        change_order_table = pd.DataFrame(change_order_list, columns=col_list)
+
+        return RET_OK, change_order_table
 
     def accinfo_query(self, envtype=0):
         """
@@ -1011,30 +1044,41 @@ class OpenHKTradeContext:
         :param envtype: trading environment parameters,0 means real transaction and 1 means simulation trading
         :return:error return RET_ERROR,msg and ok return RET_OK,ret
         """
+        if int(envtype) not in rev_envtype_map:
+            error_str = ERROR_STR_PREFIX + "the type of environment param is wrong "
+            return RET_ERROR, error_str
+
         query_processor = self._get_sync_query_processor(AccInfoQuery.hk_pack_req,
                                                          AccInfoQuery.hk_unpack_rsp)
 
         # the keys of kargs should be corresponding to the actual function arguments
         kargs = {'cookie': str(self.cookie), 'envtype': str(envtype)}
-        ret_code, msg, ret = query_processor(**kargs)
 
+        ret_code, msg, accinfo_list = query_processor(**kargs)
         if ret_code != RET_OK:
             return RET_ERROR, msg
 
-        return RET_OK, ret
+        col_list = ['Power', 'ZCJZ', 'ZQSZ', 'XJJY', 'KQXJ', 'DJZJ', 'ZSJE', 'ZGJDE', 'YYJDE', 'GPBZJ']
+        accinfo_frame_table = pd.DataFrame(accinfo_list, columns=col_list)
 
-    def order_list_query(self, envtype=0):
+        return RET_OK, accinfo_frame_table
+
+    def order_list_query(self, statusfilter="", envtype=0):
+        if int(envtype) not in rev_envtype_map:
+            error_str = ERROR_STR_PREFIX + "the type of environment param is wrong "
+            return RET_ERROR, error_str
+
         query_processor = self._get_sync_query_processor(OrderListQuery.hk_pack_req,
                                                          OrderListQuery.hk_unpack_rsp)
 
         # the keys of kargs should be corresponding to the actual function arguments
-        kargs = {'cookie': str(self.cookie), 'envtype': str(envtype)}
+        kargs = {'cookie': str(self.cookie), 'envtype': str(envtype), 'statusfilter': str(statusfilter)}
         ret_code, msg, order_list = query_processor(**kargs)
 
         if ret_code != RET_OK:
             return RET_ERROR, msg
 
-        col_list = ["stock_code", "stock_name", "dealt_avg_price", "dealt_qty",
+        col_list = ["stock_code", "stock_name", "dealt_avg_price", "dealt_qty", "qty",
                     "localid", "orderid", "order_type", "order_side", "price",
                     "status", "submited_time", "updated_time"]
 
@@ -1043,6 +1087,10 @@ class OpenHKTradeContext:
         return RET_OK, order_list_table
 
     def position_list_query(self, envtype=0):
+        if int(envtype) not in rev_envtype_map:
+            error_str = ERROR_STR_PREFIX + "the type of environment param is wrong "
+            return RET_ERROR, error_str
+
         query_processor = self._get_sync_query_processor(PositionListQuery.hk_pack_req,
                                                          PositionListQuery.hk_unpack_rsp)
 
@@ -1056,13 +1104,17 @@ class OpenHKTradeContext:
         col_list = ["stock_code", "stock_name", "qty", "can_sell_qty", "cost_price",
                     "cost_price_valid", "market_val", "nominal_price", "pl_ratio",
                     "pl_ratio_valid", "pl_val", "pl_val_valid", "today_buy_qty",
-                    "today_buy_val", "today_pl_val", "today_sell_qty","today_sell_val"]
+                    "today_buy_val", "today_pl_val", "today_sell_qty", "today_sell_val"]
 
         position_list_table = pd.DataFrame(position_list, columns=col_list)
 
         return RET_OK, position_list_table
 
     def deal_list_query(self, envtype=0):
+        if int(envtype) not in rev_envtype_map:
+            error_str = ERROR_STR_PREFIX + "the type of environment param is wrong "
+            return RET_ERROR, error_str
+
         query_processor = self._get_sync_query_processor(DealListQuery.hk_pack_req,
                                                          DealListQuery.hk_unpack_rsp)
 
@@ -1096,7 +1148,6 @@ class OpenUSTradeContext:
         return RET_OK, msg, content
 
     def _get_sync_query_processor(self, pack_func, unpack_func):
-
         send_req = self._send_sync_req
 
         def sync_query_processor(**kargs):
@@ -1117,94 +1168,143 @@ class OpenUSTradeContext:
         return sync_query_processor
 
     def unlock_trade(self, password):
-
         query_processor = self._get_sync_query_processor(UnlockTrade.pack_req,
                                                          UnlockTrade.unpack_rsp)
 
         # the keys of kargs should be corresponding to the actual function arguments
         kargs = {'cookie': str(self.cookie), 'password': str(password)}
-        ret_code, msg, ret = query_processor(**kargs)
+        ret_code, msg, unlock_list = query_processor(**kargs)
 
         if ret_code != RET_OK:
             return RET_ERROR, msg
 
-        return RET_OK, ret
+        return RET_OK, None
 
-    def place_order(self, price, qty, strcode, orderside, ordertype=2):
+    def place_order(self, price, qty, strcode, orderside, ordertype=2, envtype=0):
+        if int(envtype) != 0:
+            error_str = ERROR_STR_PREFIX + "us stocks temporarily only support real trading "
+            return RET_ERROR, error_str
+
+        ret_code, content = split_stock_str(strcode)
+        if ret_code == RET_ERROR:
+            error_str = content
+            return RET_ERROR, error_str, None
+
+        market_code, stock_code = content
+        if int(market_code) != 2:
+            error_str = ERROR_STR_PREFIX + "the type of stocks is wrong "
+            return RET_ERROR, error_str
+
         query_processor = self._get_sync_query_processor(PlaceOrder.us_pack_req,
                                                          PlaceOrder.us_unpack_rsp)
 
         # the keys of kargs should be corresponding to the actual function arguments
         kargs = {'cookie': str(self.cookie), 'envtype': '0', 'orderside': str(orderside),
-                 'ordertype': str(ordertype), 'price': str(price), 'qty': str(qty), 'strcode': str(strcode)}
-        ret_code, msg, ret = query_processor(**kargs)
+                 'ordertype': str(ordertype), 'price': str(price), 'qty': str(qty), 'strcode': str(stock_code)}
 
+        ret_code, msg, place_order_list = query_processor(**kargs)
         if ret_code != RET_OK:
             return RET_ERROR, msg
 
-        return RET_OK, ret
+        col_list = ['envtype', 'localID']
+        place_order_table = pd.DataFrame(place_order_list, columns=col_list)
 
-    def set_order_status(self, localid=0, orderid=0):
+        return RET_OK, place_order_table
+
+    def set_order_status(self, status=0, localid=0, orderid=0, envtype=0):
+        if int(envtype) != 0:
+            error_str = ERROR_STR_PREFIX + "us stocks temporarily only support real trading "
+            return RET_ERROR, error_str
+
+        if int(status) != 0:
+            error_str = ERROR_STR_PREFIX + "us stocks temporarily only support cancel order "
+            return RET_ERROR, error_str
+
         query_processor = self._get_sync_query_processor(SetOrderStatus.us_pack_req,
                                                          SetOrderStatus.us_unpack_rsp)
 
         # the keys of kargs should be corresponding to the actual function arguments
         kargs = {'cookie': str(self.cookie), 'envtype': '0', 'localid': str(localid),
                  'orderid': str(orderid), 'status': '0'}
-        ret_code, msg, ret = query_processor(**kargs)
 
+        ret_code, msg, set_order_list = query_processor(**kargs)
         if ret_code != RET_OK:
             return RET_ERROR, msg
 
-        return RET_OK, ret
+        col_list = ['envtype', 'localID', 'orderID']
+        set_order_table = pd.DataFrame(set_order_list, columns=col_list)
 
-    def change_order(self, price, qty, localid=0, orderid=0):
+        return RET_OK, set_order_table
+
+    def change_order(self, price, qty, localid=0, orderid=0, envtype=0):
+        if int(envtype) != 0:
+            error_str = ERROR_STR_PREFIX + "us stocks temporarily only support real trading "
+            return RET_ERROR, error_str
+
         query_processor = self._get_sync_query_processor(ChangeOrder.us_pack_req,
                                                          ChangeOrder.us_unpack_rsp)
 
         # the keys of kargs should be corresponding to the actual function arguments
         kargs = {'cookie': str(self.cookie), 'envtype': '0', 'localid': str(localid),
                  'orderid': str(orderid), 'price': str(price), 'qty': str(qty)}
-        ret_code, msg, ret = query_processor(**kargs)
 
+        ret_code, msg, change_order_list = query_processor(**kargs)
         if ret_code != RET_OK:
             return RET_ERROR, msg
 
-        return RET_OK, ret
+        col_list = ['envtype', 'localID', 'orderID']
+        change_order_table = pd.DataFrame(change_order_list, columns=col_list)
 
-    def accinfo_query(self):
+        return RET_OK, change_order_table
+
+    def accinfo_query(self, envtype=0):
+        if int(envtype) != 0:
+            error_str = ERROR_STR_PREFIX + "us stocks temporarily only support real trading "
+            return RET_ERROR, error_str
+
         query_processor = self._get_sync_query_processor(AccInfoQuery.us_pack_req,
                                                          AccInfoQuery.us_unpack_rsp)
 
          # the keys of kargs should be corresponding to the actual function arguments
         kargs = {'cookie': str(self.cookie), 'envtype': '0'}
-        ret_code, msg, ret = query_processor(**kargs)
 
+        ret_code, msg, accinfo_list = query_processor(**kargs)
         if ret_code != RET_OK:
             return RET_ERROR, msg
 
-        return RET_OK, ret
+        col_list = ['Power', 'ZCJZ', 'ZQSZ', 'XJJY', 'KQXJ', 'DJZJ', 'ZSJE', 'ZGJDE', 'YYJDE', 'GPBZJ']
+        accinfo_frame_table = pd.DataFrame(accinfo_list, columns=col_list)
 
-    def order_list_query(self):
+        return RET_OK, accinfo_frame_table
+
+    def order_list_query(self, statusfilter="", envtype=0):
+        if int(envtype) != 0:
+            error_str = ERROR_STR_PREFIX + "us stocks temporarily only support real trading "
+            return RET_ERROR, error_str
+
         query_processor = self._get_sync_query_processor(OrderListQuery.us_pack_req,
                                                          OrderListQuery.us_unpack_rsp)
 
         # the keys of kargs should be corresponding to the actual function arguments
-        kargs = {'cookie': str(self.cookie), 'envtype': '0'}
-        ret_code, msg, order_list = query_processor(**kargs)
+        kargs = {'cookie': str(self.cookie), 'envtype': '0', 'statusfilter': str(statusfilter)}
 
+        ret_code, msg, order_list = query_processor(**kargs)
         if ret_code != RET_OK:
             return RET_ERROR, msg
 
-        col_list = ["stock_code", "stock_name", "dealt_avg_price", "dealt_qty",
-                    "localid", "orderid", "order_type", "order_side","price",
+        col_list = ["stock_code", "stock_name", "dealt_avg_price", "dealt_qty", "qty",
+                    "localid", "orderid", "order_type", "order_side", "price",
                     "status", "submited_time", "updated_time"]
 
         order_list_table = pd.DataFrame(order_list, columns=col_list)
 
         return RET_OK, order_list_table
 
-    def position_list_query(self):
+    def position_list_query(self, envtype=0):
+        if int(envtype) != 0:
+            error_str = ERROR_STR_PREFIX + "us stocks temporarily only support real trading "
+            return RET_ERROR, error_str
+
         query_processor = self._get_sync_query_processor(PositionListQuery.us_pack_req,
                                                          PositionListQuery.us_unpack_rsp)
 
@@ -1218,13 +1318,17 @@ class OpenUSTradeContext:
         col_list = ["stock_code", "stock_name", "qty", "can_sell_qty", "cost_price",
                     "cost_price_valid", "market_val", "nominal_price", "pl_ratio",
                     "pl_ratio_valid", "pl_val", "pl_val_valid", "today_buy_qty",
-                    "today_buy_val", "today_pl_val", "today_sell_qty","today_sell_val"]
+                    "today_buy_val", "today_pl_val", "today_sell_qty", "today_sell_val"]
 
         position_list_table = pd.DataFrame(position_list, columns=col_list)
 
         return RET_OK, position_list_table
 
-    def deal_list_query(self):
+    def deal_list_query(self, envtype=0):
+        if int(envtype) != 0:
+            error_str = ERROR_STR_PREFIX + "us stocks temporarily only support real trading "
+            return RET_ERROR, error_str
+
         query_processor = self._get_sync_query_processor(DealListQuery.us_pack_req,
                                                          DealListQuery.us_unpack_rsp)
 
