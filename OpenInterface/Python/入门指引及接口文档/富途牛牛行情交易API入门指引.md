@@ -3,8 +3,8 @@
 **准备工作**
 
 1.      准备一台Windows 32bit 或者64bit 的电脑（win7/8/10）  
-2.      下载富途牛牛客户端，需要在QQ群108534228群文件中下载专用版本![image](https://github.com/FutunnOpen/OpenQuant/raw/master/Resources/Download.png)  
-3.      下载Anaconda python 3和 Pycharm 2016.3.2，Anaconda python 是Python科学技术包的合集，提供了很多用于科学计算的模块，Pycharm是一款Python的IDE，用于程序开发，可以在QQ群108534228群文件中下载python接入开发相关工具，可选择32位或者64位下载。如果已经安装了Anaconda python2，也可以使用。  
+2.      下载富途牛牛客户端，需要在QQ群108534288群文件中下载专用版本![image](https://github.com/FutunnOpen/OpenQuant/raw/master/Resources/Download.png)  
+3.      下载Anaconda python 3和 Pycharm 2016.3.2，Anaconda python 是Python科学技术包的合集，提供了很多用于科学计算的模块，Pycharm是一款Python的IDE，用于程序开发，可以在QQ群108534288群文件中下载python接入开发相关工具，可选择32位或者64位下载。如果已经安装了Anaconda python2，也可以使用。  
 4.      在GITHUB上下载FutunnOpen项目代码并解压<https://github.com/FutunnOpen/OpenQuant>
 
 
