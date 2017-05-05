@@ -163,6 +163,25 @@ static void DeleteNumStrTailZero(CString &str)
 	}
 }
 
+static BOOL DivStr(const CString& str, const CString &strDiv, std::vector<CString> &arDiv)
+{
+	if (str.GetLength() == 0 || strDiv.GetLength() == 0)
+	{
+		return false;
+	}
+	arDiv.clear();
+
+	CString strTmp = str;
+	LPCTSTR seps = (LPCTSTR)strDiv;
+	TCHAR* pstrSrc = strTmp.GetBuffer(strTmp.GetLength());
+	TCHAR* token = _tcstok(pstrSrc, seps);
+	while (token)
+	{
+		arDiv.push_back(CString(token));
+		token = _tcstok(NULL, seps);
+	}
+	return true;
+}
 _CA_END
 
 #endif

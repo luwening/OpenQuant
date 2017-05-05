@@ -3,6 +3,7 @@
 #include "PluginHKTradeServer.h"
 #include "Protocol/ProtoQueryHKOrder.h"
 #include "IManage_SecurityNum.h"
+#include "CM/ca_api.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -181,6 +182,9 @@ void CPluginQueryHKOrder::NotifyOnQueryHKOrder(Trade_Env enEnv, UINT32 nCookie, 
 	ack.body.nEnvType = enEnv;
 	ack.body.nCookie = pFindReq->req.body.nCookie;
 
+	std::vector<int> vtStatus;
+	DoGetFilterStatus(pFindReq->req.body.strStatusFilter, vtStatus);
+
 	if ( nCount > 0 && pArrOrder )
 	{
 		for ( int n = 0; n < nCount; n++ )
@@ -201,7 +205,11 @@ void CPluginQueryHKOrder::NotifyOnQueryHKOrder(Trade_Env enEnv, UINT32 nCookie, 
 			item.nSubmitedTime = order.nSubmitedTime;
 			item.nUpdatedTime = order.nUpdatedTime;
 			item.nErrCode = order.nErrCode;
-			ack.body.vtOrder.push_back(item);
+
+			if (vtStatus.size() == 0 || std::find(vtStatus.begin(), vtStatus.end(), order.nStatus) != vtStatus.end())
+			{
+				ack.body.vtOrder.push_back(item);
+			}
 		}
 	}	 
 	
@@ -349,3 +357,19 @@ void CPluginQueryHKOrder::DoClearReqInfo(SOCKET socket)
 		}
 	}
 }
+
+void CPluginQueryHKOrder::DoGetFilterStatus(const std::string& strFilter, std::vector<int>& arStatus)
+{
+	arStatus.clear();
+	CString strDiv = _T(",");
+	std::vector<CString> arFilterStr;
+	CA::DivStr(CString(strFilter.c_str()), strDiv, arFilterStr);
+	for (UINT i = 0; i < arFilterStr.size(); i++)
+	{
+		int nTmp = _ttoi(arFilterStr[i]);
+
+		arStatus.push_back(nTmp);
+	}
+}
+
+ 

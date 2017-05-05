@@ -181,6 +181,9 @@ void CPluginQueryUSOrder::NotifyOnQueryUSOrder(UINT32 nCookie, INT32 nCount, con
 	ack.body.nEnvType = 0;
 	ack.body.nCookie = pFindReq->req.body.nCookie;
 
+	std::vector<int> vtStatus;
+	DoGetFilterStatus(pFindReq->req.body.strStatusFilter, vtStatus);
+
 	if ( nCount > 0 && pArrOrder )
 	{
 		for ( int n = 0; n < nCount; n++ )
@@ -201,7 +204,11 @@ void CPluginQueryUSOrder::NotifyOnQueryUSOrder(UINT32 nCookie, INT32 nCount, con
 			item.nSubmitedTime = order.nSubmitedTime;
 			item.nUpdatedTime = order.nUpdatedTime;
 			item.nErrCode = order.nErrCode;
-			ack.body.vtOrder.push_back(item);
+
+			if (vtStatus.size() == 0 || std::find(vtStatus.begin(), vtStatus.end(), order.nStatus) != vtStatus.end())
+			{
+				ack.body.vtOrder.push_back(item);
+			}
 		}
 	}	 
 	
@@ -350,3 +357,19 @@ void CPluginQueryUSOrder::DoClearReqInfo(SOCKET socket)
 		}
 	}
 }
+
+void CPluginQueryUSOrder::DoGetFilterStatus(const std::string& strFilter, std::vector<int>& arStatus)
+{
+	arStatus.clear();
+	CString strDiv = _T(",");
+	std::vector<CString> arFilterStr;
+	CA::DivStr(CString(strFilter.c_str()), strDiv, arFilterStr);
+	for (UINT i = 0; i < arFilterStr.size(); i++)
+	{
+		int nTmp = _ttoi(arFilterStr[i]);
+
+		arStatus.push_back(nTmp);
+	}
+}
+
+

@@ -152,12 +152,13 @@ void  CPluginChangeOrder_US::DoTryProcessTradeOpt(StockDataReq* pReq)
 	} 
 	// 
 	bool bRet = false;
+	int nReqResult = 0;
 	//美股只支持撤单， 只有真实交易环境!!
 	if (body.nSvrOrderID != 0 && body.nEnvType == Trade_Env_Real)
 	{  
 		pReq->bWaitDelaySvrID = false;
 		bRet = m_pTradeOp->ChangeOrder((UINT*)&pReq->dwLocalCookie, body.nSvrOrderID, 
-			body.nPrice, body.nQty);
+			body.nPrice, body.nQty, &nReqResult);
 	} 
 
 	if ( !bRet )
@@ -166,6 +167,10 @@ void  CPluginChangeOrder_US::DoTryProcessTradeOpt(StockDataReq* pReq)
 		ack.head = req.head;
 		ack.head.ddwErrCode = PROTO_ERR_UNKNOWN_ERROR;
 		CA::Unicode2UTF(L"发送失败", ack.head.strErrDesc);
+		if (nReqResult != 0)
+		{
+			ack.head.strErrDesc = UtilPlugin::GetErrStrByCode((QueryDataErrCode)nReqResult);
+		}
 
 		ack.body.nEnvType = body.nEnvType;
 		ack.body.nCookie = body.nCookie;

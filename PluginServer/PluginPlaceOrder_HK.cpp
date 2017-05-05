@@ -83,6 +83,7 @@ void CPluginPlaceOrder_HK::SetTradeReqData(int nCmdID, const Json::Value &jsnVal
 		CA::Unicode2UTF(L"参数错误！", ack.head.strErrDesc);
 		ack.body.nCookie = req.body.nCookie;
 		ack.body.nSvrResult = Trade_SvrResult_Failed;
+		ack.body.nEnvType = req.body.nEnvType;
 		HandleTradeAck(&ack, sock);
 		return;
 	}
@@ -96,6 +97,7 @@ void CPluginPlaceOrder_HK::SetTradeReqData(int nCmdID, const Json::Value &jsnVal
 		CA::Unicode2UTF(L"请重新解锁！", ack.head.strErrDesc);
 		ack.body.nCookie = req.body.nCookie;
 		ack.body.nSvrResult = Trade_SvrResult_Failed;
+		ack.body.nEnvType = req.body.nEnvType;
 		HandleTradeAck(&ack, sock);
 		return;
 	}
@@ -112,19 +114,21 @@ void CPluginPlaceOrder_HK::SetTradeReqData(int nCmdID, const Json::Value &jsnVal
 	PlaceOrderReqBody &body = req.body;
 	std::wstring strCode;
 	CA::UTF2Unicode(body.strCode.c_str(), strCode);
+	int nReqResult = 0;
 	bool bRet = m_pTradeOp->PlaceOrder((Trade_Env)body.nEnvType, (UINT*)&pReq->dwLocalCookie, (Trade_OrderType_HK)body.nOrderType, 
-		(Trade_OrderSide)body.nOrderDir, strCode.c_str(), body.nPrice, body.nQty);
+		(Trade_OrderSide)body.nOrderDir, strCode.c_str(), body.nPrice, body.nQty, &nReqResult);
 
 	if ( !bRet )
 	{
 		TradeAckType ack;
 		ack.head = req.head;
 		ack.head.ddwErrCode = PROTO_ERR_UNKNOWN_ERROR;
-		CA::Unicode2UTF(L"发送失败", ack.head.strErrDesc);
+		ack.head.strErrDesc = UtilPlugin::GetErrStrByCode((QueryDataErrCode)nReqResult);
 
 		ack.body.nCookie = body.nCookie;
 		ack.body.nLocalID = 0;
 		ack.body.nSvrResult = Trade_SvrResult_Failed;
+		ack.body.nEnvType = req.body.nEnvType;
 		HandleTradeAck(&ack, sock);
 
 		delete pReq;

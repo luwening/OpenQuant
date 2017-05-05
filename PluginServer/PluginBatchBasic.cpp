@@ -17,6 +17,15 @@
 #define QUOTE_SERVER_TYPE	QuoteServer_QueryBatchBasic
 typedef CProtoBatchBasic	CProtoQuote;
 
+//股票状态 
+enum
+{
+	STOCK_STATUS_NONE = 0,
+	STOCK_STATUS_SUSPENSION = 1,  //停牌
+	STOCK_STATUS_NORMAL = 2,
+	STOCK_STATUS_PAUSE_Temp = 3, //熔断(可恢复) 
+	STOCK_STATUS_PAUSE_Break = 4, //熔断(不可恢复) 
+};
 
 //////////////////////////////////////////////////////////////////////////
 
@@ -179,7 +188,10 @@ void CPluginBatchBasic::SetQuoteReqData(int nCmdID, const Json::Value &jsnVal, S
 					Item.nLastClose = batchprice.dwLastClose;
 					Item.nLow = batchprice.dwLow;
 					Item.nCur = batchprice.dwCur;
-					Item.nSuspension = batchprice.nSuspension;
+
+					//统一返回， 1表求停牌， 0表示正常
+					Item.nSuspension = (STOCK_STATUS_SUSPENSION == batchprice.nSuspension) ? 1 : 0;
+
 					Item.nVolume = batchprice.ddwVolume;
 					Item.nValue = batchprice.ddwTurnover;
 					Item.nAmpli = batchprice.dwAmpli;
