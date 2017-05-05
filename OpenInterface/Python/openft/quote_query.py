@@ -87,7 +87,6 @@ ticker_direction = {"TT_BUY": 1,
 
 rev_ticker_direction = {ticker_direction[x]: x for x in ticker_direction}
 
-
 RET_OK = 0
 RET_ERROR = -1
 
@@ -465,7 +464,7 @@ class MarketSnapshotQuery:
                           'volume': int(record['SharesTraded']),
                           'turnover': float(record['Turnover']) / 1000,
                           'turnover_rate': float(record['TurnoverRatio']) / 1000,
-                          'suspension': True if int(record['SuspendFlag']) == 2 else False,
+                          'suspension': True if int(record['SuspendFlag']) == 1 else False,
                           'listing_date': datetime.fromtimestamp(int(record['ListingDate'])).strftime("%Y-%m-%d"),
                           'circular_market_val': float(record['CircularMarketVal']) / 1000,
                           'total_market_val': float(record['TotalMarketVal']) / 1000,
@@ -524,7 +523,7 @@ class RtDataQuery:
             return RET_OK, "", []
 
         # stock_code = merge_stock_str(int(rsp_data['Market']), rsp_data['StockCode'])
-        rt_list = [{# "stock_code": stock_code,
+        rt_list = [{# "code": stock_code,
                     "time": record['Time'],
                     "data_status": True if int(record['DataStatus']) == 1 else False,
                     "opened_mins": record['OpenedMins'],
@@ -1090,7 +1089,7 @@ class StockQuoteQuery:
                        'turnover':  float(record['TDVal'])/1000,
                        'turnover_rate': float(record['Turnover'])/1000,
                        'amplitude': float(record['Amplitude'])/1000,
-                       'suspension': True if int(record['Suspension']) == 2 else False,
+                       'suspension': True if int(record['Suspension']) == 1 else False,
                        'listing_date': record['ListTime']
                        }
                       for record in raw_quote_list]
