@@ -107,24 +107,31 @@ protected:
 	CPluginBasicPrice	m_BasicPrice;
 	CPluginGearPrice	m_GearPrice;
 	CPluginRTData		m_RTData;
+
 	CPluginKLData		m_KLData;
 	CPluginStockSub		m_StockSub;
 	CPluginStockUnSub	m_StockUnSub;
+
 	CPluginQueryStockSub m_QueryStockSub;
 	CPluginTradeDate	m_TradeDate;
 	CPluginStockList	m_StockList;
+
 	CPluginBatchBasic   m_BatchBasic;
 	CPluginTickerPrice  m_TickerPrice;
 	CPluginSnapshot		m_Snapshot;
+
 	CPluginHistoryKL	m_HistoryKL;
 	CPluginExRightInfo  m_ExRightInfo;
 	CPluginPushStockData m_PushStockData;
+
 	CPluginPushBatchBasic m_PushBatchBasic;
 	CPluginPushGearPrice m_PushGearPrice;
 	CPluginPushTickerPrice m_PushTickerPrice;
+
 	CPluginPushKLData	m_PushKLData;
 	CPluginPushRTData	m_PushRTData;
 	CPluginPlatesetIDs  m_platesetIDs;
+
 	CPluginPlateSubIDs  m_plateSubIDs;
 	CPluginBrokerQueue  m_BrokerQueue;
 

@@ -167,3 +167,12 @@ void CPluginPushRTData::PushStockData(INT64 nStockID, SOCKET sock)
 		m_pQuoteData->DeleteRTDataPointer(pQuoteRT);
 	}
 }
+
+void CPluginPushRTData::NotifySocketClosed(SOCKET sock)
+{
+	auto itmap = m_mapPushInfo.find(sock);
+	if (itmap != m_mapPushInfo.end())
+	{
+		m_mapPushInfo.erase(itmap);
+	}
+}

@@ -69,6 +69,18 @@ ticker_direction = {"TT_BUY": 1,
 
 rev_ticker_direction = {ticker_direction[x]: x for x in ticker_direction}
 
+order_status = {"CANCEL": 0,
+                "INVALID": 1,
+                "VALID": 2,
+                "DELETE": 3}
+
+rev_order_status = {order_status[x]: x for x in order_status}
+
+envtype_map = {"TRUE": 0,
+               "SIMULATE": 1}
+
+rev_envtype_map = {envtype_map[x]: x for x in envtype_map}
+
 
 RET_OK = 0
 RET_ERROR = -1
@@ -191,15 +203,16 @@ class UnlockTrade:
 
         rsp_data = rsp['RetData']
 
-        if "SvrResult" not in rsp_data:
-            return RET_ERROR, msg, None
+        if 'SvrResult' not in rsp_data:
+            error_str = ERROR_STR_PREFIX + "cannot find SvrResult in client rsp: %s" % rsp_str
+            return RET_ERROR, error_str, None
+        elif int(rsp_data['SvrResult']) != 0:
+            error_str = ERROR_STR_PREFIX + rsp['ErrDesc']
+            return RET_ERROR, error_str, None
 
-        if "Cookie" not in rsp_data:
-            return RET_ERROR, msg, None
+        unlock_list = [{"svr_result": rsp_data["SvrResult"]}]
 
-        ret = {"SvrResult": rsp_data["SvrResult"],
-               "Cookie": rsp_data["Cookie"]}
-        return RET_OK, "", ret
+        return RET_OK, "", unlock_list
 
 
 class PlaceOrder:
@@ -245,23 +258,20 @@ class PlaceOrder:
         rsp_data = rsp['RetData']
 
         if 'SvrResult' not in rsp_data:
-            return RET_ERROR, msg, None
-
-        if 'Cookie' not in rsp_data:
-            return RET_ERROR, msg, None
+            error_str = ERROR_STR_PREFIX + "cannot find SvrResult in client rsp: %s" % rsp_str
+            return RET_ERROR, error_str, None
+        elif int(rsp_data['SvrResult']) != 0:
+            error_str = ERROR_STR_PREFIX + rsp['ErrDesc']
+            return RET_ERROR, error_str, None
 
         if 'EnvType' not in rsp_data:
-            return RET_ERROR, msg, None
+            error_str = ERROR_STR_PREFIX + "cannot find EnvType in client rsp: %s" % rsp_str
+            return RET_ERROR, error_str, None
 
-        if 'LocalID' not in rsp_data:
-            return RET_ERROR, msg, None
+        place_order_list = [{'envtype': rsp_data['EnvType']
+                             }]
 
-        ret = {'SvrResult': rsp_data['SvrResult'],
-               'Cookie': rsp_data['Cookie'],
-               'EnvType': rsp_data['EnvType'],
-               'LocalID': rsp_data['LocalID']
-               }
-        return RET_OK, "", ret
+        return RET_OK, "", place_order_list
 
     @classmethod
     def us_pack_req(cls, cookie, envtype, orderside, ordertype, price, qty, strcode):
@@ -298,23 +308,20 @@ class PlaceOrder:
         rsp_data = rsp['RetData']
 
         if 'SvrResult' not in rsp_data:
-            return RET_ERROR, msg, None
-
-        if 'Cookie' not in rsp_data:
-            return RET_ERROR, msg, None
+            error_str = ERROR_STR_PREFIX + "cannot find SvrResult in client rsp: %s" % rsp_str
+            return RET_ERROR, error_str, None
+        elif int(rsp_data['SvrResult']) != 0:
+            error_str = ERROR_STR_PREFIX + rsp['ErrDesc']
+            return RET_ERROR, error_str, None
 
         if 'EnvType' not in rsp_data:
-            return RET_ERROR, msg, None
+            error_str = ERROR_STR_PREFIX + "cannot find EnvType in client rsp: %s" % rsp_str
+            return RET_ERROR, error_str, None
 
-        if 'LocalID' not in rsp_data:
-            return RET_ERROR, msg, None
+        place_order_list = [{'envtype': rsp_data['EnvType']
+                             }]
 
-        ret = {'SvrResult': rsp_data['SvrResult'],
-               'Cookie': rsp_data['Cookie'],
-               'EnvType': rsp_data['EnvType'],
-               'LocalID': rsp_data['LocalID']
-               }
-        return RET_OK, "", ret
+        return RET_OK, "", place_order_list
 
 
 class SetOrderStatus:
@@ -354,27 +361,25 @@ class SetOrderStatus:
         rsp_data = rsp['RetData']
 
         if 'SvrResult' not in rsp_data:
-            return RET_ERROR, msg, None
-
-        if 'Cookie' not in rsp_data:
-            return RET_ERROR, msg, None
+            error_str = ERROR_STR_PREFIX + "cannot find SvrResult in client rsp: %s" % rsp_str
+            return RET_ERROR, error_str, None
+        elif int(rsp_data['SvrResult']) != 0:
+            error_str = ERROR_STR_PREFIX + rsp['ErrDesc']
+            return RET_ERROR, error_str, None
 
         if 'EnvType' not in rsp_data:
-            return RET_ERROR, msg, None
-
-        if 'LocalID' not in rsp_data:
-            return RET_ERROR, msg, None
+            error_str = ERROR_STR_PREFIX + "cannot find EnvType in client rsp: %s" % rsp_str
+            return RET_ERROR, error_str, None
 
         if 'OrderID' not in rsp_data:
-            return RET_ERROR, msg, None
+            error_str = ERROR_STR_PREFIX + "cannot find OrderID in client rsp: %s" % rsp_str
+            return RET_ERROR, error_str, None
 
-        ret = {'SvrResult': rsp_data['SvrResult'],
-               'Cookie': rsp_data['Cookie'],
-               'EnvType': rsp_data['EnvType'],
-               'LocalID': rsp_data['LocalID'],
-               'OrderID': rsp_data['OrderID']
-               }
-        return RET_OK, "", ret
+        set_order_list = [{'envtype': rsp_data['EnvType'],
+                           'orderID': rsp_data['OrderID']
+                           }]
+
+        return RET_OK, "", set_order_list
 
     @classmethod
     def us_pack_req(cls, cookie, envtype, localid, orderid, status):
@@ -401,27 +406,25 @@ class SetOrderStatus:
         rsp_data = rsp['RetData']
 
         if 'SvrResult' not in rsp_data:
-            return RET_ERROR, msg, None
-
-        if 'Cookie' not in rsp_data:
-            return RET_ERROR, msg, None
+            error_str = ERROR_STR_PREFIX + "cannot find SvrResult in client rsp: %s" % rsp_str
+            return RET_ERROR, error_str, None
+        elif int(rsp_data['SvrResult']) != 0:
+            error_str = ERROR_STR_PREFIX + rsp['ErrDesc']
+            return RET_ERROR, error_str, None
 
         if 'EnvType' not in rsp_data:
-            return RET_ERROR, msg, None
-
-        if 'LocalID' not in rsp_data:
-            return RET_ERROR, msg, None
+            error_str = ERROR_STR_PREFIX + "cannot find EnvType in client rsp: %s" % rsp_str
+            return RET_ERROR, error_str, None
 
         if 'OrderID' not in rsp_data:
-            return RET_ERROR, msg, None
+            error_str = ERROR_STR_PREFIX + "cannot find OrderID in client rsp: %s" % rsp_str
+            return RET_ERROR, error_str, None
 
-        ret = {'SvrResult': rsp_data['SvrResult'],
-               'Cookie': rsp_data['Cookie'],
-               'EnvType': rsp_data['EnvType'],
-               'LocalID': rsp_data['LocalID'],
-               'OrderID': rsp_data['OrderID']
-               }
-        return RET_OK, "", ret
+        set_order_list = [{'envtype': rsp_data['EnvType'],
+                           'orderID': rsp_data['OrderID']
+                           }]
+
+        return RET_OK, "", set_order_list
 
 
 class ChangeOrder:
@@ -458,27 +461,25 @@ class ChangeOrder:
         rsp_data = rsp['RetData']
 
         if 'SvrResult' not in rsp_data:
-            return RET_ERROR, msg, None
-
-        if 'Cookie' not in rsp_data:
-            return RET_ERROR, msg, None
+            error_str = ERROR_STR_PREFIX + "cannot find SvrResult in client rsp: %s" % rsp_str
+            return RET_ERROR, error_str, None
+        elif int(rsp_data['SvrResult']) != 0:
+            error_str = ERROR_STR_PREFIX + rsp['ErrDesc']
+            return RET_ERROR, error_str, None
 
         if 'EnvType' not in rsp_data:
-            return RET_ERROR, msg, None
-
-        if 'LocalID' not in rsp_data:
-            return RET_ERROR, msg, None
+            error_str = ERROR_STR_PREFIX + "cannot find EnvType in client rsp: %s" % rsp_str
+            return RET_ERROR, error_str, None
 
         if 'OrderID' not in rsp_data:
-            return RET_ERROR, msg, None
+            error_str = ERROR_STR_PREFIX + "cannot find OrderID in client rsp: %s" % rsp_str
+            return RET_ERROR, error_str, None
 
-        ret = {'SvrResult': rsp_data['SvrResult'],
-               'Cookie': rsp_data['Cookie'],
-               'EnvType': rsp_data['EnvType'],
-               'LocalID': rsp_data['LocalID'],
-               'OrderID': rsp_data['OrderID']
-               }
-        return RET_OK, "", ret
+        change_order_list = [{'envtype': rsp_data['EnvType'],
+                              'orderID': rsp_data['OrderID']
+                              }]
+
+        return RET_OK, "", change_order_list
 
     @classmethod
     def us_pack_req(cls, cookie, envtype, localid, orderid, price, qty):
@@ -506,27 +507,25 @@ class ChangeOrder:
         rsp_data = rsp['RetData']
 
         if 'SvrResult' not in rsp_data:
-            return RET_ERROR, msg, None
-
-        if 'Cookie' not in rsp_data:
-            return RET_ERROR, msg, None
+            error_str = ERROR_STR_PREFIX + "cannot find SvrResult in client rsp: %s" % rsp_str
+            return RET_ERROR, error_str, None
+        elif int(rsp_data['SvrResult']) != 0:
+            error_str = ERROR_STR_PREFIX + rsp['ErrDesc']
+            return RET_ERROR, error_str, None
 
         if 'EnvType' not in rsp_data:
-            return RET_ERROR, msg, None
-
-        if 'LocalID' not in rsp_data:
-            return RET_ERROR, msg, None
+            error_str = ERROR_STR_PREFIX + "cannot find EnvType in client rsp: %s" % rsp_str
+            return RET_ERROR, error_str, None
 
         if 'OrderID' not in rsp_data:
-            return RET_ERROR, msg, None
+            error_str = ERROR_STR_PREFIX + "cannot find OrderID in client rsp: %s" % rsp_str
+            return RET_ERROR, error_str, None
 
-        ret = {'SvrResult': rsp_data['SvrResult'],
-               'Cookie': rsp_data['Cookie'],
-               'EnvType': rsp_data['EnvType'],
-               'LocalID': rsp_data['LocalID'],
-               'OrderID': rsp_data['OrderID']
-               }
-        return RET_OK, "", ret
+        change_order_list = [{'envtype': rsp_data['EnvType'],
+                              'orderID': rsp_data['OrderID']
+                              }]
+
+        return RET_OK, "", change_order_list
 
 
 class AccInfoQuery:
@@ -570,13 +569,14 @@ class AccInfoQuery:
         if 'YYJDE' not in rsp_data or 'GPBZJ' not in rsp_data:
             return RET_ERROR, msg, None
 
-        ret = {'Power': str(int(rsp_data['Power'])/1000), 'ZCJZ': str(int(rsp_data['ZCJZ'])/1000),
-               'ZQSZ': str(int(rsp_data['ZQSZ'])/1000), 'XJJY': str(int(rsp_data['XJJY'])/1000),
-               'KQXJ': str(int(rsp_data['KQXJ'])/1000), 'DJZJ': str(int(rsp_data['DJZJ'])/1000),
-               'ZSJE': str(int(rsp_data['ZSJE'])/1000), 'ZGJDE': str(int(rsp_data['ZGJDE'])/1000),
-               'YYJDE': str(int(rsp_data['YYJDE'])/1000), 'GPBZJ': str(int(rsp_data['GPBZJ'])/1000)
-               }
-        return RET_OK, "", ret
+        accinfo_list = [{'Power': float(rsp_data['Power'])/1000, 'ZCJZ': float(rsp_data['ZCJZ'])/1000,
+                         'ZQSZ': float(rsp_data['ZQSZ']) / 1000, 'XJJY': float(rsp_data['XJJY']) / 1000,
+                         'KQXJ': float(rsp_data['KQXJ']) / 1000, 'DJZJ': float(rsp_data['DJZJ']) / 1000,
+                         'ZSJE': float(rsp_data['ZSJE']) / 1000, 'ZGJDE': float(rsp_data['ZGJDE']) / 1000,
+                         'YYJDE': float(rsp_data['YYJDE']) / 1000, 'GPBZJ': float(rsp_data['GPBZJ']) / 1000
+                         }]
+
+        return RET_OK, "", accinfo_list
 
     @classmethod
     def us_pack_req(cls, cookie, envtype):
@@ -599,7 +599,7 @@ class AccInfoQuery:
 
         rsp_data = rsp['RetData']
 
-        if 'Cookie' not in rsp_data or 'EnvType' not in rsp_data:
+        if 'EnvType' not in rsp_data:
             return RET_ERROR, msg, None
 
         if 'Power' not in rsp_data or 'ZCJZ' not in rsp_data or 'ZQSZ' not in rsp_data or 'XJJY' not in rsp_data:
@@ -611,13 +611,14 @@ class AccInfoQuery:
         if 'YYJDE' not in rsp_data or 'GPBZJ' not in rsp_data:
             return RET_ERROR, msg, None
 
-        ret = {'Power': str(int(rsp_data['Power'])/1000), 'ZCJZ': str(int(rsp_data['ZCJZ'])/1000),
-               'ZQSZ': str(int(rsp_data['ZQSZ'])/1000), 'XJJY': str(int(rsp_data['XJJY'])/1000),
-               'KQXJ': str(int(rsp_data['KQXJ'])/1000), 'DJZJ': str(int(rsp_data['DJZJ'])/1000),
-               'ZSJE': str(int(rsp_data['ZSJE'])/1000), 'ZGJDE': str(int(rsp_data['ZGJDE'])/1000),
-               'YYJDE': str(int(rsp_data['YYJDE'])/1000), 'GPBZJ': str(int(rsp_data['GPBZJ'])/1000)
-               }
-        return RET_OK, "", ret
+        accinfo_list = [{'Power': float(rsp_data['Power'])/1000, 'ZCJZ': float(rsp_data['ZCJZ'])/1000,
+                         'ZQSZ': float(rsp_data['ZQSZ']) / 1000, 'XJJY': float(rsp_data['XJJY']) / 1000,
+                         'KQXJ': float(rsp_data['KQXJ']) / 1000, 'DJZJ': float(rsp_data['DJZJ']) / 1000,
+                         'ZSJE': float(rsp_data['ZSJE']) / 1000, 'ZGJDE': float(rsp_data['ZGJDE']) / 1000,
+                         'YYJDE': float(rsp_data['YYJDE']) / 1000, 'GPBZJ': float(rsp_data['GPBZJ']) / 1000
+                         }]
+
+        return RET_OK, "", accinfo_list
 
 
 class OrderListQuery:
@@ -625,7 +626,7 @@ class OrderListQuery:
         pass
 
     @classmethod
-    def hk_pack_req(cls, cookie, envtype):
+    def hk_pack_req(cls, cookie, envtype, statusfilter):
 
         if int(envtype) < 0 or int(envtype) > 1:
             error_str = ERROR_STR_PREFIX + "parameter envtype is wrong"
@@ -635,6 +636,7 @@ class OrderListQuery:
                "Version": "1",
                "ReqParam": {"Cookie": str(cookie),
                             "EnvType": str(envtype),
+                            "StatusFilterStr": str(statusfilter)
                             }
                }
         req_str = json.dumps(req) + '\r\n'
@@ -649,8 +651,9 @@ class OrderListQuery:
 
         rsp_data = rsp['RetData']
 
-        if 'Cookie' not in rsp_data or 'EnvType' not in rsp_data:
-            return RET_ERROR, msg, None
+        if 'EnvType' not in rsp_data:
+            error_str = ERROR_STR_PREFIX + "cannot find EnvType in client rsp. Response: %s" % rsp_str
+            return RET_ERROR, error_str, None
 
         if "HKOrderArr" not in rsp_data :
             error_str = ERROR_STR_PREFIX + "cannot find HKOrderArr in client rsp. Response: %s" % rsp_str
@@ -660,14 +663,15 @@ class OrderListQuery:
         if raw_order_list is None or len(raw_order_list) == 0:
             return RET_OK, "", []
 
-        order_list = [{"stock_code": order['StockCode'],
+        order_list = [{"code": merge_stock_str(1, order['StockCode']),
                        "stock_name": order["StockName"],
-                       "dealt_avg_price": str(int(order['DealtAvgPrice'])/1000),
+                       "dealt_avg_price": float(order['DealtAvgPrice'])/1000,
                        "dealt_qty": order['DealtQty'],
-                       "localid": order['LocalID'],
+                       "qty": order['Qty'],
                        "orderid": order['OrderID'],
                        "order_type": order['OrderType'],
-                       "price": str(int(order['Price'])/1000),
+                       "order_side": order['OrderSide'],
+                       "price": float(order['Price'])/1000,
                        "status": order['Status'],
                        "submited_time": order['SubmitedTime'],
                        "updated_time": order['UpdatedTime']
@@ -676,12 +680,13 @@ class OrderListQuery:
         return RET_OK, "", order_list
 
     @classmethod
-    def us_pack_req(cls, cookie, envtype):
+    def us_pack_req(cls, cookie, envtype, statusfilter):
 
         req = {"Protocol": "7008",
                "Version": "1",
                "ReqParam": {"Cookie": str(cookie),
                             "EnvType": str(envtype),
+                            "StatusFilterStr": str(statusfilter)
                             }
                }
         req_str = json.dumps(req) + '\r\n'
@@ -696,9 +701,6 @@ class OrderListQuery:
 
         rsp_data = rsp['RetData']
 
-        if 'Cookie' not in rsp_data or 'EnvType' not in rsp_data:
-            return RET_ERROR, msg, None
-
         if "USOrderArr" not in rsp_data :
             error_str = ERROR_STR_PREFIX + "cannot find USOrderArr in client rsp. Response: %s" % rsp_str
             return RET_ERROR, error_str, None
@@ -707,14 +709,15 @@ class OrderListQuery:
         if raw_order_list is None or len(raw_order_list) == 0:
             return RET_OK, "", []
 
-        order_list = [{"stock_code": order['StockCode'],
+        order_list = [{"code": merge_stock_str(2, order['StockCode']),
                        "stock_name": order["StockName"],
-                       "dealt_avg_price": str(int(order['DealtAvgPrice'])/1000),
+                       "dealt_avg_price": float(order['DealtAvgPrice'])/1000,
                        "dealt_qty": order['DealtQty'],
-                       "localid": order['LocalID'],
+                       "qty": order['Qty'],
                        "orderid": order['OrderID'],
                        "order_type": order['OrderType'],
-                       "price": str(int(order['Price'])/1000),
+                       "order_side": order['OrderSide'],
+                       "price": float(order['Price'])/1000,
                        "status": order['Status'],
                        "submited_time": order['SubmitedTime'],
                        "updated_time": order['UpdatedTime']
@@ -763,23 +766,23 @@ class PositionListQuery:
         if raw_position_list is None or len(raw_position_list) == 0:
             return RET_OK, "", []
 
-        position_list = [{"stock_code": str(position['StockCode']),
-                          "stock_name": str(position["StockName"]),
+        position_list = [{"code": merge_stock_str(1, position['StockCode']),
+                          "stock_name": position["StockName"],
                           "qty": position['Qty'],
                           "can_sell_qty": position['CanSellQty'],
-                          "cost_price": str(int(position['CostPrice'])/1000),
+                          "cost_price": float(position['CostPrice'])/1000,
                           "cost_price_valid": position['CostPriceValid'],
-                          "market_val": str(int(position['MarketVal'])/1000),
-                          "nominal_price": str(int(position['NominalPrice'])/1000),
-                          "pl_ratio": str(int(position['PLRatio'])/1000),
+                          "market_val": float(position['MarketVal'])/1000,
+                          "nominal_price": float(position['NominalPrice'])/1000,
+                          "pl_ratio": float(position['PLRatio'])/1000,
                           "pl_ratio_valid": position['PLRatioValid'],
-                          "pl_val": str(int(position['PLVal'])/1000),
+                          "pl_val": float(position['PLVal'])/1000,
                           "pl_val_valid": position['PLValValid'],
                           "today_buy_qty": position['Today_BuyQty'],
-                          "today_buy_val": str(int(position['Today_BuyVal'])/1000),
-                          "today_pl_val": str(int(position['Today_PLVal'])/1000),
+                          "today_buy_val": float(position['Today_BuyVal'])/1000,
+                          "today_pl_val": float(position['Today_PLVal'])/1000,
                           "today_sell_qty": position['Today_SellQty'],
-                          "today_sell_val": str(int(position['Today_SellVal'])/1000)
+                          "today_sell_val": float(position['Today_SellVal'])/1000
                           }
                          for position in raw_position_list]
         return RET_OK, "", position_list
@@ -805,9 +808,6 @@ class PositionListQuery:
 
         rsp_data = rsp['RetData']
 
-        if 'Cookie' not in rsp_data or 'EnvType' not in rsp_data:
-            return RET_ERROR, msg, None
-
         if "USPositionArr" not in rsp_data :
             error_str = ERROR_STR_PREFIX + "cannot find USPositionArr in client rsp. Response: %s" % rsp_str
             return RET_ERROR, error_str, None
@@ -816,23 +816,23 @@ class PositionListQuery:
         if raw_position_list is None or len(raw_position_list) == 0:
             return RET_OK, "", []
 
-        position_list = [{"stock_code": str(position['StockCode']),
-                          "stock_name": str(position["StockName"]),
+        position_list = [{"code": merge_stock_str(2, position['StockCode']),
+                          "stock_name": position["StockName"],
                           "qty": position['Qty'],
                           "can_sell_qty": position['CanSellQty'],
-                          "cost_price": str(int(position['CostPrice'])/1000),
+                          "cost_price": float(position['CostPrice'])/1000,
                           "cost_price_valid": position['CostPriceValid'],
-                          "market_val": str(int(position['MarketVal'])/1000),
-                          "nominal_price": str(int(position['NominalPrice'])/1000),
-                          "pl_ratio": str(int(position['PLRatio'])/1000),
+                          "market_val": float(position['MarketVal'])/1000,
+                          "nominal_price": float(position['NominalPrice'])/1000,
+                          "pl_ratio": float(position['PLRatio'])/1000,
                           "pl_ratio_valid": position['PLRatioValid'],
-                          "pl_val": str(int(position['PLVal'])/1000),
+                          "pl_val": float(position['PLVal'])/1000,
                           "pl_val_valid": position['PLValValid'],
                           "today_buy_qty": position['Today_BuyQty'],
-                          "today_buy_val": str(int(position['Today_BuyVal'])/1000),
-                          "today_pl_val": str(int(position['Today_PLVal'])/1000),
+                          "today_buy_val": float(position['Today_BuyVal'])/1000,
+                          "today_pl_val": float(position['Today_PLVal'])/1000,
                           "today_sell_qty": position['Today_SellQty'],
-                          "today_sell_val": str(int(position['Today_SellVal'])/1000)
+                          "today_sell_val": float(position['Today_SellVal'])/1000
                           }
                          for position in raw_position_list]
         return RET_OK, "", position_list
@@ -878,12 +878,12 @@ class DealListQuery:
         if raw_deal_list is None or len(raw_deal_list) == 0:
             return RET_OK, "", []
 
-        deal_list = [{"stock_code": deal['StockCode'],
+        deal_list = [{"code": merge_stock_str(1, deal['StockCode']),
                       "stock_name": deal["StockName"],
                       "dealid": deal['DealID'],
                       "orderid": deal['OrderID'],
                       "qty": deal['Qty'],
-                      "price": str(int(deal['Price'])/1000),
+                      "price": float(deal['Price'])/1000,
                       "orderside": deal['OrderSide'],
                       "time": deal['Time']
                       }
@@ -911,10 +911,7 @@ class DealListQuery:
 
         rsp_data = rsp['RetData']
 
-        if 'Cookie' not in rsp_data or 'EnvType' not in rsp_data:
-            return RET_ERROR, msg, None
-
-        if "USDealArr" not in rsp_data :
+        if "USDealArr" not in rsp_data:
             error_str = ERROR_STR_PREFIX + "cannot find USDealArr in client rsp. Response: %s" % rsp_str
             return RET_ERROR, error_str, None
 
@@ -922,12 +919,12 @@ class DealListQuery:
         if raw_deal_list is None or len(raw_deal_list) == 0:
             return RET_OK, "", []
 
-        deal_list = [{"stock_code": deal['StockCode'],
+        deal_list = [{"code": merge_stock_str(2, deal['StockCode']),
                       "stock_name": deal["StockName"],
                       "dealid": deal['DealID'],
                       "orderid": deal['OrderID'],
                       "qty": deal['Qty'],
-                      "price": str(int(deal['Price'])/1000),
+                      "price": float(deal['Price'])/1000,
                       "orderside": deal['OrderSide'],
                       "time": deal['Time']
                       }

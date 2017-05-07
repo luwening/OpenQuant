@@ -18,6 +18,8 @@ public:
 	void Uninit();	
 	void PushStockData(INT64 nStockID, SOCKET sock);
 
+	void NotifySocketClosed(SOCKET sock);
+
 protected:
 	struct	StockDataReq
 	{

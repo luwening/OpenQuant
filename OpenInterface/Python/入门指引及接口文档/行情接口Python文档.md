@@ -171,6 +171,16 @@ BrokerHandlerBase     # 经纪队列处理基类
 
 
 
+**板块分类类型** ，（字符串类型）：
+| 板块分类 | 标识          |
+| ---- | ----------- |
+| 所有板块   | "ALL"        |
+| 行业分类   | "INDUSTRY"        |
+| 地域分类   | "REGION"        |
+| 概念分类   | "CONCEPT"        |
+
+
+
 **股票代码模式**为：“ 市场+原始代码"
 例如，“HK.00700”, “SZ.000001”, “US.AAPL”
 
@@ -426,7 +436,6 @@ ret_code失败时，ret_data返回为错误描述字符串；
 **volume**：	成交数量； long
 **turnover**：	成交金额；float
 **turnover_rate**：	换手率；float
-**amplitude**：	  振幅；float 
 **suspension**：	  是否停牌(True表示停牌)；bool
 **listing_date** ：  上市日期 (yyyy-MM-dd)；string
 **circular_market_val**：  流通市值；float
@@ -501,7 +510,16 @@ ret_code, ret_data = quote_ctx.get_plate_list(market, plate_class)
 **功能**： 获取板块集合下的子板块列表
 **参数**：
 **market**：市场标识
-**plate_class** ：板块分类, string; 例如，"ALL", "INDUSTRY",具体见板块分类说明
+**plate_class** ：板块分类, string; 例如，"ALL", "INDUSTRY"
+
+**板块分类类型** ，（字符串类型）：
+| 板块分类 | 标识          |
+| ---- | ----------- |
+| "ALL"           | 所有板块    |
+| "INDUSTRY"      | 行业分类    |
+| "REGION"        | 地域分类    |
+| "CONCEPT"       | 概念分类    |
+
 
 **返回**：
 ret_code失败时，ret_data返回为错误描述字符串；
@@ -546,7 +564,7 @@ ret_code失败时，ret_data返回为错误描述字符串；
 **stock_type**：股票类型：string, 例如，"BOND", "STOCK"
 
 **失败情况**：
-1. 市场或板块代码不合法 
+1. 市场或板块代码不合法，或者该板块不存在 
 2. 客户端内部或网络错误
 
 

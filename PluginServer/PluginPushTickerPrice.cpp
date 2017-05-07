@@ -117,6 +117,15 @@ void CPluginPushTickerPrice::PushStockData(INT64 ddwStockHash, SOCKET sock)
 
 }
 
+void CPluginPushTickerPrice::NotifySocketClosed(SOCKET sock)
+{
+	auto itmap = m_mapPushInfo.find(sock);
+	if (itmap != m_mapPushInfo.end())
+	{
+		m_mapPushInfo.erase(itmap);
+	}
+}
+
 INT64 CPluginPushTickerPrice::GetLastPushTicker(INT64 ddwStockHash, SOCKET sock)
 {
 	std::vector<Stock_PushInfo> &vtInfoSingleSocket = m_mapPushInfo[sock];

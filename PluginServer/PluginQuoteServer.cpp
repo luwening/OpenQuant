@@ -333,7 +333,41 @@ QueryDataErrCode CPluginQuoteServer::QueryPlateSubIDList(DWORD* pdwCookie, INT64
 
 void CPluginQuoteServer::CloseSocket(SOCKET sock)
 {
-	m_pQuoteOp->NotifyFTPluginSocketClosed(PLUGIN_GUID, sock);
+	if (m_pQuoteOp)
+	{
+		m_pQuoteOp->NotifyFTPluginSocketClosed(PLUGIN_GUID, sock);
+	}
+
+	m_BasicPrice.NotifySocketClosed(sock);
+	m_GearPrice.NotifySocketClosed(sock);
+	m_RTData.NotifySocketClosed(sock);
+
+	m_KLData.NotifySocketClosed(sock);
+	m_StockSub.NotifySocketClosed(sock);
+	m_StockUnSub.NotifySocketClosed(sock);
+
+	m_QueryStockSub.NotifySocketClosed(sock);
+	m_TradeDate.NotifySocketClosed(sock);
+	m_StockList.NotifySocketClosed(sock);
+
+	m_BatchBasic.NotifySocketClosed(sock);
+	m_TickerPrice.NotifySocketClosed(sock);
+	m_Snapshot.NotifySocketClosed(sock);
+
+	m_HistoryKL.NotifySocketClosed(sock);
+	m_ExRightInfo.NotifySocketClosed(sock);
+	m_PushStockData.NotifySocketClosed(sock);
+
+	m_PushBatchBasic.NotifySocketClosed(sock);
+	m_PushGearPrice.NotifySocketClosed(sock);
+	m_PushTickerPrice.NotifySocketClosed(sock);
+
+	m_PushKLData.NotifySocketClosed(sock);
+	m_PushRTData.NotifySocketClosed(sock);
+	m_platesetIDs.NotifySocketClosed(sock);
+
+	m_plateSubIDs.NotifySocketClosed(sock);
+	m_BrokerQueue.NotifySocketClosed(sock);
 }
 
 void  CPluginQuoteServer::OnChanged_PriceBase(INT64  ddwStockHash)

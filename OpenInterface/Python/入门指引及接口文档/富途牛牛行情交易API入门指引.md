@@ -3,8 +3,8 @@
 **准备工作**
 
 1.      准备一台Windows 32bit 或者64bit 的电脑（win7/8/10）  
-2.      下载富途牛牛客户端，需要在QQ群108534228群文件中下载专用版本![image](https://github.com/FutunnOpen/OpenQuant/raw/master/Resources/Download.png)  
-3.      下载Anaconda python 3和 Pycharm 2016.3.2，Anaconda python 是Python科学技术包的合集，提供了很多用于科学计算的模块，Pycharm是一款Python的IDE，用于程序开发，可以在QQ群108534228群文件中下载python接入开发相关工具，可选择32位或者64位下载。如果已经安装了Anaconda python2，也可以使用。  
+2.      下载富途牛牛客户端，需要在QQ群108534288群文件中下载专用版本![image](https://github.com/FutunnOpen/OpenQuant/raw/master/Resources/Download.png)  
+3.      下载Anaconda python 3和 Pycharm 2016.3.2，Anaconda python 是Python科学技术包的合集，提供了很多用于科学计算的模块，Pycharm是一款Python的IDE，用于程序开发，可以在QQ群108534288群文件中下载python接入开发相关工具，可选择32位或者64位下载。如果已经安装了Anaconda python2，也可以使用。  
 4.      在GITHUB上下载FutunnOpen项目代码并解压<https://github.com/FutunnOpen/OpenQuant>
 
 
@@ -26,7 +26,7 @@
 
 1. 在开启了富途牛牛客户端或者利用云端获取数据的情况下，在Pycharm中运行项目代码中OpenQuant\OpenInterface\Python下的sample.py，即可进行调试，运行。
 
-2. 注册并登录富途牛牛即可免费获取港股实时行情，有效期至4月底
+2. 注册并登录富途牛牛即可免费获取港股实时行情，有效期至10月底
 
 3. 行情和交易接口文档可在如下地址获取，
 

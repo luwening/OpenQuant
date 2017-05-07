@@ -22,6 +22,8 @@ public:
 	void Init(CPluginQuoteServer* pQuoteServer, IFTQuoteData*  pQuoteData);
 	void Uninit();
 	void PushStockData(INT64 ddwStockHash, SOCKET sock);
+	
+	void NotifySocketClosed(SOCKET sock);
 
 protected:
 	struct	StockDataReq

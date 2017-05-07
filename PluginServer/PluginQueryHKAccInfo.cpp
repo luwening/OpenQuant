@@ -146,7 +146,7 @@ bool CPluginQueryHKAccInfo::DoDeleteReqData(StockDataReq* pReq)
 	return false;
 }
 
-void CPluginQueryHKAccInfo::NotifyOnQueryHKAccInfo(Trade_Env enEnv, UINT32 nCookie, const Trade_AccInfo& accInfo)
+void CPluginQueryHKAccInfo::NotifyOnQueryHKAccInfo(Trade_Env enEnv, UINT32 nCookie, const Trade_AccInfo& accInfo, int nResult)
 {
 	CHECK_RET(nCookie, NORET);
 	CHECK_RET(m_pTradeOp && m_pTradeServer, NORET);
@@ -168,13 +168,13 @@ void CPluginQueryHKAccInfo::NotifyOnQueryHKAccInfo(Trade_Env enEnv, UINT32 nCook
 
 	TradeAckType ack;
 	ack.head = pFindReq->req.head;
-	ack.head.ddwErrCode = PROTO_ERR_NO_ERROR;
-// 	if ( nErrCode )
-// 	{
-// 		WCHAR szErr[256] = L"";
-// 		if ( m_pTradeOp->GetErrDescV2(nErrCode, szErr) )
-// 			CA::Unicode2UTF(szErr, ack.head.strErrDesc);
-// 	}
+	ack.head.ddwErrCode = nResult;
+
+	if (nResult != 0)
+ 	{
+		WCHAR szErr[256] = L"获取信息失败!";
+ 		CA::Unicode2UTF(szErr, ack.head.strErrDesc);
+ 	}
 
 	//tomodify 4
 	ack.body.nEnvType = enEnv;
@@ -196,6 +196,11 @@ void CPluginQueryHKAccInfo::NotifyOnQueryHKAccInfo(Trade_Env enEnv, UINT32 nCook
 
 	m_vtReqData.erase(itReq);
 	delete pFindReq;
+}
+
+void CPluginQueryHKAccInfo::NotifySocketClosed(SOCKET sock)
+{
+	DoClearReqInfo(sock);
 }
 
 void CPluginQueryHKAccInfo::OnTimeEvent(UINT nEventID)
@@ -310,4 +315,24 @@ void CPluginQueryHKAccInfo::ClearAllReqAckData()
 	}
 
 	m_vtReqData.clear();
+}
+
+void CPluginQueryHKAccInfo::DoClearReqInfo(SOCKET socket)
+{
+	VT_REQ_TRADE_DATA& vtReq = m_vtReqData;
+
+	//清掉socket对应的请求信息
+	auto itReq = vtReq.begin();
+	while (itReq != vtReq.end())
+	{
+		if (*itReq && (*itReq)->sock == socket)
+		{
+			delete *itReq;
+			itReq = vtReq.erase(itReq);
+		}
+		else
+		{
+			++itReq;
+		}
+	}
 }

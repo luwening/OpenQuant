@@ -22,6 +22,8 @@ public:
 	void NotifyOnChangeOrder(Trade_Env enEnv, UINT nCookie, Trade_SvrResult enSvrRet, 
 		UINT64 nLocalID, INT64 nErrCode);
 
+	void NotifySocketClosed(SOCKET sock);
+
 protected:
 	//CTimerWndInterface 
 	virtual void OnTimeEvent(UINT nEventID);
@@ -59,6 +61,9 @@ private:
 	bool	IsReqDataExist(StockDataReq* pReq); 
 	void	DoRemoveReqData(StockDataReq* pReq);
 	void	DoTryProcessTradeOpt(StockDataReq* pReq);
+
+private:
+	void DoClearReqInfo(SOCKET socket);
 
 protected:
 	CPluginUSTradeServer	*m_pTradeServer;

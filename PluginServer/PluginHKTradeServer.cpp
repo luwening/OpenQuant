@@ -147,6 +147,20 @@ void CPluginHKTradeServer::ReplyTradeReq(int nCmdID, const char *pBuf, int nLen,
 	m_pNetwork->SendData(sock, pBuf, nLen);
 }
 
+void CPluginHKTradeServer::CloseSocket(SOCKET sock)
+{
+	m_PlaceOrder.NotifySocketClosed(sock);
+	m_ChangeOrder.NotifySocketClosed(sock);
+	m_SetOrderStatus.NotifySocketClosed(sock);
+
+	m_UnlockTrade.NotifySocketClosed(sock);
+	m_QueryAccInfo.NotifySocketClosed(sock);
+	m_QueryHKOrder.NotifySocketClosed(sock);
+
+	m_QueryHKPos.NotifySocketClosed(sock);
+	m_QueryHKDeal.NotifySocketClosed(sock);
+}
+
 void CPluginHKTradeServer::OnUnlockTrade(UINT32 nCookie, Trade_SvrResult enSvrRet, UINT64 nErrCode)
 {
 	if (enSvrRet == Trade_SvrResult_Failed)
@@ -176,9 +190,9 @@ void CPluginHKTradeServer::OnQueryPositionList(Trade_Env enEnv, UINT32 nCookie, 
 	m_QueryHKPos.NotifyOnQueryPosition(enEnv, nCookie, nCount, pArrPosition);
 }
 
-void CPluginHKTradeServer::OnQueryAccInfo(Trade_Env enEnv, UINT32 nCookie, const Trade_AccInfo& accInfo)
+void CPluginHKTradeServer::OnQueryAccInfo(Trade_Env enEnv, UINT32 nCookie, const Trade_AccInfo& accInfo, int nResult)
 {
-	m_QueryAccInfo.NotifyOnQueryHKAccInfo(enEnv, nCookie, accInfo);
+	m_QueryAccInfo.NotifyOnQueryHKAccInfo(enEnv, nCookie, accInfo, nResult);
 }
 
 void CPluginHKTradeServer::OnPlaceOrder(Trade_Env enEnv, UINT nCookie, Trade_SvrResult enSvrRet, UINT64 nLocalID, UINT16 nErrCode)

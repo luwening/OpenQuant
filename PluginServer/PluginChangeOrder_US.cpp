@@ -152,12 +152,13 @@ void  CPluginChangeOrder_US::DoTryProcessTradeOpt(StockDataReq* pReq)
 	} 
 	// 
 	bool bRet = false;
+	int nReqResult = 0;
 	//美股只支持撤单， 只有真实交易环境!!
 	if (body.nSvrOrderID != 0 && body.nEnvType == Trade_Env_Real)
 	{  
 		pReq->bWaitDelaySvrID = false;
 		bRet = m_pTradeOp->ChangeOrder((UINT*)&pReq->dwLocalCookie, body.nSvrOrderID, 
-			body.nPrice, body.nQty);
+			body.nPrice, body.nQty, &nReqResult);
 	} 
 
 	if ( !bRet )
@@ -166,6 +167,10 @@ void  CPluginChangeOrder_US::DoTryProcessTradeOpt(StockDataReq* pReq)
 		ack.head = req.head;
 		ack.head.ddwErrCode = PROTO_ERR_UNKNOWN_ERROR;
 		CA::Unicode2UTF(L"发送失败", ack.head.strErrDesc);
+		if (nReqResult != 0)
+		{
+			ack.head.strErrDesc = UtilPlugin::GetErrStrByCode((QueryDataErrCode)nReqResult);
+		}
 
 		ack.body.nEnvType = body.nEnvType;
 		ack.body.nCookie = body.nCookie;
@@ -207,11 +212,13 @@ void CPluginChangeOrder_US::NotifyOnChangeOrder(Trade_Env enEnv, UINT nCookie,
 	TradeAckType ack;
 	ack.head = pFindReq->req.head;
 	ack.head.ddwErrCode = nErrCode;
-	if ( nErrCode )
+	if (nErrCode != 0 || enSvrRet != Trade_SvrResult_Succeed)
 	{
-		WCHAR szErr[256] = L"";
-		if ( m_pTradeOp->GetErrDescV2(nErrCode, szErr) )
-			CA::Unicode2UTF(szErr, ack.head.strErrDesc);
+		WCHAR szErr[256] = L"发送请求失败!";
+		if (nErrCode != 0)
+			m_pTradeOp->GetErrDescV2(nErrCode, szErr);
+
+		CA::Unicode2UTF(szErr, ack.head.strErrDesc);
 	}
 
 	//tomodify 4
@@ -225,6 +232,11 @@ void CPluginChangeOrder_US::NotifyOnChangeOrder(Trade_Env enEnv, UINT nCookie,
 
 	m_vtReqData.erase(itReq);
 	delete pFindReq;
+}
+
+void CPluginChangeOrder_US::NotifySocketClosed(SOCKET sock)
+{
+	DoClearReqInfo(sock);
 }
 
 void CPluginChangeOrder_US::OnTimeEvent(UINT nEventID)
@@ -401,5 +413,25 @@ void CPluginChangeOrder_US::OnCvtOrderID_Local2Svr( int nResult, Trade_Env eEnv,
 			DoTryProcessTradeOpt(pItem);
 		}
 		++it; 
+	}
+}
+
+void CPluginChangeOrder_US::DoClearReqInfo(SOCKET socket)
+{
+	VT_REQ_TRADE_DATA& vtReq = m_vtReqData;
+
+	//清掉socket对应的请求信息
+	auto itReq = vtReq.begin();
+	while (itReq != vtReq.end())
+	{
+		if (*itReq && (*itReq)->sock == socket)
+		{
+			delete *itReq;
+			itReq = vtReq.erase(itReq);
+		}
+		else
+		{
+			++itReq;
+		}
 	}
 }

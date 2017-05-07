@@ -120,6 +120,11 @@ void CPluginPushStockData::NotifyQuoteDataUpdate(int nCmdID, INT64 nStockID)
 	//CHECK_RET(m_pQuoteData, NORET);
 }
 
+void CPluginPushStockData::NotifySocketClosed(SOCKET sock)
+{
+	DoClearReqInfo(sock);
+}
+
 void CPluginPushStockData::OnMsgEvent(int nEvent,WPARAM wParam,LPARAM lParam)
 {
 	if ( EVENT_ID_ACK_REQUEST == nEvent )
@@ -218,4 +223,24 @@ void CPluginPushStockData::ReleaseAllReqData()
 		delete pReqData;
 	}
 	m_vtReqData.clear();
+}
+
+void CPluginPushStockData::DoClearReqInfo(SOCKET socket)
+{
+	VT_STOCK_DATA_REQ& vtReq = m_vtReqData;
+
+	//清掉socket对应的请求信息
+	auto itReq = vtReq.begin();
+	while (itReq != vtReq.end())
+	{
+		if (*itReq && (*itReq)->sock == socket)
+		{
+			delete *itReq;
+			itReq = vtReq.erase(itReq);
+		}
+		else
+		{
+			++itReq;
+		}
+	}
 }

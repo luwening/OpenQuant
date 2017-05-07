@@ -45,8 +45,10 @@ enum QueryDataErrCode
 	QueryData_FailCodeNoFind = 3,	//代码没找到(也有可能是市场类型错了)
 	QueryData_FailGuidNoFind = 4,	//插件GUID传错
 	QueryData_FailNoImplInf = 5,		//行情接口未完成
-	QueryData_IsExisted = 6,
+	
 	QueryData_FailFreqLimit = 7,	//查询频率限制导致失败
+	QueryData_FailNetwork = 8,		//网络异常，发送失败
+	QueryData_FailErrParam = 9,		//参数错误
 };
 
 enum StockSubType

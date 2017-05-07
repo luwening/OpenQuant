@@ -176,18 +176,18 @@ bool CProtoQueryUSOrder::MakeProtoBody_Ack(Json::Value &jsnVal, const ProtoAckDa
 void CProtoQueryUSOrder::GetProtoBodyField_Req(VT_PROTO_FIELD &vtField, const ProtoReqBodyType &reqData)
 {
 	static BOOL arOptional[] = {
-		TRUE, FALSE, 
+		TRUE, FALSE, TRUE,
 	};
 	static EProtoFildType arFieldType[] = {
-		ProtoFild_Int32, ProtoFild_Int32, 
+		ProtoFild_Int32, ProtoFild_Int32, ProtoFild_StringA,
 	};
 	static LPCSTR arFieldKey[] = {
-		"EnvType",	"Cookie",
+		"EnvType", "Cookie", "StatusFilterStr"
 	};
 
 	ProtoReqBodyType &body = const_cast<ProtoReqBodyType &>(reqData);
 	void *arPtr[] = {
-		&body.nEnvType, &body.nCookie, 
+		&body.nEnvType, &body.nCookie, &body.strStatusFilter
 	};
 
 	CHECK_OP(_countof(arOptional) == _countof(arFieldType), NOOP);

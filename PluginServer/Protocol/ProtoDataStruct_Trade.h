@@ -283,6 +283,7 @@ struct	QueryHKOrderReqBody
 {
 	int		nEnvType;
 	int		nCookie;
+	std::string strStatusFilter; //状态过滤字符串， 以","号分隔，如"0,1,2"
 };
 
 //与 Trade_OrderItem 同步
@@ -337,6 +338,7 @@ struct	QueryUSOrderReqBody
 {
 	int		nEnvType;
 	int		nCookie;
+	std::string strStatusFilter; //状态过滤字符串， 以","号分隔，如"0,1,2"
 };
 
 //与 Trade_OrderItem 同步_

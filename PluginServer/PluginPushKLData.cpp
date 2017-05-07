@@ -184,6 +184,15 @@ void CPluginPushKLData::PushStockData(INT64 nStockID, SOCKET sock, StockSubType 
 	}
 }
 
+void CPluginPushKLData::NotifySocketClosed(SOCKET sock)
+{
+	auto itmap = m_mapPushInfo.find(sock);
+	if (itmap != m_mapPushInfo.end())
+	{
+		m_mapPushInfo.erase(itmap);
+	}
+}
+
 DWORD CPluginPushKLData::GetLastPushKL(INT64 ddwStockHash, SOCKET sock, StockSubType eStockSubType)
 {
 	std::vector<Stock_PushInfo> &vtInfoSingleSocket = m_mapPushInfo[sock];

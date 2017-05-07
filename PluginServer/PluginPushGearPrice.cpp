@@ -105,3 +105,8 @@ void CPluginPushGearPrice::PushStockData(INT64 nStockID, SOCKET sock)
 
 	}
 }
+
+void CPluginPushGearPrice::NotifySocketClosed(SOCKET sock)
+{
+
+}
