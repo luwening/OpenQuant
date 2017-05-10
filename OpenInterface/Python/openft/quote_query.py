@@ -527,8 +527,8 @@ class RtDataQuery:
                     "cur_price": float(record['CurPrice']) / 1000,
                     "last_close": float(record['LastClose']) / 1000,
                     "avg_price": float(record['AvgPrice']) / 1000,
-                    "turnover": float(record['Turnover'])/1000,
-                    "volume": record['Volume']
+                    "turnover": float(record['Volume'])/1000,
+                    "volume": record['Turnover']
                     } for record in rt_data_list]
 
         return RET_OK, "", rt_list
