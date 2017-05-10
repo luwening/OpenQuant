@@ -337,7 +337,7 @@ void CProtoPushRTData::GetRTDataArrField(VT_PROTO_FIELD &vtField, const PushRTDa
 	static LPCSTR arFieldKey[] = {
 		"DataStatus", "Time", "OpenedMins", 
 		"Cur", "LastClose", "AvgPrice", 
-		"Turnover", "Volume",
+		"Volume", "Turnover",
 	};
 
 	PushRTDataAckItem &item = const_cast<PushRTDataAckItem &>(ackItem);
