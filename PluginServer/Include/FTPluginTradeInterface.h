@@ -20,8 +20,8 @@ Ver: 1.2
 
 enum Trade_Env
 {
-	Trade_Env_Real = 0, //真实环境（实盘交易）
-	Trade_Env_Virtual = 1, //虚拟环境（仿真交易或模拟交易）
+	Trade_Env_Real = 0, //真实环境（实盘交易, 目前支持港股/美股）
+	Trade_Env_Virtual = 1, //虚拟环境（仿真交易或模拟交易, 目前仅支持港股）
 };
 
 enum Trade_SvrResult
@@ -228,10 +228,22 @@ interface ITrade_HK
 	* @param lpszCode 股票代码.
 	* @param nPrice 订单价格. 注意：是浮点值×1000，即最小单位是0.001元
 	* @param nQty 订单数量.
+	* @param pnResult 返回错误码, 目前可能的错误码: QueryData_FailFreqLimit, QueryData_FailNetwork
 
 	* @return true发送成功，false发送失败.
 	*/
-	virtual bool PlaceOrder(Trade_Env enEnv, UINT32* pCookie, Trade_OrderType_HK enType, Trade_OrderSide enSide, LPCWSTR lpszCode, UINT64 nPrice, UINT64 nQty) = 0;
+	virtual bool PlaceOrder(Trade_Env enEnv, UINT32* pCookie, Trade_OrderType_HK enType, 
+		Trade_OrderSide enSide, LPCWSTR lpszCode, UINT64 nPrice, UINT64 nQty, int* pnResult = NULL) = 0;
+
+	/**
+	* 得到订单状态
+
+	* @param enEnv 交易环境(实盘交易或仿真交易).
+	* @param nOrderID 订单真正的ID.
+	* @param eStatus 返回订单状态
+	* @return true/false 订单是否存在
+	*/
+	virtual bool GetOrderStatus(Trade_Env enEnv, UINT64 nOrderID, Trade_OrderStatus& eStatus) = 0;
 
 	/**
 	* 设置订单状态
@@ -240,10 +252,12 @@ interface ITrade_HK
 	* @param pCookie 接收本次调用对应的Cookie值，用于服务器返回时做对应关系判断.
 	* @param nOrderID 订单真正的ID.
 	* @param enStatus 设置为何种状态.
+	* @param pnResult 返回错误码, 目前可能的错误码: QueryData_FailFreqLimit, QueryData_FailNetwork
 
 	* @return true发送成功，false发送失败.
 	*/
-	virtual bool SetOrderStatus(Trade_Env enEnv, UINT32* pCookie, UINT64 nOrderID, Trade_SetOrderStatus enStatus) = 0;
+	virtual bool SetOrderStatus(Trade_Env enEnv, UINT32* pCookie, UINT64 nOrderID, 
+		Trade_SetOrderStatus enStatus, int* pnResult = NULL) = 0;
 
 	/**
 	* 改单
@@ -253,10 +267,12 @@ interface ITrade_HK
 	* @param nOrderID 订单真正的ID.
 	* @param nPrice 新的订单价格. 注意：是浮点值×1000，即最小单位是0.001元
 	* @param nQty 新的订单数量.
+	* @param pnResult 返回错误码, 目前可能的错误码: QueryData_FailFreqLimit, QueryData_FailNetwork
 
 	* @return true发送成功，false发送失败.
 	*/
-	virtual bool ChangeOrder(Trade_Env enEnv, UINT32* pCookie, UINT64 nOrderID, UINT64 nPrice, UINT64 nQty) = 0;
+	virtual bool ChangeOrder(Trade_Env enEnv, UINT32* pCookie, UINT64 nOrderID, UINT64 nPrice, 
+		UINT64 nQty, int* pnResult = NULL) = 0;
 
 	/**
 	* 通过错误码得到错误描述
@@ -425,7 +441,7 @@ interface ITradeCallBack_HK
 	* @param nCookie 请求时的Cookie.
 	* @param accInfo 账户信息结构体.
 	*/
-	virtual void OnQueryAccInfo(Trade_Env enEnv, UINT32 nCookie, const Trade_AccInfo& accInfo) = 0;
+	virtual void OnQueryAccInfo(Trade_Env enEnv, UINT32 nCookie, const Trade_AccInfo& accInfo, int nResult) = 0;
 
 	/**
 	* 查询持仓列表回调
@@ -457,20 +473,23 @@ interface ITrade_US
 	* @param lpszCode 股票代码.
 	* @param nPrice 订单价格. 注意：是浮点值×1000，即最小单位是0.001元
 	* @param nQty 订单数量.
+	* @param pnResult 返回错误码, 目前可能的错误码: QueryData_FailFreqLimit, QueryData_FailNetwork
 
 	* @return true发送成功，false发送失败.
 	*/
-	virtual bool PlaceOrder(UINT32* pCookie, Trade_OrderType_US enType, Trade_OrderSide enSide, LPCWSTR lpszCode, UINT64 nPrice, UINT64 nQty) = 0;
+	virtual bool PlaceOrder(UINT32* pCookie, Trade_OrderType_US enType, Trade_OrderSide enSide, 
+		LPCWSTR lpszCode, UINT64 nPrice, UINT64 nQty, int* pnResult = NULL) = 0;
 
 	/**
 	* 撤销订单
 
 	* @param pCookie 接收本次调用对应的Cookie值，用于服务器返回时做对应关系判断.
 	* @param nOrderID 订单真正的ID.
+	* @param pnResult 返回错误码, 目前可能的错误码: QueryData_FailFreqLimit, QueryData_FailNetwork
 
 	* @return true发送成功，false发送失败.
 	*/
-	virtual bool CancelOrder(UINT32* pCookie, UINT64 nOrderID) = 0;
+	virtual bool CancelOrder(UINT32* pCookie, UINT64 nOrderID, int* pnResult = NULL) = 0;
 
 	/**
 	* 改单
@@ -479,10 +498,11 @@ interface ITrade_US
 	* @param nOrderID 订单真正的ID.
 	* @param nPrice 新的订单价格.  注意：是浮点值×1000，即最小单位是0.001元
 	* @param nQty 新的订单数量.
+	* @param pnResult 返回错误码, 目前可能的错误码: QueryData_FailFreqLimit, QueryData_FailNetwork
 
 	* @return true发送成功，false发送失败.
 	*/
-	virtual bool ChangeOrder(UINT32* pCookie, UINT64 nOrderID, UINT64 nPrice, UINT64 nQty) = 0;
+	virtual bool ChangeOrder(UINT32* pCookie, UINT64 nOrderID, UINT64 nPrice, UINT64 nQty, int* pnResult = NULL) = 0;
 
 	/**
 	* 通过错误描述Hash得到错误描述
@@ -541,6 +561,17 @@ interface ITrade_US
 	* @return  订单ServerID , 如果还没生成或者查找不到返回0
 	*/
 	virtual INT64 FindOrderSvrID(INT64 nLocalID) = 0;
+
+	/**
+	* 得到订单状态
+
+	* @param enEnv 交易环境(实盘交易或仿真交易).
+	* @param nOrderID 订单真正的ID.
+	* @param eStatus 返回订单状态
+	* @return true/false 订单是否存在
+	*/
+	virtual bool GetOrderStatus(UINT64 nOrderID, Trade_OrderStatus& eStatus) = 0;
+
 };
 
 interface ITradeCallBack_US
@@ -609,7 +640,7 @@ interface ITradeCallBack_US
 	* @param nCookie 请求时的Cookie.
 	* @param accInfo 账户信息结构体.
 	*/
-	virtual void OnQueryAccInfo(UINT32 nCookie, const Trade_AccInfo& accInfo) = 0;
+	virtual void OnQueryAccInfo(UINT32 nCookie, const Trade_AccInfo& accInfo, int nResult) = 0;
 
 	/**
 	* 查询持仓列表回调

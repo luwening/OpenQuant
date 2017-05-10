@@ -25,6 +25,8 @@ public:
 	void SetSnapshotOperator(IFTQuoteOperation	*pQuoteOp);
 	void NotifySnapshotResult(DWORD dwCookie, PluginStockSnapshot *arSnapshot, int nSnapshotNum);
 
+	void NotifySocketClosed(SOCKET sock);
+
 protected:
 	//CTimerWndInterface
 	virtual void OnTimeEvent(UINT nEventID);
@@ -67,6 +69,9 @@ protected:
 	bool GetStockMktCode(INT64 nStockID, StockMktCode &stkMktCode);
 	void ClearAllReqCache();
 	
+private:
+	void DoClearReqInfo(SOCKET socket);
+
 protected:
 	CPluginQuoteServer* m_pQuoteServer;
 	IFTQuoteOperation	*m_pQuoteOperator;

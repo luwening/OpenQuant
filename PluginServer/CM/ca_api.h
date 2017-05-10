@@ -6,7 +6,7 @@
 #include <vector> 
 #include <shlobj.h>
 #include <math.h> 
-
+#include "CA_Lock.h"
 
 _CA_BEGIN
 
@@ -65,7 +65,10 @@ static void  Unicode2UTF(const WCHAR*wcsCnt,std::string&strRet)
 
 static void  UTF2Unicode(LPCSTR pstr, std::wstring & strContext)
 {
+	static CA::CCriticalSection  s_lock;
 	static std::vector<wchar_t> s_vtTemp;   
+
+	CA::CAutoLock<CA::CCriticalSection>  lock(&s_lock);
 
 	int nStrLen = pstr? strlen(pstr):0; 
 	strContext.clear(); 
@@ -160,6 +163,25 @@ static void DeleteNumStrTailZero(CString &str)
 	}
 }
 
+static BOOL DivStr(const CString& str, const CString &strDiv, std::vector<CString> &arDiv)
+{
+	if (str.GetLength() == 0 || strDiv.GetLength() == 0)
+	{
+		return false;
+	}
+	arDiv.clear();
+
+	CString strTmp = str;
+	LPCTSTR seps = (LPCTSTR)strDiv;
+	TCHAR* pstrSrc = strTmp.GetBuffer(strTmp.GetLength());
+	TCHAR* token = _tcstok(pstrSrc, seps);
+	while (token)
+	{
+		arDiv.push_back(CString(token));
+		token = _tcstok(NULL, seps);
+	}
+	return true;
+}
 _CA_END
 
 #endif

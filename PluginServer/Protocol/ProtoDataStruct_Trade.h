@@ -23,6 +23,20 @@ struct OrderUpdatePushHKAckBody
 	int   nUpdateTime;
 	std::string strStockName;
 	std::string strStockCode;
+	OrderUpdatePushHKAckBody()
+	{
+		nEnvType = 0;
+		nLocalID = 0;
+		nOrderID = 0;
+		nOrderDir = 0;
+		nOrderTypeHK = 0;
+		nOrderStatusHK = 0;
+		nPrice = 0;
+		nQTY = 0;
+		nDealQTY = 0;
+		nSubmitTime = 0;
+		nUpdateTime = 0;
+	}
 };
 
 struct	OrderUpdatePushHK_Req
@@ -52,6 +66,14 @@ struct OrderErrorPushHKAckBody
 	int   nOrderErrNotifyHK;
 	int	  nOrderErrCode;
 	std::string  strOrderErrDesc;
+	
+	OrderErrorPushHKAckBody()
+	{
+		nEnvType = 0;
+		nOrderID = 0;
+		nOrderErrNotifyHK = 0;
+		nOrderErrCode = 0;
+	}
 };
 
 struct	OrderErrorPushHK_Req
@@ -78,6 +100,16 @@ struct	PlaceOrderReqBody
 	int nPrice;
 	INT64 nQty;
 	std::string strCode;
+
+	PlaceOrderReqBody()
+	{
+		nEnvType = 0;
+		nCookie = 0;
+		nOrderDir = 0;
+		nOrderType = 0;
+		nPrice = 0;
+		nQty = 0;
+	}
 };
 
 struct PlaceOrderAckBody
@@ -86,6 +118,16 @@ struct PlaceOrderAckBody
 	int nCookie;
 	INT64 nLocalID;
 	int nSvrResult;	
+	INT64	nSvrOrderID;
+
+	PlaceOrderAckBody()
+	{
+		nEnvType = 0;
+		nCookie = 0;
+		nLocalID = 0;
+		nSvrResult = 0;
+		nSvrOrderID = 0;
+	}
 };
 
 struct	PlaceOrder_Req
@@ -111,6 +153,15 @@ struct	SetOrderStatusReqBody
 	INT64	nSvrOrderID;
 	INT64	nLocalOrderID;
 
+	SetOrderStatusReqBody()
+	{
+		nEnvType = 0;
+		nCookie = 0;
+		nSetOrderStatus = 0;
+		nSvrOrderID = 0;
+		nLocalOrderID = 0;
+	}
+
 };
 
 struct SetOrderStatusAckBody
@@ -120,6 +171,15 @@ struct SetOrderStatusAckBody
 	INT64	nSvrOrderID;
 	INT64	nLocalOrderID;
 	int		nSvrResult;	
+
+	SetOrderStatusAckBody()
+	{
+		nEnvType = 0;
+		nCookie = 0;
+		nSvrOrderID = 0;
+		nLocalOrderID = 0;
+		nSvrResult = 0;
+	}
 };
 
 struct	SetOrderStatus_Req
@@ -141,6 +201,11 @@ struct UnlockTradeReqBody
 {
 	int			nCookie;
 	std::string strPasswd;
+
+	UnlockTradeReqBody()
+	{
+		nCookie = 0;
+	}
 };
 
 struct UnlockTradeAckBody
@@ -148,6 +213,12 @@ struct UnlockTradeAckBody
 	int	nCookie;
 	int nSvrResult;	
 	std::string strSecNum;
+
+	UnlockTradeAckBody()
+	{
+		nCookie = 0;
+		nSvrResult = 0;
+	}
 };
 
 struct UnlockTrade_Req
@@ -173,6 +244,16 @@ struct	ChangeOrderReqBody
 	INT64	nLocalOrderID;
 	int		nPrice;
 	INT64	nQty;
+
+	ChangeOrderReqBody()
+	{
+		nEnvType = 0;
+		nCookie = 0;
+		nSvrOrderID = 0;
+		nLocalOrderID = 0;
+		nPrice = 0;
+		nQty = 0;
+	}
 };
 
 struct ChangeOrderAckBody
@@ -182,6 +263,15 @@ struct ChangeOrderAckBody
 	INT64	nSvrOrderID;
 	INT64	nLocalOrderID;
 	int		nSvrResult;	
+
+	ChangeOrderAckBody()
+	{
+		nEnvType = 0;
+		nCookie = 0;
+		nSvrOrderID = 0;
+		nLocalOrderID = 0;
+		nSvrResult = 0;
+	}
 };
 
 struct	ChangeOrder_Req
@@ -202,6 +292,12 @@ struct	QueryHKAccInfoReqBody
 {
 	int		nEnvType;
 	int		nCookie;	
+
+	QueryHKAccInfoReqBody()
+	{
+		nEnvType = 0;
+		nCookie = 0;
+	}
 };
 
 struct QueryHKAccInfoAckBody
@@ -221,6 +317,24 @@ struct QueryHKAccInfoAckBody
 	INT64 nZgjde; //最高借贷额
 	INT64 nYyjde; //已用信贷额
 	INT64 nGpbzj; //股票保证金
+
+	QueryHKAccInfoAckBody()
+	{
+		nEnvType = 0;
+		nCookie = 0;
+
+		nPower = 0;
+		nZcjz = 0;
+		nZqsz = 0;
+		nXjjy = 0;
+		nKqxj = 0;
+		nDjzj = 0;
+		nZsje = 0;
+
+		nZgjde = 0;
+		nYyjde = 0;
+		nGpbzj = 0;
+	}
 };
 
 struct	QueryHKAccInfo_Req
@@ -243,6 +357,12 @@ struct	QueryUSAccInfoReqBody
 {
 	int		nEnvType;
 	int		nCookie;	
+
+	QueryUSAccInfoReqBody()
+	{
+		nEnvType = 0;
+		nCookie = 0;
+	}
 };
 
 struct QueryUSAccInfoAckBody
@@ -262,6 +382,24 @@ struct QueryUSAccInfoAckBody
 	INT64 nZgjde; //最高借贷额
 	INT64 nYyjde; //已用信贷额
 	INT64 nGpbzj; //股票保证金
+
+	QueryUSAccInfoAckBody()
+	{
+		nEnvType = 0;
+		nCookie = 0;
+
+		nPower = 0;
+		nZcjz = 0;
+		nZqsz = 0;
+		nXjjy = 0;
+		nKqxj = 0;
+		nDjzj = 0;
+		nZsje = 0;
+
+		nZgjde = 0;
+		nYyjde = 0;
+		nGpbzj = 0;
+	}
 };
 
 struct	QueryUSAccInfo_Req
@@ -283,6 +421,13 @@ struct	QueryHKOrderReqBody
 {
 	int		nEnvType;
 	int		nCookie;
+	std::string strStatusFilter; //状态过滤字符串， 以","号分隔，如"0,1,2"
+
+	QueryHKOrderReqBody()
+	{
+		nEnvType = 0;
+		nCookie = 0;
+	}
 };
 
 //与 Trade_OrderItem 同步
@@ -305,6 +450,24 @@ struct QueryHKOrderAckItem
 	INT64 nUpdatedTime; //订单最后更新的时间
 
 	int   nErrCode; //错误码，仅支持港股
+
+	QueryHKOrderAckItem()
+	{
+		nLocalID = 0;
+		nOrderID = 0;
+
+		nOrderType = 0;
+		nStatus = 0;
+		nPrice = 0;
+		nQty = 0;
+		nDealtQty = 0;
+		nDealtAvgPrice = 0;
+
+		nSubmitedTime = 0;
+		nUpdatedTime = 0;
+
+		nErrCode = 0;
+	}
 };
 
 typedef std::vector<QueryHKOrderAckItem>	VT_HK_ORDER;
@@ -314,6 +477,12 @@ struct QueryHKOrderAckBody
 	int		nEnvType;
 	int		nCookie;
 	VT_HK_ORDER vtOrder;
+
+	QueryHKOrderAckBody()
+	{
+		nEnvType = 0;
+		nCookie = 0;
+	}
 };
 
 struct	QueryHKOrder_Req
@@ -328,15 +497,19 @@ struct	QueryHKOrder_Ack
 	QueryHKOrderAckBody	body;
 };
 
-
-
-
 //////////////////////////////////////////////////////////////////////////
 //查询所有美股订单
 struct	QueryUSOrderReqBody
 {
 	int		nEnvType;
 	int		nCookie;
+	std::string strStatusFilter; //状态过滤字符串， 以","号分隔，如"0,1,2"
+
+	QueryUSOrderReqBody()
+	{
+		nEnvType = 0;
+		nCookie = 0;
+	}
 };
 
 //与 Trade_OrderItem 同步_
@@ -359,6 +532,24 @@ struct QueryUSOrderAckItem
 	INT64 nUpdatedTime; //订单最后更新的时间
 
 	int   nErrCode; //错误码，仅支持美股
+
+	QueryUSOrderAckItem()
+	{
+		nLocalID = 0;
+		nOrderID = 0;
+
+		nOrderType = 0;
+		nStatus = 0;
+		nPrice = 0;
+		nQty = 0;
+		nDealtQty = 0;
+		nDealtAvgPrice = 0;
+
+		nSubmitedTime = 0;
+		nUpdatedTime = 0;
+
+		nErrCode = 0;
+	}
 };
 
 typedef std::vector<QueryUSOrderAckItem>	VT_US_ORDER;
@@ -368,6 +559,12 @@ struct QueryUSOrderAckBody
 	int		nEnvType;
 	int		nCookie;
 	VT_US_ORDER vtOrder;
+
+	QueryUSOrderAckBody()
+	{
+		nEnvType = 0;
+		nCookie = 0;
+	}
 };
 
 struct	QueryUSOrder_Req
@@ -389,6 +586,12 @@ struct	QueryPositionReqBody
 {
 	int		nEnvType;
 	int		nCookie;
+
+	QueryPositionReqBody()
+	{
+		nEnvType = 0;
+		nCookie = 0;
+	}
 };
 
 //与 Trade_PositionItem 同步_
@@ -414,6 +617,27 @@ struct QueryPositionAckItem
 	INT64 nToday_BuyVal; //今日买入成交额
 	INT64 nToday_SellQty; //今日卖出成交量
 	INT64 nToday_SellVal; //今日卖出成交额
+
+	QueryPositionAckItem()
+	{
+		nQty = 0;
+		nCanSellQty = 0;
+		nNominalPrice = 0;
+		nMarketVal = 0;
+
+		nCostPrice = 0;
+		nCostPriceValid = 0;
+		nPLVal = 0;
+		nPLValValid = 0;
+		nPLRatio = 0;
+		nPLRatioValid = 0;
+
+		nToday_PLVal = 0;
+		nToday_BuyQty = 0;
+		nToday_BuyVal = 0;
+		nToday_SellQty = 0;
+		nToday_SellVal = 0;
+	}
 };
 
 typedef std::vector<QueryPositionAckItem>	VT_Position;
@@ -423,6 +647,12 @@ struct QueryPositionAckBody
 	int		nEnvType;
 	int		nCookie;
 	VT_Position  vtPosition;
+
+	QueryPositionAckBody()
+	{
+		nEnvType = 0;
+		nCookie = 0;
+	}
 };
 
 struct QueryPosition_Req
@@ -442,6 +672,12 @@ struct QueryHKDealReqBody
 {
 	int		nEnvType;
 	int		nCookie;
+
+	QueryHKDealReqBody()
+	{
+		nEnvType = 0;
+		nCookie = 0;
+	}
 };
 
 //与 Trade_DealItem 同步
@@ -461,6 +697,17 @@ struct QueryHKDealAckItem
 	UINT64 nQty; //成交数量
 
 	UINT64 nTime;	//成交时间
+
+	QueryHKDealAckItem()
+	{
+		nOrderID = 0;
+		nDealID = 0;
+
+		enSide = 0;
+		nPrice = 0;
+		nQty = 0;
+		nTime = 0;
+	}
 };
 
 typedef std::vector<QueryHKDealAckItem>	VT_HK_Deal;
@@ -470,6 +717,12 @@ struct QueryHKDealAckBody
 	int		nEnvType;
 	int		nCookie;
 	VT_HK_Deal vtDeal;
+
+	QueryHKDealAckBody()
+	{
+		nEnvType = 0;
+		nCookie = 0;
+	}
 };
 
 struct QueryHKDeal_Req
@@ -490,6 +743,12 @@ struct QueryUSDealReqBody
 {
 	int		nEnvType;
 	int		nCookie;
+
+	QueryUSDealReqBody()
+	{
+		nEnvType = 0;
+		nCookie = 0;
+	}
 };
 
 //与 Trade_DealItem 同步
@@ -510,6 +769,19 @@ struct QueryUSDealAckItem
 	UINT64 nQty; //成交数量
 
 	UINT64 nTime;	//成交时间
+
+	QueryUSDealAckItem()
+	{
+		nOrderID = 0;
+		nDealID = 0;
+
+		enSide = 0;
+
+		nPrice = 0;
+		nQty = 0;
+
+		nTime = 0;
+	}
 };
 
 typedef std::vector<QueryUSDealAckItem>	VT_US_Deal;
@@ -519,6 +791,12 @@ struct QueryUSDealAckBody
 	int		nEnvType;
 	int		nCookie;
 	VT_US_Deal vtDeal;
+
+	QueryUSDealAckBody()
+	{
+		nEnvType = 0;
+		nCookie = 0;
+	}
 };
 
 struct QueryUSDeal_Req
@@ -536,13 +814,24 @@ struct QueryUSDeal_Ack
 //验证
 struct CheckSecNumReqBody
 {
-	int			nCookie;
+	int	nCookie;
+
+	CheckSecNumReqBody()
+	{
+		nCookie = 0;
+	}
 };
 
 struct CheckSecNumAckBody
 {
 	int	nCookie;
 	int nSvrResult;	
+
+	CheckSecNumAckBody()
+	{
+		nCookie = 0;
+		nSvrResult = 0;
+	}
 };
 
 struct CheckSecNum_Req

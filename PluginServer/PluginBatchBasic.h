@@ -21,6 +21,8 @@ public:
 	void SetQuoteReqData(int nCmdID, const Json::Value &jsnVal, SOCKET sock);
 	void NotifyQuoteDataUpdate(int nCmdID, INT64 nStockID);
 
+	void NotifySocketClosed(SOCKET sock);
+
 protected:
 	//CTimerWndInterface
 	virtual void OnTimeEvent(UINT nEventID);
@@ -50,7 +52,6 @@ protected:
 	typedef std::map<std::pair<SOCKET, DWORD>, DWORD>				MAP_CACHE_TO_DESTROY;
 	typedef std::map<INT64, StockMktCode>							MAP_STOCK_ID_CODE;
 
-
 protected:
 	void ClearQuoteDataCache();
 	void HandleTimeoutReq();
@@ -61,6 +62,9 @@ protected:
 	void SetTimerClearCache(bool bStartOrStop);
 	bool GetStockMktCode(INT64 nStockID, StockMktCode &stkMktCode);
 	void ClearAllReqCache();
+
+private:
+	void DoClearReqInfo(SOCKET socket);
 
 protected:
 	CPluginQuoteServer* m_pQuoteServer;

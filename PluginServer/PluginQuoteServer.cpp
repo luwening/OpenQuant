@@ -74,6 +74,10 @@ void CPluginQuoteServer::InitQuoteSvr(IFTPluginCore* pPluginCore, CPluginNetwork
 	m_PushTickerPrice.Init(this, m_pQuoteData);
 	m_PushKLData.Init(this, m_pQuoteData);
 	m_PushRTData.Init(this, m_pQuoteData);
+	m_platesetIDs.Init(this, m_pQuoteData);
+	m_plateSubIDs.Init(this, m_pQuoteData);
+	m_BrokerQueue.Init(this, m_pQuoteData);
+
 }
 
 void CPluginQuoteServer::UninitQuoteSvr()
@@ -100,6 +104,9 @@ void CPluginQuoteServer::UninitQuoteSvr()
 		m_PushTickerPrice.Uninit();
 		m_PushKLData.Uninit();
 		m_PushRTData.Uninit();
+		m_platesetIDs.Uninit();
+		m_plateSubIDs.Uninit();
+		m_BrokerQueue.Uninit();
 
 		m_pQuoteData = NULL;
 		m_pQuoteOp = NULL;
@@ -172,7 +179,15 @@ void CPluginQuoteServer::SetQuoteReqData(int nCmdID, const Json::Value &jsnVal, 
 	case PROTO_ID_QT_PushStockData:
 		m_PushStockData.SetQuoteReqData(nCmdID, jsnVal, sock);
 		break;
-
+	case PROTO_ID_QT_GET_PLATESETIDS:
+		m_platesetIDs.SetQuoteReqData(nCmdID, jsnVal, sock);
+		break;
+	case PROTO_ID_QT_GET_PLATESUBIDS:
+		m_plateSubIDs.SetQuoteReqData(nCmdID, jsnVal, sock);
+		break;
+	case PROTO_ID_QT_GET_BROKER_QUEUE:
+		m_BrokerQueue.SetQuoteReqData(nCmdID, jsnVal, sock);
+		break;
 	default:
 		CHECK_OP(false, NOOP);
 		BasicPrice_Ack Ack;
@@ -200,7 +215,7 @@ void CPluginQuoteServer::ReplyQuoteReq(int nCmdID, const char *pBuf, int nLen, S
 	m_pNetwork->SendData(sock, pBuf, nLen);
 }
 
-StockSubErrCode CPluginQuoteServer::SubscribeQuote(const std::string &strCode, StockMktType nMarketType, StockSubType eStockSubType, bool bSubOrUnsub)
+StockSubErrCode CPluginQuoteServer::SubscribeQuote(const std::string &strCode, StockMktType nMarketType, StockSubType eStockSubType, bool bSubOrUnsub, SOCKET sock)
 {
 	CHECK_RET(m_pQuoteOp, StockSub_FailUnknown);
 
@@ -211,19 +226,22 @@ StockSubErrCode CPluginQuoteServer::SubscribeQuote(const std::string &strCode, S
 	switch (eStockSubType)
 	{
 	case StockSubType_Simple:
-		err_code = m_pQuoteOp->Subscribe_PriceBase(PLUGIN_GUID, strUnicode.c_str(), nMarketType, bSubOrUnsub);
+		err_code = m_pQuoteOp->Subscribe_PriceBase(PLUGIN_GUID, strUnicode.c_str(), nMarketType, bSubOrUnsub, sock);
 		break;
 
 	case StockSubType_Gear:
-		err_code = m_pQuoteOp->Subscribe_OrderQueue(PLUGIN_GUID, strUnicode.c_str(), nMarketType, bSubOrUnsub);
+		err_code = m_pQuoteOp->Subscribe_OrderQueue(PLUGIN_GUID, strUnicode.c_str(), nMarketType, bSubOrUnsub, sock);
 		break;
 
 	case StockSubType_RT:
-		err_code = m_pQuoteOp->Subscribe_RTData(PLUGIN_GUID, strUnicode.c_str(), nMarketType, bSubOrUnsub);
+		err_code = m_pQuoteOp->Subscribe_RTData(PLUGIN_GUID, strUnicode.c_str(), nMarketType, bSubOrUnsub, sock);
 		break;
 
 	case StockSubType_Ticker:
-		err_code = m_pQuoteOp->Subscribe_Ticker(PLUGIN_GUID, strUnicode.c_str(), nMarketType, bSubOrUnsub);
+		err_code = m_pQuoteOp->Subscribe_Ticker(PLUGIN_GUID, strUnicode.c_str(), nMarketType, bSubOrUnsub, sock);
+		break;
+	case StockSubType_Broker:
+		err_code = m_pQuoteOp->Subscribe_BrokerQueue(PLUGIN_GUID, strUnicode.c_str(), nMarketType, bSubOrUnsub, sock);
 		break;
 
 	case StockSubType_KL_DAY:
@@ -234,7 +252,7 @@ StockSubErrCode CPluginQuoteServer::SubscribeQuote(const std::string &strCode, S
 	case StockSubType_KL_MIN60:
 	case StockSubType_KL_WEEK:
 	case StockSubType_KL_MONTH:
-		err_code = m_pQuoteOp->Subscribe_KLData(PLUGIN_GUID, strUnicode.c_str(), nMarketType, bSubOrUnsub, eStockSubType);
+		err_code = m_pQuoteOp->Subscribe_KLData(PLUGIN_GUID, strUnicode.c_str(), nMarketType, bSubOrUnsub, eStockSubType, sock);
 		break;
 
 	default:
@@ -285,9 +303,71 @@ QueryDataErrCode CPluginQuoteServer::QueryStockKLData(DWORD* pCookie, const std:
 	return err_code;
 }
 
+QueryDataErrCode CPluginQuoteServer::QueryPlatesetSubIDList(DWORD* pdwCookie, INT64 nPlatesetID)
+{
+	CHECK_RET(m_pQuoteOp, QueryData_FailUnknown);
+
+	DWORD dwCookie = 0;
+	QueryDataErrCode eRet = m_pQuoteOp->QueryPlatesetSubIDList(PLUGIN_GUID, nPlatesetID, dwCookie);
+	
+	if (pdwCookie)
+	{
+		*pdwCookie = dwCookie;
+	}
+	return eRet;
+}
+
+QueryDataErrCode CPluginQuoteServer::QueryPlateSubIDList(DWORD* pdwCookie, INT64 nPlatesetID)
+{
+	CHECK_RET(m_pQuoteOp, QueryData_FailUnknown);
+
+	DWORD dwCookie = 0;
+	QueryDataErrCode eRet = m_pQuoteOp->QueryPlateStockIDList(PLUGIN_GUID, nPlatesetID, dwCookie);
+
+	if (pdwCookie)
+	{
+		*pdwCookie = dwCookie;
+	}
+	return eRet;
+}
+
 void CPluginQuoteServer::CloseSocket(SOCKET sock)
 {
-	m_pQuoteOp->NotifyFTPluginSocketClosed(sock);
+	if (m_pQuoteOp)
+	{
+		m_pQuoteOp->NotifyFTPluginSocketClosed(PLUGIN_GUID, sock);
+	}
+
+	m_BasicPrice.NotifySocketClosed(sock);
+	m_GearPrice.NotifySocketClosed(sock);
+	m_RTData.NotifySocketClosed(sock);
+
+	m_KLData.NotifySocketClosed(sock);
+	m_StockSub.NotifySocketClosed(sock);
+	m_StockUnSub.NotifySocketClosed(sock);
+
+	m_QueryStockSub.NotifySocketClosed(sock);
+	m_TradeDate.NotifySocketClosed(sock);
+	m_StockList.NotifySocketClosed(sock);
+
+	m_BatchBasic.NotifySocketClosed(sock);
+	m_TickerPrice.NotifySocketClosed(sock);
+	m_Snapshot.NotifySocketClosed(sock);
+
+	m_HistoryKL.NotifySocketClosed(sock);
+	m_ExRightInfo.NotifySocketClosed(sock);
+	m_PushStockData.NotifySocketClosed(sock);
+
+	m_PushBatchBasic.NotifySocketClosed(sock);
+	m_PushGearPrice.NotifySocketClosed(sock);
+	m_PushTickerPrice.NotifySocketClosed(sock);
+
+	m_PushKLData.NotifySocketClosed(sock);
+	m_PushRTData.NotifySocketClosed(sock);
+	m_platesetIDs.NotifySocketClosed(sock);
+
+	m_plateSubIDs.NotifySocketClosed(sock);
+	m_BrokerQueue.NotifySocketClosed(sock);
 }
 
 void  CPluginQuoteServer::OnChanged_PriceBase(INT64  ddwStockHash)
@@ -298,6 +378,11 @@ void  CPluginQuoteServer::OnChanged_PriceBase(INT64  ddwStockHash)
 void  CPluginQuoteServer::OnChanged_OrderQueue(INT64 ddwStockHash)
 {
 	m_GearPrice.NotifyQuoteDataUpdate(PROTO_ID_QT_GET_GEAR_PRICE, ddwStockHash);
+}
+
+void  CPluginQuoteServer::OnChanged_BrokerQueue(INT64 ddwStockHash)
+{
+	m_BrokerQueue.NotifyQuoteDataUpdate(PROTO_ID_QT_GET_BROKER_QUEUE, ddwStockHash);
 }
 
 void CPluginQuoteServer::OnChanged_RTData(INT64 ddwStockHash)
@@ -320,19 +405,24 @@ void CPluginQuoteServer::OnPushGear(INT64 ddwStockHash, SOCKET sock)
 	m_PushGearPrice.PushStockData(ddwStockHash, sock);
 }
 
-void CPluginQuoteServer::OnPushTicker(INT64 ddwStockHash, SOCKET sock, INT64 nSequence)
+void CPluginQuoteServer::OnPushBrokerQueue(INT64 ddwStockHash, SOCKET sock)
 {
-    m_PushTickerPrice.PushStockData(ddwStockHash, sock, nSequence);
+	m_BrokerQueue.PushStockData(ddwStockHash, sock);
 }
 
-void CPluginQuoteServer::OnPushKL(INT64 ddwStockHash, SOCKET sock, StockSubType eStockSubType, DWORD dwTime)
+void CPluginQuoteServer::OnPushTicker(INT64 ddwStockHash, SOCKET sock)
 {
-	m_PushKLData.PushStockData(ddwStockHash, sock, eStockSubType, dwTime);
+    m_PushTickerPrice.PushStockData(ddwStockHash, sock);
 }
 
-void CPluginQuoteServer::OnPushRT(INT64 ddwStockHash, SOCKET sock, DWORD dwTime)
+void CPluginQuoteServer::OnPushKL(INT64 ddwStockHash, SOCKET sock, StockSubType eStockSubType)
 {
-	m_PushRTData.PushStockData(ddwStockHash, sock, dwTime);
+	m_PushKLData.PushStockData(ddwStockHash, sock, eStockSubType);
+}
+
+void CPluginQuoteServer::OnPushRT(INT64 ddwStockHash, SOCKET sock)
+{
+	m_PushRTData.PushStockData(ddwStockHash, sock);
 }
 
 void CPluginQuoteServer::OnQueryStockRTData(DWORD dwCookie, int nCSResult)
@@ -345,7 +435,18 @@ void CPluginQuoteServer::OnQueryStockKLData(DWORD dwCookie, int nCSResult)
 	m_KLData.SendAck(dwCookie, nCSResult);
 }
 
+void CPluginQuoteServer::OnReqPlatesetIDs(int nCSResult, DWORD dwCookie)
+{
+	m_platesetIDs.NotifyQueryPlatesetIDs(nCSResult, dwCookie);
+}
+
+void CPluginQuoteServer::OnReqPlateStockIDs(int nCSResult, DWORD dwCookie)
+{
+	m_plateSubIDs.NotifyQueryPlateSubIDs(nCSResult, dwCookie);
+}
+
 void CPluginQuoteServer::OnReqStockSnapshot(DWORD dwCookie, PluginStockSnapshot *arSnapshot, int nSnapshotNum)
 {
 	m_Snapshot.NotifySnapshotResult(dwCookie, arSnapshot, nSnapshotNum);
 }
+

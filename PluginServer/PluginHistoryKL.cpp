@@ -85,6 +85,7 @@ void CPluginHistoryKL::SetQuoteReqData(int nCmdID, const Json::Value &jsnVal, SO
 		req_info.nStockID = nStockID;
 		req_info.sock = sock;
 		req_info.req = req;
+		req_info.dwReqTick = ::GetTickCount();
 		ReplyDataReqError(&req_info, PROTO_ERR_STOCK_NOT_FIND, L"找不到股票！");
 		return;
 	}	
@@ -104,6 +105,11 @@ void CPluginHistoryKL::NotifyQuoteDataUpdate(int nCmdID, INT64 nStockID)
 	CHECK_OP(false, NOOP);
 	//CHECK_RET(nCmdID == PROTO_ID_QUOTE && nStockID, NORET);
 	//CHECK_RET(m_pQuoteData, NORET);
+}
+
+void CPluginHistoryKL::NotifySocketClosed(SOCKET sock)
+{
+	DoClearReqInfo(sock);
 }
 
 void CPluginHistoryKL::OnMsgEvent(int nEvent,WPARAM wParam,LPARAM lParam)
@@ -273,4 +279,24 @@ void CPluginHistoryKL::FormatTimestampToDate(int nTimestamp, int nTimezone, std:
 	char szBuf[32];
 	sprintf_s(szBuf, "%d-%02d-%02d", stTime->tm_year + 1900, stTime->tm_mon + 1, stTime->tm_mday);
 	strFmtTime = szBuf;
+}
+
+void CPluginHistoryKL::DoClearReqInfo(SOCKET socket)
+{
+	VT_STOCK_DATA_REQ& vtReq = m_vtReqData;
+
+	//清掉socket对应的请求信息
+	auto itReq = vtReq.begin();
+	while (itReq != vtReq.end())
+	{
+		if (*itReq && (*itReq)->sock == socket)
+		{
+			delete *itReq;
+			itReq = vtReq.erase(itReq);
+		}
+		else
+		{
+			++itReq;
+		}
+	}
 }

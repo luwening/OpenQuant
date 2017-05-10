@@ -85,6 +85,7 @@ void CPluginStockUnSub::SetQuoteReqData(int nCmdID, const Json::Value &jsnVal, S
 		StockDataReq req_info;
 		req_info.sock = sock;
 		req_info.req = req;
+		req_info.dwReqTick = ::GetTickCount();
 		ReplyDataReqError(&req_info, PROTO_ERR_PARAM_ERR, L"参数错误！");
 		return;
 	}
@@ -100,6 +101,7 @@ void CPluginStockUnSub::SetQuoteReqData(int nCmdID, const Json::Value &jsnVal, S
 		req_info.nStockID = nStockID;
 		req_info.sock = sock;
 		req_info.req = req;
+		req_info.dwReqTick = ::GetTickCount();
 		ReplyDataReqError(&req_info, PROTO_ERR_STOCK_NOT_FIND, L"找不到股票！");
 		return;
 	}	
@@ -118,6 +120,7 @@ void CPluginStockUnSub::SetQuoteReqData(int nCmdID, const Json::Value &jsnVal, S
 	pReqInfo->nStockID = nStockID;
 	pReqInfo->sock = sock;
 	pReqInfo->req = req;
+	pReqInfo->dwReqTick = ::GetTickCount();
 
 	VT_STOCK_DATA_REQ &vtReq = m_mapReqInfo[std::make_pair(nStockID, req.body.nStockSubType)];
 	bool bNeedSub = vtReq.empty();	
@@ -125,31 +128,23 @@ void CPluginStockUnSub::SetQuoteReqData(int nCmdID, const Json::Value &jsnVal, S
 
 	if ( bNeedSub )
 	{
-		/////需要先判断是否已经订阅
-		bool bIsSub = m_pQuoteData->IsSubStockOneType(nStockID, (StockSubType)req.body.nStockSubType);
-		if ( bIsSub )
+		StockSubErrCode SubResult = m_pQuoteServer->SubscribeQuote(req.body.strStockCode, (StockMktType)req.body.nStockMarket, (StockSubType)req.body.nStockSubType, false, sock);
+		if ( SubResult == StockSub_UnSubTimeError )
 		{
-			StockSubErrCode SubResult = m_pQuoteServer->SubscribeQuote(req.body.strStockCode, (StockMktType)req.body.nStockMarket, (StockSubType)req.body.nStockSubType, false);
-			if ( SubResult == StockSub_UnSubTimeError )
+			////不满足反订阅的时间要求，对vtReq中的每一个
+			for (size_t i = 0; i < vtReq.size(); i++)
 			{
-				////不满足反订阅的时间要求，对vtReq中的每一个
-				for (size_t i = 0; i < vtReq.size(); i++)
-				{
-					StockDataReq *pReqAnswer = vtReq[i];
-					ReplyDataReqError(pReqInfo, PROTO_ERR_UNSUB_TIME_ERR, L"股票不满足反订阅时间要求！");
-				}
-				MAP_STOCK_DATA_REQ::iterator it_iterator = m_mapReqInfo.find(std::make_pair(nStockID, req.body.nStockSubType));
-				if ( it_iterator != m_mapReqInfo.end() )
-				{
-					it_iterator = m_mapReqInfo.erase(it_iterator);
-				}
-				return;
+				StockDataReq *pReqAnswer = vtReq[i];
+				ReplyDataReqError(pReqInfo, PROTO_ERR_UNSUB_TIME_ERR, L"股票不满足反订阅时间要求！");
 			}
+			MAP_STOCK_DATA_REQ::iterator it_iterator = m_mapReqInfo.find(std::make_pair(nStockID, req.body.nStockSubType));
+			if ( it_iterator != m_mapReqInfo.end() )
+			{
+				it_iterator = m_mapReqInfo.erase(it_iterator);
+			}
+			return;
 		}
-		else
-		{
-			////如果未订阅，不做操作
-		}
+
 		QuoteAckDataBody &ack = m_mapCacheData[std::make_pair(nStockID, req.body.nStockSubType)];
 	}
 
@@ -172,6 +167,11 @@ void CPluginStockUnSub::NotifyQuoteDataUpdate(int nCmdID, INT64 nStockID)
 	//	return;
 	//}
 
+}
+
+void CPluginStockUnSub::NotifySocketClosed(SOCKET sock)
+{
+	DoClearReqInfo(sock);
 }
 
 void CPluginStockUnSub::OnTimeEvent(UINT nEventID)
@@ -480,4 +480,36 @@ void CPluginStockUnSub::ClearAllReqCache()
 	m_mapCacheData.clear();
 	m_mapCacheToDel.clear();
 	m_mapStockIDCode.clear();
+}
+
+void CPluginStockUnSub::DoClearReqInfo(SOCKET socket)
+{
+	auto itmap = m_mapReqInfo.begin();
+	while (itmap != m_mapReqInfo.end())
+	{
+		VT_STOCK_DATA_REQ& vtReq = itmap->second;
+
+		//清掉socket对应的请求信息
+		auto itReq = vtReq.begin();
+		while (itReq != vtReq.end())
+		{
+			if (*itReq && (*itReq)->sock == socket)
+			{
+				delete *itReq;
+				itReq = vtReq.erase(itReq);
+			}
+			else
+			{
+				++itReq;
+			}
+		}
+		if (vtReq.size() == 0)
+		{
+			itmap = m_mapReqInfo.erase(itmap);
+		}
+		else
+		{
+			++itmap;
+		}
+	}
 }

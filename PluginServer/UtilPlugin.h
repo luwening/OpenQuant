@@ -9,4 +9,5 @@ public:
 	static  int  GetMarketTimezone2(StockMktType eMkt, int nYear, int nMonth, int nDay);
 	static  std::string FormatMktTimestamp(int nTimestamp, StockMktType eMkt, FormatTimeType eFmtType);
 
+	static  std::string GetErrStrByCode(QueryDataErrCode eCode);
 };

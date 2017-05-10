@@ -20,6 +20,8 @@ public:
 	void SetQuoteReqData(int nCmdID, const Json::Value &jsnVal, SOCKET sock);
 	void NotifyQuoteDataUpdate(int nCmdID, INT64 nStockID);
 
+	void NotifySocketClosed(SOCKET sock);
+
 protected:
 	//CTimerWndInterface
 	virtual void OnTimeEvent(UINT nEventID);
@@ -58,6 +60,9 @@ protected:
 	void SetTimerHandleTimeout(bool bStartOrStop);
 	void SetTimerClearCache(bool bStartOrStop);
 	void ClearAllReqCache();
+
+private:
+	void DoClearReqInfo(SOCKET socket);
 
 protected:
 	CPluginQuoteServer* m_pQuoteServer;

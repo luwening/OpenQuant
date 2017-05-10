@@ -88,6 +88,7 @@ void CPluginSnapshot::SetQuoteReqData(int nCmdID, const Json::Value &jsnVal, SOC
 		StockDataReq req_info;		
 		req_info.sock = sock;
 		req_info.req = req;
+		req_info.dwReqTick = ::GetTickCount();
 		ReplyDataReqError(&req_info, PROTO_ERR_PARAM_ERR, L"参数错误！");
 		return;
 	}
@@ -105,6 +106,7 @@ void CPluginSnapshot::SetQuoteReqData(int nCmdID, const Json::Value &jsnVal, SOC
 			StockDataReq req_info;			
 			req_info.sock = sock;
 			req_info.req = req;
+			req_info.dwReqTick = ::GetTickCount();
 			ReplyDataReqError(&req_info, PROTO_ERR_STOCK_NOT_FIND, L"找不到股票！");
 			return;
 		}
@@ -118,7 +120,7 @@ void CPluginSnapshot::SetQuoteReqData(int nCmdID, const Json::Value &jsnVal, SOC
 	CHECK_RET(pReqInfo, NORET);	
 	pReqInfo->sock = sock;
 	pReqInfo->req = req;
-
+	pReqInfo->dwReqTick = ::GetTickCount();
 
 	QueryDataErrCode queryErr = m_pQuoteOperator->QueryStockSnapshot(PLUGIN_GUID, _vect2Ptr(vtReqStockID), _vectIntSize(vtReqStockID), pReqInfo->nReqCookie);
 	if ( queryErr != QueryData_Suc || pReqInfo->nReqCookie == 0 )
@@ -180,7 +182,9 @@ void CPluginSnapshot::NotifySnapshotResult(DWORD dwCookie, PluginStockSnapshot *
 	ack.head.nProtoID = PROTO_ID_QUOTE;
 	ack.head.ddwErrCode = 0;	
 	ack.body.vtSnapshot.resize(nSnapshotNum);
-	const INT64 c_priceMultiply= 1000000000L; 
+	//[3/29/2017 python脚本中约定的还是3位精度，等后台修改后这里会再修改ysq]
+	const INT64 c_priceMultiply = 1000L; 
+
 	for (int n = 0; n < nSnapshotNum; n++)
 	{
 		const PluginStockSnapshot &snapSrc = arSnapshot[n];
@@ -202,8 +206,62 @@ void CPluginSnapshot::NotifySnapshotResult(DWORD dwCookie, PluginStockSnapshot *
 		snapDst.highest_price = INT64(snapSrc.highest_price * c_priceMultiply);
 		snapDst.lowest_price = INT64(snapSrc.lowest_price * c_priceMultiply);
 		snapDst.turnover_ratio = int(snapSrc.turnover_ratio * 10000);
+		
+		snapDst.nLostSize = snapSrc.nLotSize;
 
+		wchar_t szTime[64] = {0};
+		if (m_pQuoteData)
+		{
+			m_pQuoteData->TimeStampToStr(snapDst.nStockID, snapDst.update_time, szTime);
+		}
+		CA::Unicode2UTF(szTime, snapDst.strUpdateTime);
+		
+		if (snapSrc.stEquitiesData.bDataValid)
+		{
+			snapDst.nTatalMarketVal = ((INT64)(snapSrc.nominal_price * c_priceMultiply)) * snapSrc.stEquitiesData.nIssuedShares;
+			snapDst.nCircularMarketVal = ((INT64)(snapSrc.nominal_price * c_priceMultiply)) * snapSrc.stEquitiesData.nOutStandingShares;
+		}
+		else
+		{
+			snapDst.nTatalMarketVal = 0;
+			snapDst.nCircularMarketVal = 0;
+		}
 		snapDst.ret_err = snapSrc.ret;
+		//涡轮信息
+		snapDst.stWrtData.bDataValid = snapSrc.stWrtData.bDataValid;
+		snapDst.stWrtData.nWarrantType = snapSrc.stWrtData.nWarrantType;
+		snapDst.stWrtData.nConversionRatio = snapSrc.stWrtData.nConversionRatio;
+		snapDst.stWrtData.nStrikePrice = snapSrc.stWrtData.dbStrikePrice * c_priceMultiply;
+		snapDst.stWrtData.nMaturityDate = snapSrc.stWrtData.nMaturityDate;
+		snapDst.stWrtData.nEndtradeDate = snapSrc.stWrtData.nEndtradeDate;
+		
+		StockMktType eMkt = StockMkt_None; wchar_t szCode[16] = { 0 }, szStockName[128] = { 0 };
+		if (m_pQuoteData && snapDst.stWrtData.bDataValid)
+		{
+			m_pQuoteData->GetStockInfoByHashVal(snapSrc.stWrtData.nWarrantOwnerID, eMkt, szCode, szStockName);
+		}
+		CA::Unicode2UTF(szCode, snapDst.stWrtData.strOwnerStockCode);
+		snapDst.stWrtData.nOwnerStockMarket = (int)eMkt;
+
+		snapDst.stWrtData.nRecoveryPrice = snapSrc.stWrtData.dbRecoveryPrice * c_priceMultiply;
+		snapDst.stWrtData.nStreetVol = snapSrc.stWrtData.nStreetVol;
+		snapDst.stWrtData.nIssueVol = snapSrc.stWrtData.nIssueVol;
+		snapDst.stWrtData.nOwnerStockPrice = snapSrc.stWrtData.dbOwnerStockPrice * c_priceMultiply;
+		snapDst.stWrtData.nStreetRatio = snapSrc.stWrtData.dbStreetRatio * 100000;
+		snapDst.stWrtData.nDelta = snapSrc.stWrtData.dbDelta * 1000;
+		snapDst.stWrtData.nImpliedVolatility = snapSrc.stWrtData.dbImpliedVolatility * 1000;
+		snapDst.stWrtData.nPremium = snapSrc.stWrtData.dbPremiun * 100000;
+
+		if (snapDst.stWrtData.bDataValid)
+		{
+			szTime[0] = 0;
+			m_pQuoteData->TimeStampToStr(snapDst.nStockID, snapDst.stWrtData.nEndtradeDate, szTime);
+			CA::Unicode2UTF(szTime, snapDst.stWrtData.strEndtradeDate);
+
+			szTime[0] = 0;
+			m_pQuoteData->TimeStampToStr(snapDst.nStockID, snapDst.stWrtData.nMaturityDate, szTime);
+			CA::Unicode2UTF(szTime, snapDst.stWrtData.strMaturityData);
+		}
 	}
 	
 	CProtoQuote proto;	
@@ -228,6 +286,11 @@ void CPluginSnapshot::NotifySnapshotResult(DWORD dwCookie, PluginStockSnapshot *
 		delete pReq;
 	}
 	vtReq.clear();
+}
+
+void CPluginSnapshot::NotifySocketClosed(SOCKET sock)
+{
+	DoClearReqInfo(sock);
 }
 
 void CPluginSnapshot::OnTimeEvent(UINT nEventID)
@@ -563,4 +626,36 @@ void CPluginSnapshot::ClearAllReqCache()
 	m_mapCacheData.clear();
 	m_mapCacheToDel.clear();
 	m_mapStockIDCode.clear();
+}
+
+void CPluginSnapshot::DoClearReqInfo(SOCKET socket)
+{
+	auto itmap = m_mapReqInfo.begin();
+	while (itmap != m_mapReqInfo.end())
+	{
+		VT_STOCK_DATA_REQ& vtReq = itmap->second;
+
+		//清掉socket对应的请求信息
+		auto itReq = vtReq.begin();
+		while (itReq != vtReq.end())
+		{
+			if (*itReq && (*itReq)->sock == socket)
+			{
+				delete *itReq;
+				itReq = vtReq.erase(itReq);
+			}
+			else
+			{
+				++itReq;
+			}
+		}
+		if (vtReq.size() == 0)
+		{
+			itmap = m_mapReqInfo.erase(itmap);
+		}
+		else
+		{
+			++itmap;
+		}
+	}
 }

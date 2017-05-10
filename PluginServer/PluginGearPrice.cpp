@@ -84,6 +84,7 @@ void CPluginGearPrice::SetQuoteReqData(int nCmdID, const Json::Value &jsnVal, SO
 		StockDataReq req_info;
 		req_info.sock = sock;
 		req_info.req = req;
+		req_info.dwReqTick = ::GetTickCount();
 		ReplyDataReqError(&req_info, PROTO_ERR_PARAM_ERR, L"参数错误！");
 		return;
 	}
@@ -100,6 +101,7 @@ void CPluginGearPrice::SetQuoteReqData(int nCmdID, const Json::Value &jsnVal, SO
 		req_info.nStockID = nStockID;
 		req_info.sock = sock;
 		req_info.req = req;
+		req_info.dwReqTick = ::GetTickCount();
 		ReplyDataReqError(&req_info, PROTO_ERR_STOCK_NOT_FIND, L"找不到股票！");
 		return;
 	}	
@@ -116,6 +118,7 @@ void CPluginGearPrice::SetQuoteReqData(int nCmdID, const Json::Value &jsnVal, SO
 	pReqInfo->nStockID = nStockID;
 	pReqInfo->sock = sock;
 	pReqInfo->req = req;
+	pReqInfo->dwReqTick = ::GetTickCount();
 
 	VT_STOCK_DATA_REQ &vtReq = m_mapReqInfo[nStockID];
 	bool bNeedSub = vtReq.empty();	
@@ -209,6 +212,11 @@ void CPluginGearPrice::NotifyQuoteDataUpdate(int nCmdID, INT64 nStockID)
 		
 		m_MsgHandler.RaiseEvent(EVENT_ID_ACK_REQUEST, 0, 0);
 	}
+}
+
+void CPluginGearPrice::NotifySocketClosed(SOCKET sock)
+{
+	DoClearReqInfo(sock);
 }
 
 void CPluginGearPrice::OnTimeEvent(UINT nEventID)
@@ -530,4 +538,36 @@ void CPluginGearPrice::ClearAllReqCache()
 	m_mapCacheData.clear();
 	m_mapCacheToDel.clear();
 	m_mapStockIDCode.clear();
+}
+
+void CPluginGearPrice::DoClearReqInfo(SOCKET socket)
+{
+	auto itmap = m_mapReqInfo.begin();
+	while (itmap != m_mapReqInfo.end())
+	{
+		VT_STOCK_DATA_REQ& vtReq = itmap->second;
+
+		//清掉socket对应的请求信息
+		auto itReq = vtReq.begin();
+		while (itReq != vtReq.end())
+		{
+			if (*itReq && (*itReq)->sock == socket)
+			{
+				delete *itReq;
+				itReq = vtReq.erase(itReq);
+			}
+			else
+			{
+				++itReq;
+			}
+		}
+		if (vtReq.size() == 0)
+		{
+			itmap = m_mapReqInfo.erase(itmap);
+		}
+		else
+		{
+			++itmap;
+		}
+	}
 }

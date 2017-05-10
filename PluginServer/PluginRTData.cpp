@@ -84,6 +84,7 @@ void CPluginRTData::SetQuoteReqData(int nCmdID, const Json::Value &jsnVal, SOCKE
 		StockDataReq req_info;
 		req_info.sock = sock;
 		req_info.req = req;
+		req_info.dwReqTick = ::GetTickCount();
 		ReplyDataReqError(&req_info, PROTO_ERR_PARAM_ERR, L"参数错误！");
 		return;
 	}
@@ -100,6 +101,7 @@ void CPluginRTData::SetQuoteReqData(int nCmdID, const Json::Value &jsnVal, SOCKE
 		req_info.nStockID = nStockID;
 		req_info.sock = sock;
 		req_info.req = req;
+		req_info.dwReqTick = ::GetTickCount();
 		ReplyDataReqError(&req_info, PROTO_ERR_STOCK_NOT_FIND, L"找不到股票！");
 		return;
 	}	
@@ -616,6 +618,44 @@ void CPluginRTData::SendAck(DWORD dwCookie, int nCSResult)
 					}
 				}
 			}
+		}
+	}
+}
+
+
+void CPluginRTData::NotifySocketClosed(SOCKET sock)
+{
+	DoClearReqInfo(sock);
+}
+
+void CPluginRTData::DoClearReqInfo(SOCKET socket)
+{
+	auto itmap = m_mapReqInfo.begin();
+	while (itmap != m_mapReqInfo.end())
+	{
+		VT_STOCK_DATA_REQ& vtReq = itmap->second;
+
+		//清掉socket对应的请求信息
+		auto itReq = vtReq.begin();
+		while (itReq != vtReq.end())
+		{
+			if (*itReq && (*itReq)->sock == socket)
+			{
+				delete *itReq;
+				itReq = vtReq.erase(itReq);
+			}
+			else
+			{
+				++itReq;
+			}
+		}
+		if (vtReq.size() == 0)
+		{
+			itmap = m_mapReqInfo.erase(itmap);
+		}
+		else
+		{
+			++itmap;
 		}
 	}
 }

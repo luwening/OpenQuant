@@ -140,6 +140,19 @@ void CPluginUSTradeServer::ReplyTradeReq(int nCmdID, const char *pBuf, int nLen,
 	m_pNetwork->SendData(sock, pBuf, nLen);
 }
 
+void CPluginUSTradeServer::CloseSocket(SOCKET sock)
+{
+	m_PlaceOrder.NotifySocketClosed(sock);
+	m_ChangeOrder.NotifySocketClosed(sock);
+	m_SetOrderStatus.NotifySocketClosed(sock);
+
+	m_QueryUSOrder.NotifySocketClosed(sock);
+	m_QueryUSAcc.NotifySocketClosed(sock);
+	m_QueryPos.NotifySocketClosed(sock);
+
+	m_QueryUSDeal.NotifySocketClosed(sock);
+}
+
 void CPluginUSTradeServer::OnPlaceOrder(UINT32 nCookie, Trade_SvrResult enSvrRet, UINT64 nLocalID, INT64 nErrHash)
 {
 	m_PlaceOrder.NotifyOnPlaceOrder(Trade_Env_Real, nCookie, enSvrRet, nLocalID, nErrHash);
@@ -170,9 +183,9 @@ void CPluginUSTradeServer::OnQueryDealList(UINT32 nCookie, INT32 nCount, const T
 	m_QueryUSDeal.NotifyOnQueryUSDeal(nCookie, nCount, pArrOrder);
 }
 
-void CPluginUSTradeServer::OnQueryAccInfo(UINT32 nCookie, const Trade_AccInfo& accInfo)
+void CPluginUSTradeServer::OnQueryAccInfo(UINT32 nCookie, const Trade_AccInfo& accInfo, int nResult)
 {
-	m_QueryUSAcc.NotifyOnQueryUSAccInfo(Trade_Env_Real, nCookie, accInfo);
+	m_QueryUSAcc.NotifyOnQueryUSAccInfo(Trade_Env_Real, nCookie, accInfo, nResult);
 }
 
 void CPluginUSTradeServer::OnQueryPositionList( UINT32 nCookie, INT32 nCount, const Trade_PositionItem* pArrPosition )

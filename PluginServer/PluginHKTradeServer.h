@@ -28,6 +28,8 @@ public:
 	void SetTradeReqData(int nCmdID, const Json::Value &jsnVal, SOCKET sock);
 	void ReplyTradeReq(int nCmdID, const char *pBuf, int nLen, SOCKET sock);	
 
+	void CloseSocket(SOCKET sock);
+
 protected:
 	//ITradeCallBack_HK
 	virtual void OnUnlockTrade(UINT32 nCookie, Trade_SvrResult enSvrRet, UINT64 nErrCode);
@@ -40,7 +42,7 @@ protected:
 
 	virtual void OnQueryOrderList(Trade_Env enEnv, UINT32 nCookie, INT32 nCount, const Trade_OrderItem* pArrOrder);
 	virtual void OnQueryDealList(Trade_Env enEnv, UINT32 nCookie, INT32 nCount, const Trade_DealItem* pArrOrder);
-	virtual void OnQueryAccInfo(Trade_Env enEnv, UINT32 nCookie, const Trade_AccInfo& accInfo);
+	virtual void OnQueryAccInfo(Trade_Env enEnv, UINT32 nCookie, const Trade_AccInfo& accInfo, int nResult);
 	virtual void OnQueryPositionList(Trade_Env enEnv, UINT32 nCookie, INT32 nCount, const Trade_PositionItem* pArrPosition);
 
 protected:
@@ -48,12 +50,15 @@ protected:
 	ITrade_HK			*m_pTradeOp;
 	IFTDataReport		*m_pDataReport;
 	CPluginNetwork		*m_pNetwork;
+
 	CPluginPlaceOrder_HK	m_PlaceOrder;
 	CPluginChangeOrder_HK  m_ChangeOrder;
 	CPluginSetOrderStatus_HK m_SetOrderStatus;
+
 	CPluginUnlockTrade		m_UnlockTrade;
 	CPluginQueryHKAccInfo	m_QueryAccInfo;
 	CPluginQueryHKOrder		m_QueryHKOrder;
+
 	CPluginQueryHKPosition	m_QueryHKPos;
 	CPluginQueryHKDeal		m_QueryHKDeal;
 };

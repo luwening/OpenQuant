@@ -347,8 +347,8 @@ void CProtoHistoryKL::GetHistoryKLArrField(VT_PROTO_FIELD &vtField, const Histor
 	static LPCSTR arFieldKey[] = {
 		"Time", "Open", 
 		"Close", "High", "Low", 
-		"PERatio", "Turnover", "TDVol",
-		"TDVal"
+		"PERatio", "TurnoverRate", "Volume",
+		"Turnover"
 	};
 
 	HistoryKLAckItem &item = const_cast<HistoryKLAckItem &>(ackItem);

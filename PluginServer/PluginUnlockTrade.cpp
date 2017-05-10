@@ -88,6 +88,18 @@ void CPluginUnlockTrade::SetTradeReqData(int nCmdID, const Json::Value &jsnVal, 
 
 	CHECK_RET(req.head.nProtoID == nCmdID && req.body.nCookie, NORET);
 
+	if (IManage_SecurityNum::IsSafeSocket(sock))
+	{
+		TradeAckType ack;
+		ack.head = req.head;
+		ack.head.ddwErrCode = 0;
+		CA::Unicode2UTF(L"", ack.head.strErrDesc);
+		ack.body.nCookie = req.body.nCookie;
+		ack.body.nSvrResult = Trade_SvrResult_Succeed;
+		HandleTradeAck(&ack, sock);
+		return;
+	}
+
 	StockDataReq *pReq = new StockDataReq;
 	CHECK_RET(pReq, NORET);
 	pReq->sock = sock;
@@ -123,7 +135,6 @@ void CPluginUnlockTrade::SetTradeReqData(int nCmdID, const Json::Value &jsnVal, 
 
 		return ;
 	}
-
 
 	SetTimerHandleTimeout(true);
 }
@@ -167,11 +178,13 @@ void CPluginUnlockTrade::NotifyOnUnlockTrade(UINT32 nCookie, Trade_SvrResult enS
 	TradeAckType ack;
 	ack.head = pFindReq->req.head;
 	ack.head.ddwErrCode = nErrCode;
-	if ( nErrCode )
+	if (nErrCode != 0 || enSvrRet != Trade_SvrResult_Succeed)
 	{
-		WCHAR szErr[256] = L"";
-		if ( m_pTradeOp->GetErrDescV2(nErrCode, szErr) )
-			CA::Unicode2UTF(szErr, ack.head.strErrDesc);
+		WCHAR szErr[256] = L"发送请求失败!";
+		if (nErrCode != 0)
+			m_pTradeOp->GetErrDescV2(nErrCode, szErr);
+
+		CA::Unicode2UTF(szErr, ack.head.strErrDesc);
 	}
 
 	//tomodify 4
@@ -181,6 +194,11 @@ void CPluginUnlockTrade::NotifyOnUnlockTrade(UINT32 nCookie, Trade_SvrResult enS
 
 	m_vtReqData.erase(itReq);
 	delete pFindReq;
+}
+
+void CPluginUnlockTrade::NotifySocketClosed(SOCKET sock)
+{
+	DoClearReqInfo(sock);
 }
 
 void CPluginUnlockTrade::OnTimeEvent(UINT nEventID)
@@ -293,4 +311,24 @@ void CPluginUnlockTrade::ClearAllReqAckData()
 	}
 
 	m_vtReqData.clear();
+}
+
+void CPluginUnlockTrade::DoClearReqInfo(SOCKET socket)
+{
+	VT_REQ_TRADE_DATA& vtReq = m_vtReqData;
+
+	//清掉socket对应的请求信息
+	auto itReq = vtReq.begin();
+	while (itReq != vtReq.end())
+	{
+		if (*itReq && (*itReq)->sock == socket)
+		{
+			delete *itReq;
+			itReq = vtReq.erase(itReq);
+		}
+		else
+		{
+			++itReq;
+		}
+	}
 }

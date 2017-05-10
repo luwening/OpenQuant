@@ -86,7 +86,7 @@ void CPluginQueryHKPosition::SetTradeReqData(int nCmdID, const Json::Value &jsnV
 		return;
 	}
 
-	if (!IManage_SecurityNum::IsSafeSocket(sock))
+	if (req.body.nEnvType == Trade_Env_Real && !IManage_SecurityNum::IsSafeSocket(sock))
 	{
 		CHECK_OP(false, NORET);
 		TradeAckType ack;
@@ -214,6 +214,11 @@ void CPluginQueryHKPosition::NotifyOnQueryPosition(Trade_Env enEnv, UINT32 nCook
 	delete pFindReq;
 }
 
+void CPluginQueryHKPosition::NotifySocketClosed(SOCKET sock)
+{
+	DoClearReqInfo(sock);
+}
+
 void CPluginQueryHKPosition::OnTimeEvent(UINT nEventID)
 {
 	if ( TIMER_ID_HANDLE_TIMEOUT_REQ == nEventID )
@@ -326,4 +331,24 @@ void CPluginQueryHKPosition::ClearAllReqAckData()
 	}
 
 	m_vtReqData.clear();
+}
+
+void CPluginQueryHKPosition::DoClearReqInfo(SOCKET socket)
+{
+	VT_REQ_TRADE_DATA& vtReq = m_vtReqData;
+
+	//清掉socket对应的请求信息
+	auto itReq = vtReq.begin();
+	while (itReq != vtReq.end())
+	{
+		if (*itReq && (*itReq)->sock == socket)
+		{
+			delete *itReq;
+			itReq = vtReq.erase(itReq);
+		}
+		else
+		{
+			++itReq;
+		}
+	}
 }

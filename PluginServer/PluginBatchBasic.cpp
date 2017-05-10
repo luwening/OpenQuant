@@ -17,6 +17,15 @@
 #define QUOTE_SERVER_TYPE	QuoteServer_QueryBatchBasic
 typedef CProtoBatchBasic	CProtoQuote;
 
+//股票状态 
+enum
+{
+	STOCK_STATUS_NONE = 0,
+	STOCK_STATUS_SUSPENSION = 1,  //停牌
+	STOCK_STATUS_NORMAL = 2,
+	STOCK_STATUS_PAUSE_Temp = 3, //熔断(可恢复) 
+	STOCK_STATUS_PAUSE_Break = 4, //熔断(不可恢复) 
+};
 
 //////////////////////////////////////////////////////////////////////////
 
@@ -84,6 +93,7 @@ void CPluginBatchBasic::SetQuoteReqData(int nCmdID, const Json::Value &jsnVal, S
 		StockDataReq req_info;
 		req_info.sock = sock;
 		req_info.req = req;
+		req_info.dwReqTick = ::GetTickCount();
 		ReplyDataReqError(&req_info, PROTO_ERR_PARAM_ERR, L"参数错误！");
 		return;
 	}
@@ -97,6 +107,7 @@ void CPluginBatchBasic::SetQuoteReqData(int nCmdID, const Json::Value &jsnVal, S
 		//req_info.nStockID = nStockID;
 		req_info.sock = sock;
 		req_info.req = req;
+		req_info.dwReqTick = ::GetTickCount();
 		ReplyDataReqError(&req_info, PROTO_ERR_PARAM_ERR, L"参数错误！");
 		return;
 	}
@@ -114,6 +125,7 @@ void CPluginBatchBasic::SetQuoteReqData(int nCmdID, const Json::Value &jsnVal, S
 
 			req_info.sock = sock;
 			req_info.req = req;
+			req_info.dwReqTick = ::GetTickCount();
 			ReplyDataReqError(&req_info, PROTO_ERR_STOCK_NOT_FIND, L"找不到股票！");
 			return;
 		}
@@ -129,10 +141,11 @@ void CPluginBatchBasic::SetQuoteReqData(int nCmdID, const Json::Value &jsnVal, S
 	StockDataReq *pReqInfo = new StockDataReq;
 	CHECK_RET(pReqInfo, NORET);
 
+	DWORD dwTime = ::GetTickCount();
 	pReqInfo->sock = sock;
 	pReqInfo->req = req;
+	pReqInfo->dwReqTick = dwTime;
 
-	DWORD dwTime = ::GetTickCount();
 	VT_STOCK_DATA_REQ &vtReq = m_mapReqInfo[std::make_pair(sock, dwTime)];
 	bool bNeedSub = vtReq.empty();	
 	vtReq.push_back(pReqInfo);
@@ -155,6 +168,8 @@ void CPluginBatchBasic::SetQuoteReqData(int nCmdID, const Json::Value &jsnVal, S
 		if ( bIsSub )
 		{
 			QuoteAckDataBody &ack = m_mapCacheData[std::make_pair(sock, dwTime)];
+			//fix:同一毫秒发来的请求，可能导致vtAckBatchBasic重复添加 
+			ack.vtAckBatchBasic.clear();
 			Quote_BatchBasic batchprice;
 			bool bFillSuccess = false;
 			for (int i = 0; i < (int)req.body.vtReqBatchBasic.size(); i++)
@@ -169,11 +184,14 @@ void CPluginBatchBasic::SetQuoteReqData(int nCmdID, const Json::Value &jsnVal, S
 					Item.nStockMarket = req.body.vtReqBatchBasic[i].nStockMarket;
 					Item.strStockCode = req.body.vtReqBatchBasic[i].strStockCode;
 					Item.nHigh = batchprice.dwHigh;
-					Item.nOpen = batchprice.dwLastClose;
+					Item.nOpen = batchprice.dwOpen;
 					Item.nLastClose = batchprice.dwLastClose;
 					Item.nLow = batchprice.dwLow;
 					Item.nCur = batchprice.dwCur;
-					Item.nSuspension = batchprice.nSuspension;
+
+					//统一返回， 1表求停牌， 0表示正常
+					Item.nSuspension = (STOCK_STATUS_SUSPENSION == batchprice.nSuspension) ? 1 : 0;
+
 					Item.nVolume = batchprice.ddwVolume;
 					Item.nValue = batchprice.ddwTurnover;
 					Item.nAmpli = batchprice.dwAmpli;
@@ -247,6 +265,11 @@ void CPluginBatchBasic::NotifyQuoteDataUpdate(int nCmdID, INT64 nStockID)
 {
 	CHECK_RET(nCmdID == PROTO_ID_QUOTE && nStockID, NORET);
 	CHECK_RET(m_pQuoteData, NORET);
+}
+
+void CPluginBatchBasic::NotifySocketClosed(SOCKET sock)
+{
+	DoClearReqInfo(sock);
 }
 
 void CPluginBatchBasic::OnTimeEvent(UINT nEventID)
@@ -546,4 +569,36 @@ void CPluginBatchBasic::ClearAllReqCache()
 	m_mapCacheData.clear();
 	m_mapCacheToDel.clear();
 	m_mapStockIDCode.clear();
+}
+
+void CPluginBatchBasic::DoClearReqInfo(SOCKET socket)
+{
+	auto itmap = m_mapReqInfo.begin();
+	while (itmap != m_mapReqInfo.end())
+	{
+		VT_STOCK_DATA_REQ& vtReq = itmap->second;
+
+		//清掉socket对应的请求信息
+		auto itReq = vtReq.begin();
+		while (itReq != vtReq.end())
+		{
+			if (*itReq && (*itReq)->sock == socket)
+			{
+				delete *itReq;
+				itReq = vtReq.erase(itReq);
+			}
+			else
+			{
+				++itReq;
+			}
+		}
+		if (vtReq.size() == 0)
+		{
+			itmap = m_mapReqInfo.erase(itmap);
+		}
+		else
+		{
+			++itmap;
+		}
+	}
 }

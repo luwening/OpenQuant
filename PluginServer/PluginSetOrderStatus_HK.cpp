@@ -78,7 +78,7 @@ void CPluginSetOrderStatus_HK::SetTradeReqData(int nCmdID, const Json::Value &js
 	CProtoQuote proto;
 	CProtoQuote::ProtoReqDataType	req;
 	proto.SetProtoData_Req(&req);
-	if ( !proto.ParseJson_Req(jsnVal) )
+	if (!proto.ParseJson_Req(jsnVal))
 	{
 		CHECK_OP(false, NORET);
 		TradeAckType ack;
@@ -91,7 +91,7 @@ void CPluginSetOrderStatus_HK::SetTradeReqData(int nCmdID, const Json::Value &js
 		return;
 	}
 
-	if (!IManage_SecurityNum::IsSafeSocket(sock))
+	if (req.body.nEnvType == Trade_Env_Real && !IManage_SecurityNum::IsSafeSocket(sock))
 	{
 		CHECK_OP(false, NORET);
 		TradeAckType ack;
@@ -104,6 +104,19 @@ void CPluginSetOrderStatus_HK::SetTradeReqData(int nCmdID, const Json::Value &js
 		return;
 	}
 
+	//仿真交易不支持localID
+	if (req.body.nEnvType == Trade_Env_Virtual &&
+		req.body.nLocalOrderID != 0 && 0 == req.body.nSvrOrderID)
+	{
+		TradeAckType ack;
+		ack.head = req.head;
+		ack.head.ddwErrCode = PROTO_ERR_PARAM_ERR;
+		CA::Unicode2UTF(L"参数错误，仿真交易不支持LocalID!", ack.head.strErrDesc);
+		ack.body.nCookie = req.body.nCookie;
+		ack.body.nSvrResult = Trade_SvrResult_Failed;
+		HandleTradeAck(&ack, sock);
+		return;
+	}
 	CHECK_RET(req.head.nProtoID == nCmdID && req.body.nCookie, NORET);
 	SetOrderStatusReqBody &body = req.body;		
 
@@ -147,13 +160,35 @@ void  CPluginSetOrderStatus_HK::DoTryProcessTradeOpt(StockDataReq* pReq)
 			}
 		} 
 	} 
+	
+	//减少不必要的请求， 避免超过无意义的超过调用频率
+	if (IsNewStateNotNeedReq((Trade_Env)body.nEnvType, body.nSvrOrderID, (Trade_SetOrderStatus)body.nSetOrderStatus))
+	{
+		TradeAckType ack;
+		ack.head = req.head;
+		ack.head.ddwErrCode = 0;
+		ack.head.strErrDesc = "";
+
+		ack.body.nEnvType = body.nEnvType;
+		ack.body.nCookie = body.nCookie;
+		ack.body.nLocalOrderID = body.nLocalOrderID;
+		ack.body.nSvrOrderID = body.nSvrOrderID;
+		ack.body.nSvrResult = Trade_SvrResult_Succeed;
+		HandleTradeAck(&ack, sock);
+
+		//清除req对象 
+		DoRemoveReqData(pReq);
+		return;
+	}
+
 	// 
 	bool bRet = false;
+	int nReqResult = 0;
 	if (body.nSvrOrderID != 0)
 	{  
 		pReq->bWaitDelaySvrID = false;
 		bRet = m_pTradeOp->SetOrderStatus((Trade_Env)body.nEnvType, (UINT*)&pReq->dwLocalCookie, body.nSvrOrderID, 
-			(Trade_SetOrderStatus)body.nSetOrderStatus);
+			(Trade_SetOrderStatus)body.nSetOrderStatus, &nReqResult);
 	} 
 
 	if ( !bRet )
@@ -162,6 +197,10 @@ void  CPluginSetOrderStatus_HK::DoTryProcessTradeOpt(StockDataReq* pReq)
 		ack.head = req.head;
 		ack.head.ddwErrCode = PROTO_ERR_UNKNOWN_ERROR;
 		CA::Unicode2UTF(L"发送失败", ack.head.strErrDesc);
+		if (nReqResult != 0)
+		{
+			ack.head.strErrDesc = UtilPlugin::GetErrStrByCode((QueryDataErrCode)nReqResult);
+		}
 
 		ack.body.nEnvType = body.nEnvType;
 		ack.body.nCookie = body.nCookie;
@@ -204,11 +243,13 @@ void CPluginSetOrderStatus_HK::NotifyOnSetOrderStatus(Trade_Env enEnv, UINT nCoo
 	TradeAckType ack;
 	ack.head = pFindReq->req.head;
 	ack.head.ddwErrCode = nErrCode;
-	if ( nErrCode )
+	if (nErrCode != 0 || enSvrRet != Trade_SvrResult_Succeed)
 	{
-		WCHAR szErr[256] = L"";
-		if ( m_pTradeOp->GetErrDescV2(nErrCode, szErr) )
-			CA::Unicode2UTF(szErr, ack.head.strErrDesc);
+		WCHAR szErr[256] = L"发送请求失败!";
+		if (nErrCode != 0)
+			m_pTradeOp->GetErrDescV2(nErrCode, szErr);
+
+		CA::Unicode2UTF(szErr, ack.head.strErrDesc);
 	}
 
 	//tomodify 4
@@ -222,6 +263,11 @@ void CPluginSetOrderStatus_HK::NotifyOnSetOrderStatus(Trade_Env enEnv, UINT nCoo
 
 	m_vtReqData.erase(itReq);
 	delete pFindReq;
+}
+
+void CPluginSetOrderStatus_HK::NotifySocketClosed(SOCKET sock)
+{
+	DoClearReqInfo(sock);
 }
 
 void CPluginSetOrderStatus_HK::OnTimeEvent(UINT nEventID)
@@ -395,4 +441,62 @@ void CPluginSetOrderStatus_HK::OnCvtOrderID_Local2Svr( int nResult, Trade_Env eE
 		}
 		++it; 
 	}
+}
+
+void CPluginSetOrderStatus_HK::DoClearReqInfo(SOCKET socket)
+{
+	VT_REQ_TRADE_DATA& vtReq = m_vtReqData;
+
+	//清掉socket对应的请求信息
+	auto itReq = vtReq.begin();
+	while (itReq != vtReq.end())
+	{
+		if (*itReq && (*itReq)->sock == socket)
+		{
+			delete *itReq;
+			itReq = vtReq.erase(itReq);
+		}
+		else
+		{
+			++itReq;
+		}
+	}
+}
+
+bool CPluginSetOrderStatus_HK::IsNewStateNotNeedReq(Trade_Env eEnv, INT64 nSvrOrderID, Trade_SetOrderStatus eNewStatus)
+{
+	if (0 == nSvrOrderID)
+	{
+		return false;
+	}
+	Trade_OrderStatus eCurStatus = Trade_OrderStatus_Processing;
+	if (!m_pTradeOp->GetOrderStatus(eEnv, nSvrOrderID, eCurStatus))
+	{
+		return false;
+	}
+
+	bool bRet = false;
+	switch (eNewStatus)
+	{
+	case Trade_SetOrderStatus_Cancel:
+		bRet = Trade_OrderStatus_Cancelled == eCurStatus || Trade_OrderStatus_Deleted == eCurStatus;
+		break;
+	case Trade_SetOrderStatus_Disable:
+		bRet = Trade_OrderStatus_Disabled == eCurStatus;
+		break;
+	case Trade_SetOrderStatus_Enable:
+		bRet = Trade_OrderStatus_AllDealt == eCurStatus;
+		break;
+	case Trade_SetOrderStatus_Delete:
+		bRet = Trade_OrderStatus_Deleted == eCurStatus;
+		break;
+	case Trade_SetOrderStatus_HK_SplitLargeOrder:
+	case Trade_SetOrderStatus_HK_PriceTooFar:
+	case Trade_SetOrderStatus_HK_BuyWolun:
+	case Trade_SetOrderStatus_HK_BuyGuQuan:
+	case Trade_SetOrderStatus_HK_BuyLowPriceStock:
+	default:
+		break;
+	}
+	return bRet;
 }

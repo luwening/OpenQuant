@@ -85,6 +85,7 @@ void CPluginQueryStockSub::SetQuoteReqData(int nCmdID, const Json::Value &jsnVal
 		StockDataReq req_info;
 		req_info.sock = sock;
 		req_info.req = req;
+		req_info.dwReqTick = ::GetTickCount();
 		ReplyDataReqError(&req_info, PROTO_ERR_PARAM_ERR, L"参数错误！");
 		return;
 	}
@@ -106,15 +107,18 @@ void CPluginQueryStockSub::SetQuoteReqData(int nCmdID, const Json::Value &jsnVal
 	{
 		Quote_SubInfo* pSubInfo = NULL;
 		int nSubInfoLen = 0;
-		m_pQuoteData->GetStockSubInfoList(pSubInfo, nSubInfoLen);
+		bool bQueryAllSocket = (req.body.nQueryAllSocket != 0);
+		m_pQuoteData->GetStockSubInfoList(pSubInfo, nSubInfoLen, bQueryAllSocket? 0: sock);
 		QuoteAckDataBody &ack = m_mapCacheData[dwReqTick];
+		//fix:同一毫秒发来的请求，可能导致vtSubInfo重复添加 
+		ack.vtSubInfo.clear();
 		for ( int n = 0; n < nSubInfoLen; n++ )
 		{
 			SubInfoAckItem item;
-			item.nStockSubType = pSubInfo[n].nStockSubType;
+			item.nStockSubType = pSubInfo[n].eStockSubType;
 			StockMktType eMkt = StockMkt_HK;
-			wchar_t szStockCode[16] = {}; 
-			m_pQuoteData->GetStockInfoByHashVal(pSubInfo[n].ddwStockHash, eMkt, szStockCode);
+			wchar_t szStockCode[16] = {}, szStockName[128] = { 0 };
+			m_pQuoteData->GetStockInfoByHashVal(pSubInfo[n].ddwStockHash, eMkt, szStockCode, szStockName);
 			item.nStockMarket = (int)eMkt;
 			item.strStockCode = szStockCode;
 			ack.vtSubInfo.push_back(item);
@@ -140,6 +144,11 @@ void CPluginQueryStockSub::NotifyQuoteDataUpdate(int nCmdID, INT64 nStockID)
 	//	return;
 	//}
 
+}
+
+void CPluginQueryStockSub::NotifySocketClosed(SOCKET sock)
+{
+	DoClearReqInfo(sock);
 }
 
 void CPluginQueryStockSub::OnTimeEvent(UINT nEventID)
@@ -421,4 +430,36 @@ void CPluginQueryStockSub::ClearAllReqCache()
 	m_mapReqInfo.clear();
 	m_mapCacheData.clear();
 	m_mapCacheToDel.clear();
+}
+
+void CPluginQueryStockSub::DoClearReqInfo(SOCKET socket)
+{
+	auto itmap = m_mapReqInfo.begin();
+	while (itmap != m_mapReqInfo.end())
+	{
+		VT_STOCK_DATA_REQ& vtReq = itmap->second;
+
+		//清掉socket对应的请求信息
+		auto itReq = vtReq.begin();
+		while (itReq != vtReq.end())
+		{
+			if (*itReq && (*itReq)->sock == socket)
+			{
+				delete *itReq;
+				itReq = vtReq.erase(itReq);
+			}
+			else
+			{
+				++itReq;
+			}
+		}
+		if (vtReq.size() == 0)
+		{
+			itmap = m_mapReqInfo.erase(itmap);
+		}
+		else
+		{
+			++itmap;
+		}
+	}
 }

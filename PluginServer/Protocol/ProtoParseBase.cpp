@@ -47,6 +47,25 @@ bool  CProtoParseBase::ConvJson2String(const Json::Value &jsnVal, std::string &s
 	if ( strOut.empty() )
 		return false;
 	
+	//去掉json自已产生的\r\n
+	int nTrimLen = 0;
+	std::string::reverse_iterator it = strOut.rbegin();
+	while (it != strOut.rend())
+	{
+		if (*it == '\r' || *it == '\n')
+		{
+			nTrimLen++;
+		}
+		else
+		{
+			break;
+		}
+		++it;
+	}
+	if (nTrimLen != 0)
+	{
+		strOut.resize(strOut.size() - nTrimLen);
+	}
 	strOut.append("\r\n\r\n");
 	return true;
 }

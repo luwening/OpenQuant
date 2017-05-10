@@ -20,6 +20,8 @@ public:
 	void SetTradeReqData(int nCmdID, const Json::Value &jsnVal, SOCKET sock);
 	void NotifyOnQueryHKOrder(Trade_Env enEnv, UINT32 nCookie, INT32 nCount, const Trade_OrderItem* pArrOrder);
 
+	void NotifySocketClosed(SOCKET sock);
+
 protected:
 	//CTimerWndInterface 
 	virtual void OnTimeEvent(UINT nEventID);
@@ -50,7 +52,11 @@ protected:
 	void ClearAllReqAckData();
 	
 private: 
-	bool	DoDeleteReqData(StockDataReq* pReq); 
+	bool DoDeleteReqData(StockDataReq* pReq); 
+	void DoGetFilterStatus(const std::string& strFilter, std::vector<int>& arStatus);
+
+private:
+	void DoClearReqInfo(SOCKET socket);
 
 protected:
 	CPluginHKTradeServer	*m_pTradeServer;

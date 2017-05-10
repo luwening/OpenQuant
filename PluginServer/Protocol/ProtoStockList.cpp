@@ -97,25 +97,30 @@ void CProtoStockList::GetStructField4ParseJson_v0(bool bReqOrAck, int nLevel, co
 		CHECK_RET(pStockItem != NULL, NORET);
 
 		static BOOL arOptional[] = {
-			FALSE, FALSE, 
-			FALSE, FALSE, 
+			FALSE, FALSE,
+			FALSE, FALSE,
 			FALSE,
+			TRUE, TRUE, TRUE,
 		};
 		static EProtoFildType arFieldType[] = {
 			ProtoFild_Int64, ProtoFild_Int32,
 			ProtoFild_StringA, ProtoFild_StringA, 
 			ProtoFild_Int32,
+			ProtoFild_Int32, ProtoFild_StringA, ProtoFild_Int32,
+
 		};
 		static LPCSTR arFieldKey[] = {
 			"StockID",	"LotSize",
-			"Name",		"StockCode",
-			"StockType"
+			"StockName",		"StockCode",
+			"StockType", 
+			"StockChildType", "OwnerStockCode", "OwnerMarketType"
 		};
 
 		void *arPtr[] = {
 			&pStockItem->nStockID,   &pStockItem->nLotSize,
 			&pStockItem->strSimpName, &pStockItem->strStockCode, 
-			&pStockItem->nSecurityType
+			&pStockItem->nSecurityType,
+			&pStockItem->nSubType, &pStockItem->strOwnerStockCode, &pStockItem->nOwnerMarketType,
 		};
 
 		CHECK_OP(_countof(arOptional) == _countof(arFieldType), NOOP);

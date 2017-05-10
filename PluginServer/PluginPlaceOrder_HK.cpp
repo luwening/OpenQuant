@@ -83,11 +83,12 @@ void CPluginPlaceOrder_HK::SetTradeReqData(int nCmdID, const Json::Value &jsnVal
 		CA::Unicode2UTF(L"参数错误！", ack.head.strErrDesc);
 		ack.body.nCookie = req.body.nCookie;
 		ack.body.nSvrResult = Trade_SvrResult_Failed;
+		ack.body.nEnvType = req.body.nEnvType;
 		HandleTradeAck(&ack, sock);
 		return;
 	}
 
-	if (!IManage_SecurityNum::IsSafeSocket(sock))
+	if (req.body.nEnvType == Trade_Env_Real && !IManage_SecurityNum::IsSafeSocket(sock))
 	{
 		CHECK_OP(false, NORET);
 		TradeAckType ack;
@@ -96,6 +97,7 @@ void CPluginPlaceOrder_HK::SetTradeReqData(int nCmdID, const Json::Value &jsnVal
 		CA::Unicode2UTF(L"请重新解锁！", ack.head.strErrDesc);
 		ack.body.nCookie = req.body.nCookie;
 		ack.body.nSvrResult = Trade_SvrResult_Failed;
+		ack.body.nEnvType = req.body.nEnvType;
 		HandleTradeAck(&ack, sock);
 		return;
 	}
@@ -112,19 +114,21 @@ void CPluginPlaceOrder_HK::SetTradeReqData(int nCmdID, const Json::Value &jsnVal
 	PlaceOrderReqBody &body = req.body;
 	std::wstring strCode;
 	CA::UTF2Unicode(body.strCode.c_str(), strCode);
+	int nReqResult = 0;
 	bool bRet = m_pTradeOp->PlaceOrder((Trade_Env)body.nEnvType, (UINT*)&pReq->dwLocalCookie, (Trade_OrderType_HK)body.nOrderType, 
-		(Trade_OrderSide)body.nOrderDir, strCode.c_str(), body.nPrice, body.nQty);
+		(Trade_OrderSide)body.nOrderDir, strCode.c_str(), body.nPrice, body.nQty, &nReqResult);
 
 	if ( !bRet )
 	{
 		TradeAckType ack;
 		ack.head = req.head;
 		ack.head.ddwErrCode = PROTO_ERR_UNKNOWN_ERROR;
-		CA::Unicode2UTF(L"发送失败", ack.head.strErrDesc);
+		ack.head.strErrDesc = UtilPlugin::GetErrStrByCode((QueryDataErrCode)nReqResult);
 
 		ack.body.nCookie = body.nCookie;
 		ack.body.nLocalID = 0;
 		ack.body.nSvrResult = Trade_SvrResult_Failed;
+		ack.body.nEnvType = req.body.nEnvType;
 		HandleTradeAck(&ack, sock);
 
 		delete pReq;
@@ -159,11 +163,13 @@ void CPluginPlaceOrder_HK::NotifyOnPlaceOrder(Trade_Env enEnv, UINT nCookie, Tra
 	TradeAckType ack;
 	ack.head = pFindReq->req.head;
 	ack.head.ddwErrCode = nErrCode;
-	if ( nErrCode )
+	if (nErrCode != 0 || enSvrRet != Trade_SvrResult_Succeed)
 	{
-		WCHAR szErr[256] = L"";
-		if ( m_pTradeOp->GetErrDescV2(nErrCode, szErr) )
-			CA::Unicode2UTF(szErr, ack.head.strErrDesc);
+		WCHAR szErr[256] = L"发送请求失败!";
+		if (nErrCode != 0)
+			m_pTradeOp->GetErrDescV2(nErrCode, szErr);
+
+		CA::Unicode2UTF(szErr, ack.head.strErrDesc);
 	}
 
 	//tomodify 4
@@ -171,10 +177,18 @@ void CPluginPlaceOrder_HK::NotifyOnPlaceOrder(Trade_Env enEnv, UINT nCookie, Tra
 	ack.body.nCookie = pFindReq->req.body.nCookie;
 	ack.body.nLocalID = nLocalID;
 	ack.body.nSvrResult = enSvrRet;
+	ack.body.nSvrOrderID = m_pTradeOp->FindOrderSvrID(enEnv, nLocalID);
+	CHECK_OP(ack.body.nSvrResult != 0 || ack.body.nSvrOrderID != 0, NOOP);
+
 	HandleTradeAck(&ack, pFindReq->sock);
 
 	m_vtReqData.erase(itReq);
 	delete pFindReq;
+}
+
+void CPluginPlaceOrder_HK::NotifySocketClosed(SOCKET sock)
+{
+	DoClearReqInfo(sock);
 }
 
 void CPluginPlaceOrder_HK::OnTimeEvent(UINT nEventID)
@@ -289,4 +303,24 @@ void CPluginPlaceOrder_HK::ClearAllReqAckData()
 	}
 
 	m_vtReqData.clear();
+}
+
+void CPluginPlaceOrder_HK::DoClearReqInfo(SOCKET socket)
+{
+	VT_REQ_TRADE_DATA& vtReq = m_vtReqData;
+
+	//清掉socket对应的请求信息
+	auto itReq = vtReq.begin();
+	while (itReq != vtReq.end())
+	{
+		if (*itReq && (*itReq)->sock == socket)
+		{
+			delete *itReq;
+			itReq = vtReq.erase(itReq);
+		}
+		else
+		{
+			++itReq;
+		}
+	}
 }

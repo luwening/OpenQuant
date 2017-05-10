@@ -347,8 +347,8 @@ void CProtoKLData::GetKLDataArrField(VT_PROTO_FIELD &vtField, const KLDataAckIte
 	static LPCSTR arFieldKey[] = {
 		"DataStatus", "Time", "Open", 
 		"Close", "High", "Low", 
-		"PERatio", "Turnover", "TDVol",
-		"TDVal"
+		"PERatio", "TurnoverRate", "Volume",
+		"Turnover"
 	};
 
 	KLDataAckItem &item = const_cast<KLDataAckItem &>(ackItem);

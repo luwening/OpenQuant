@@ -93,6 +93,11 @@ void CPluginStockList::NotifyQuoteDataUpdate(int nCmdID, INT64 nStockID)
 	//CHECK_RET(m_pQuoteData, NORET);
 }
 
+void CPluginStockList::NotifySocketClosed(SOCKET sock)
+{
+	DoClearReqInfo(sock);
+}
+
 void CPluginStockList::OnMsgEvent(int nEvent,WPARAM wParam,LPARAM lParam)
 {
 	if ( EVENT_ID_ACK_REQUEST == nEvent )
@@ -136,10 +141,25 @@ void CPluginStockList::ReplyAllRequest()
 			CA::Unicode2UTF(pInfo->chCodeSig, strCode);
 			CA::Unicode2UTF(pInfo->chSimpName, strName);
 			stkItem.strStockCode = strCode;
+			stkItem.nStockMarket = ackBody.nStockMarket;
 			stkItem.strSimpName = strName;
+			stkItem.nSubType = pInfo->nSubType;
+			stkItem.nOwnerStockID = pInfo->nOwnerStockID;
+			if (stkItem.nOwnerStockID != 0)
+			{
+				StockMktType eMktType = StockMkt_None;
+				wchar_t wstrCode[16] = { 0 }, szStockName[128] = { 0 };
+				m_pQuoteData->GetStockInfoByHashVal(stkItem.nOwnerStockID, eMktType, wstrCode, szStockName);
+				CA::Unicode2UTF(wstrCode, stkItem.strOwnerStockCode);
+				stkItem.nOwnerMarketType = (int)eMktType;
+			}
+			else
+			{
+				stkItem.nOwnerMarketType = 0;
+				stkItem.strOwnerStockCode = "";
+			}
 			ackBody.vtStockList.push_back(stkItem);
 		}
-		
 		ReplyStockDataReq(pReqData, ackBody);
 	}
 }
@@ -208,4 +228,24 @@ void CPluginStockList::ReleaseAllReqData()
 		delete pReqData;
 	}
 	m_vtReqData.clear();
+}
+
+void CPluginStockList::DoClearReqInfo(SOCKET socket)
+{
+	VT_STOCK_DATA_REQ& vtReq = m_vtReqData;
+
+	//清掉socket对应的请求信息
+	auto itReq = vtReq.begin();
+	while (itReq != vtReq.end())
+	{
+		if (*itReq && (*itReq)->sock == socket)
+		{
+			delete *itReq;
+			itReq = vtReq.erase(itReq);
+		}
+		else
+		{
+			++itReq;
+		}
+	}
 }

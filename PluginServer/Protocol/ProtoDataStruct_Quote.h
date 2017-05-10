@@ -240,7 +240,11 @@ struct StockUnSub_Ack
 ////查询订阅接口PROTO_ID_QT_QueryStockSub
 struct QueryStockSubReqBody
 {
-
+	QueryStockSubReqBody()
+	{
+		nQueryAllSocket = 0;
+	}
+	int nQueryAllSocket;//是否请求所有连接的定阅信息 0：1
 };
 
 struct SubInfoAckItem
@@ -360,10 +364,16 @@ struct	StockListReqBody
 struct StockListAckItem
 {
 	INT64 nStockID;
-	int  nLotSize;	
-	int  nSecurityType;  // enum PluginSecurityType	
+	int nLotSize;	
+	int nSecurityType;  // enum PluginSecurityType	
+	int nStockMarket;
+	std::string strStockCode;
 	std::string strSimpName;
-	std::string strStockCode;	
+
+	int nSubType; //如果是涡轮
+	INT64 nOwnerStockID; //涡轮正股
+	std::string strOwnerStockCode;
+	int nOwnerMarketType;
 };
 
 typedef std::vector<StockListAckItem>	VT_STOCK_INFO;
@@ -420,6 +430,37 @@ struct SnapshotAckItem
 	INT64 lowest_price;
 	int turnover_ratio;
 	int ret_err;//0为成功
+
+	INT64 nTatalMarketVal; //市值
+	INT64 nCircularMarketVal; //流通市值
+
+	UINT32 nLostSize; //每手
+	std::string strUpdateTime; //增加字符串时间
+
+	struct tagWarrantData
+	{
+		BOOL bDataValid;  //如果非涡轮 == 0 
+		int  nWarrantType;  //涡轮类型 Quote_WarrantType
+		UINT32 nConversionRatio; //换股比率
+		INT64  nStrikePrice; //行使价
+
+		INT64  nMaturityDate; //到期日
+		std::string strMaturityData;
+		INT64 nEndtradeDate;  //最后交易日
+		std::string strEndtradeDate;
+
+		std::string strOwnerStockCode;
+		int nOwnerStockMarket; 
+
+		INT64 nRecoveryPrice; //回收价
+		UINT64 nStreetVol;  //街货量
+		UINT64 nIssueVol;  //发行量
+		INT64 nOwnerStockPrice;  //正股价格
+		int nStreetRatio; //街货占比
+		int nDelta;	 //对冲值
+		int nImpliedVolatility; //引伸波幅
+		int nPremium; //溢价		
+	}stWrtData;
 };
 
 typedef std::vector<SnapshotAckItem>	VT_ACK_SNAPSHOT;
@@ -615,6 +656,7 @@ struct PushStockDataReqBody
 {
 	int nStockPushType;
 	int nStockMarket;
+	int nUnPush;
 	std::string strStockCode;
 };
 
@@ -868,4 +910,118 @@ struct PushRTData_Ack
 {
 	ProtoHead			head;
 	PushRTDataAckBody		body;
+};
+
+//指定板块集合下的板块ID列表
+//
+enum PlateClass
+{
+	PlateClass_All = 0,
+	PlateClass_Industry = 1,  //板块行业分类
+	PlateClass_Region = 2,    //板块地域分类
+	PlateClass_Concept = 3,	  //板块概念分类
+};
+
+struct	PlatesetIDsReqBody
+{
+	int nPlateClassType;
+	int nStockMarket;
+};
+
+struct PlatesetIDsAckItem
+{
+	int nStockMarket;
+	std::string strStockCode;
+	std::string strStockName;
+	UINT64  nStockID;
+};
+typedef std::vector<PlatesetIDsAckItem>	VT_PlatesetID;
+
+struct PlatesetIDsAckBody
+{
+	int nPlateClassType;
+	int nStockMarket;
+
+	VT_PlatesetID vtPlatesetIDs;
+};
+
+struct	PlatesetIDs_Req
+{
+	ProtoHead			head;
+	PlatesetIDsReqBody	body;
+};
+
+struct	PlatesetIDs_Ack
+{
+	ProtoHead				head;
+	PlatesetIDsAckBody		body;
+};
+
+//指定板块集合下的股票ID列表
+//
+struct	PlateSubIDsReqBody
+{
+	int nStockMarket;
+	std::string strStockCode;
+};
+
+typedef StockListAckItem PlateSubIDsAckItem;
+typedef std::vector<PlateSubIDsAckItem>	VT_PlateSubID;
+
+struct PlateSubIDsAckBody
+{
+	int nStockMarket;
+	std::string strStockCode;
+
+	VT_PlateSubID vtPlateSubIDs;
+};
+
+struct	PlateSubIDs_Req
+{
+	ProtoHead			head;
+	PlateSubIDsReqBody	body;
+};
+
+struct	PlateSubIDs_Ack
+{
+	ProtoHead				head;
+	PlateSubIDsAckBody		body;
+};
+
+//////////////////////////////////////////////////////////////////////////
+//经纪队列协议, PROTO_ID_GET_BROKER_QUEUE
+
+struct	BrokerQueueReqBody
+{
+	int nStockMarket;
+	std::string strStockCode;
+};
+
+struct BrokerQueueAckItem
+{
+	int nBrokerID;	//经纪id 
+	std::string strBrokerName;  
+	int nBrokerPos;  //经纪摆盘档位, 取值 0 , 1, 2, 3 ...
+};
+
+typedef std::vector<BrokerQueueAckItem>	VT_BROKER_QUEUE;
+
+struct BrokerQueueAckBody
+{
+	int nStockMarket;
+	std::string strStockCode;
+	VT_BROKER_QUEUE vtBrokerAsk; //买盘经纪
+	VT_BROKER_QUEUE vtBrokerBid; //卖盘经纪
+};
+
+struct	BrokerQueue_Req
+{
+	ProtoHead			head;
+	BrokerQueueReqBody	body;
+};
+
+struct	BrokerQueue_Ack
+{
+	ProtoHead			head;
+	BrokerQueueAckBody	body;
 };

@@ -2,6 +2,7 @@
 #include "PluginPushStockData.h"
 #include "PluginQuoteServer.h"
 #include "Protocol/ProtoPushStockData.h"
+#include "include/FTPluginQuoteDefine.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -85,11 +86,12 @@ void CPluginPushStockData::SetQuoteReqData(int nCmdID, const Json::Value &jsnVal
 		req_info.nStockID = nStockID;
 		req_info.sock = sock;
 		req_info.req = req;
+		req_info.dwReqTick = ::GetTickCount();
 		ReplyDataReqError(&req_info, PROTO_ERR_STOCK_NOT_FIND, L"找不到股票！");
 		return;
 	}	
 	
-	if ( req.body.nStockPushType <=0 ||  req.body.nStockPushType >= 14 )
+	if (req.body.nStockPushType <= 0 || req.body.nStockPushType >= StockSubType_Max)
 	{
 		CHECK_OP(false, NOOP);
 		StockDataReq req_info;
@@ -118,6 +120,11 @@ void CPluginPushStockData::NotifyQuoteDataUpdate(int nCmdID, INT64 nStockID)
 	//CHECK_RET(m_pQuoteData, NORET);
 }
 
+void CPluginPushStockData::NotifySocketClosed(SOCKET sock)
+{
+	DoClearReqInfo(sock);
+}
+
 void CPluginPushStockData::OnMsgEvent(int nEvent,WPARAM wParam,LPARAM lParam)
 {
 	if ( EVENT_ID_ACK_REQUEST == nEvent )
@@ -139,8 +146,8 @@ void CPluginPushStockData::ReplyAllRequest()
 	{
 		StockDataReq *pReqData = *it;
 		CHECK_OP(pReqData, continue);
-
-		m_pQuoteData->RecordPushRequest(pReqData->sock, pReqData->nStockID, (StockSubType)pReqData->req.body.nStockPushType);
+		bool bUnpush = pReqData->req.body.nUnPush == 0 ? false : true;
+		m_pQuoteData->RecordPushRequest(pReqData->sock, pReqData->nStockID, (StockSubType)pReqData->req.body.nStockPushType, bUnpush);
 
 		CProtoQuote::ProtoAckBodyType ackBody;
 		ackBody.nStockMarket = pReqData->req.body.nStockMarket;
@@ -216,4 +223,24 @@ void CPluginPushStockData::ReleaseAllReqData()
 		delete pReqData;
 	}
 	m_vtReqData.clear();
+}
+
+void CPluginPushStockData::DoClearReqInfo(SOCKET socket)
+{
+	VT_STOCK_DATA_REQ& vtReq = m_vtReqData;
+
+	//清掉socket对应的请求信息
+	auto itReq = vtReq.begin();
+	while (itReq != vtReq.end())
+	{
+		if (*itReq && (*itReq)->sock == socket)
+		{
+			delete *itReq;
+			itReq = vtReq.erase(itReq);
+		}
+		else
+		{
+			++itReq;
+		}
+	}
 }

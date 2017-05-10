@@ -166,18 +166,18 @@ bool CProtoPushStockData::MakeProtoBody_Ack(Json::Value &jsnVal, const ProtoAckD
 void CProtoPushStockData::GetProtoBodyField_Req(VT_PROTO_FIELD &vtField, const ProtoReqBodyType &reqData)
 {
 	static BOOL arOptional[] = {
-		FALSE, FALSE, FALSE,
+		FALSE, FALSE, TRUE, FALSE,
 	};
 	static EProtoFildType arFieldType[] = {
-		ProtoFild_Int32, ProtoFild_Int32, ProtoFild_StringA, 
+		ProtoFild_Int32, ProtoFild_Int32, ProtoFild_Int32, ProtoFild_StringA,
 	};
 	static LPCSTR arFieldKey[] = {
-		"StockPushType", "Market", "StockCode",
+		"StockPushType", "Market", "UnPush", "StockCode",
 	};
 
 	ProtoReqBodyType &body = const_cast<ProtoReqBodyType &>(reqData);	
 	void *arPtr[] = {
-		&body.nStockPushType, &body.nStockMarket, &body.strStockCode, 
+		&body.nStockPushType, &body.nStockMarket, &body.nUnPush, &body.strStockCode, 
 	};
 
 	CHECK_OP(_countof(arOptional) == _countof(arFieldType), NOOP);
