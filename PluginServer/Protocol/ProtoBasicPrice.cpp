@@ -231,8 +231,8 @@ void CProtoBasicPrice::GetProtoBodyField_Ack(VT_PROTO_FIELD &vtField, const Prot
 	};
 	static LPCSTR arFieldKey[] = {
 		"High",	"Open",	"Low", 
-		"Close", "Vol", "Turnover",
-		"LastClose","Cur",
+		"Close", "Volume", "Turnover",
+		"LastClose","CurPrice",
 		"Market",	"StockCode", "Time", "LotSize"
 	};
 

@@ -185,6 +185,8 @@ void CPluginPlaceOrder_US::NotifyOnPlaceOrder(Trade_Env enEnv, UINT32 nCookie, T
 	ack.body.nCookie = pFindReq->req.body.nCookie;
 	ack.body.nLocalID = nLocalID;
 	ack.body.nSvrResult = enSvrRet;
+	ack.body.nSvrOrderID = m_pTradeOp->FindOrderSvrID(nLocalID);
+	CHECK_OP(ack.body.nSvrResult != 0 || ack.body.nSvrOrderID != 0, NOOP);
 
 	HandleTradeAck(&ack, pFindReq->sock);
 

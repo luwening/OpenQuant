@@ -160,12 +160,12 @@ void CProtoSnapshot::GetStructField4ParseJson_v0(bool bReqOrAck, int nLevel, con
 		};
 		static LPCSTR arFieldKey[] = { 
 			"StockID",	"StockCode",  "MarketType",
-			"InstrumentType", "LastClose",  "NominalPrice",
+			"StockType", "LastClose",  "NominalPrice",
 			"OpenPrice",  "UpdateTime", "SuspendFlag",
 
-			"ListingStatus", "ListingDate", "SharesTraded",
+			"ListingStatus", "ListingDate", "Volume",
 			"Turnover",  "HighestPrice", "LowestPrice",
-			"TurnoverRatio", "RetErrCode", "TotalMarketVal",
+			"TurnoverRate", "RetErrCode", "TotalMarketVal",
 
 			"CircularMarketVal", "LotSize", "UpdateTimeStr",
 

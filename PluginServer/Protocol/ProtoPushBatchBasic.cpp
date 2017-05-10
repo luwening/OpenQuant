@@ -259,8 +259,8 @@ void CProtoPushBatchBasic::GetAckBatchBasicArrField(VT_PROTO_FIELD &vtField, con
 	static LPCSTR arFieldKey[] = {
 		"Market",  "StockCode",  "High", 
 		"Open",	  "LastClose",    "Low",
-		"Cur",	  "Suspension", "Turnover",
-		"TDVol",  "TDVal",   "Amplitude",     
+		"Cur",	  "Suspension", "TurnoverRate",
+		"Turnover",  "Volume",   "Amplitude",     
 		"Date",	  "Time",     "ListTime", 
 	};
 

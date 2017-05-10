@@ -111,7 +111,7 @@ void CProtoStockList::GetStructField4ParseJson_v0(bool bReqOrAck, int nLevel, co
 		};
 		static LPCSTR arFieldKey[] = {
 			"StockID",	"LotSize",
-			"Name",		"StockCode",
+			"StockName",		"StockCode",
 			"StockType", 
 			"StockChildType", "OwnerStockCode", "OwnerMarketType"
 		};
