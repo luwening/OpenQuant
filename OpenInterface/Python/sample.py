@@ -9,7 +9,7 @@ def _example_stock_quote(quote_ctx):
     """
     获取批量报价，输出 股票名称，时间，当前价，开盘价，最高价，最低价，昨天收盘价，成交量，成交额，换手率，振幅，股票状态
     """
-    stock_code_list = ["US.AAPL", "HK.00700", "SZ.000001"]
+    stock_code_list = ["US.AAPL", "HK.00700", "SZ.000001", "HK.68106", "HK.65395"]
 
     # subscribe "QUOTE"
     for stk_code in stock_code_list:
@@ -41,7 +41,7 @@ def _example_cur_kline(quote_ctx):
     获取当前K线，输出 股票代码，时间，开盘价，收盘价，最高价，最低价，成交量，成交额
     """
     # subscribe Kline
-    stock_code_list = ["US.AAPL", "HK.00700", "SZ.000001", "HK.08112", 'HK_FUTURE.999010']
+    stock_code_list = ["US.AAPL", "HK.00700"]
     sub_type_list = ["K_1M", "K_5M", "K_15M", "K_30M", "K_60M", "K_DAY", "K_WEEK", "K_MON"]
 
     for code in stock_code_list:
@@ -75,7 +75,7 @@ def _example_rt_ticker(quote_ctx):
     """
     获取逐笔，输出 股票代码，时间，价格，成交量，成交金额，暂时没什么意义的序列号
     """
-    stock_code_list = ["US.AAPL", "HK.00700", "SZ.000001", "SH.601318"]
+    stock_code_list = ["HK.00700", "HK.68106"]
 
     # subscribe "TICKER"
     for stk_code in stock_code_list:
@@ -85,7 +85,7 @@ def _example_rt_ticker(quote_ctx):
             exit()
 
     for stk_code in stock_code_list:
-        ret_status, ret_data = quote_ctx.get_rt_ticker(stk_code, 10)
+        ret_status, ret_data = quote_ctx.get_rt_ticker(stk_code, 3)
         if ret_status == RET_ERROR:
             print(stk_code, ret_data)
             exit()
@@ -134,7 +134,7 @@ def _example_stock_basic(quote_ctx):
     """
     获取股票信息，输出 股票代码，股票名，每手数量，股票类型，子类型所属正股
     """
-    ret_status, ret_data = quote_ctx.get_stock_basicinfo("US", "STOCK")
+    ret_status, ret_data = quote_ctx.get_stock_basicinfo("HK", "STOCK")
     if ret_status == RET_ERROR:
         print(ret_data)
         exit()
@@ -149,7 +149,7 @@ def _example_get_market_snapshot(quote_ctx):
     格式化窝轮最后到期时间，窝轮对应的正股，窝轮回收价，窝轮街货量，窝轮发行量，窝轮街货占比，窝轮对冲值，窝轮引伸波幅，
     窝轮溢价
     """
-    ret_status, ret_data = quote_ctx.get_market_snapshot(["HK.00700", "HK.00038"])
+    ret_status, ret_data = quote_ctx.get_market_snapshot(["HK.68106", "HK.65395", "HK.00700"])
     if ret_status == RET_ERROR:
         print(ret_data)
         exit()
@@ -183,7 +183,7 @@ def _example_plate_subplate(quote_ctx):
     """
     获取板块集合下的子板块列表，输出 市场，板块分类,板块代码，名称，ID
     """
-    ret_status, ret_data = quote_ctx.get_plate_list("HK", "INDUSTRY")
+    ret_status, ret_data = quote_ctx.get_plate_list("SZ", "ALL")
     if ret_status == RET_ERROR:
         print(ret_data)
         exit()
@@ -195,7 +195,7 @@ def _example_plate_stock(quote_ctx):
     """
     获取板块下的股票列表，输出 市场，股票每手，股票名称，所属市场，子类型，股票类型
     """
-    ret_status, ret_data = quote_ctx.get_plate_stock("HK", "BK1001")
+    ret_status, ret_data = quote_ctx.get_plate_stock("SH.BK0531")
     if ret_status == RET_ERROR:
         print(ret_data)
         exit()
@@ -295,8 +295,8 @@ if __name__ == "__main__":
     quote_context = OpenQuoteContext(host='127.0.0.1', async_port=11111)
 
     # 获取推送数据
-    # quote_context.subscribe('HK.00700', "QUOTE", push=True)
-    # quote_context.set_handler(StockQuoteTest())
+    quote_context.subscribe('HK.00700', "QUOTE", push=True)
+    quote_context.set_handler(StockQuoteTest())
     #
     # quote_context.subscribe('HK.00700', "K_DAY", push=True)
     # quote_context.set_handler(CurKlineTest())
@@ -305,6 +305,7 @@ if __name__ == "__main__":
     # quote_context.set_handler(OrderBookTest())
     #
     # quote_context.subscribe('HK.00700', "TICKER", push=True)
+    # quote_context.subscribe('HK.68106', "TICKER", push=True)
     # quote_context.set_handler(TickerTest())
     #
     # quote_context.subscribe('HK.00700', "RT_DATA", push=True)
@@ -312,11 +313,11 @@ if __name__ == "__main__":
     #
     # quote_context.subscribe('HK.00700', "BROKER", push=True)
     # quote_context.set_handler(BrokerTest())
-    #
-    # quote_context.start()
+    quote_context.start()
+
 
     # 获取实时数据
-    # _example_stock_quote(quote_context)
+    _example_stock_quote(quote_context)
     # _example_get_market_snapshot(quote_context)
     # _example_cur_kline(quote_context)
     # _example_rt_ticker(quote_context)
@@ -327,3 +328,4 @@ if __name__ == "__main__":
     # _example_plate_subplate(quote_context)
     # _example_plate_stock(quote_context)
     # _example_broker_queue(quote_context)
+
