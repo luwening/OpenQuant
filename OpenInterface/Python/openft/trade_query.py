@@ -268,7 +268,8 @@ class PlaceOrder:
             error_str = ERROR_STR_PREFIX + "cannot find EnvType in client rsp: %s" % rsp_str
             return RET_ERROR, error_str, None
 
-        place_order_list = [{'envtype': rsp_data['EnvType']
+        place_order_list = [{'envtype': rsp_data['EnvType'],
+                             'orderid': rsp_data['OrderID']
                              }]
 
         return RET_OK, "", place_order_list
@@ -318,7 +319,8 @@ class PlaceOrder:
             error_str = ERROR_STR_PREFIX + "cannot find EnvType in client rsp: %s" % rsp_str
             return RET_ERROR, error_str, None
 
-        place_order_list = [{'envtype': rsp_data['EnvType']
+        place_order_list = [{'envtype': rsp_data['EnvType'],
+                             'orderid': rsp_data['OrderID']
                              }]
 
         return RET_OK, "", place_order_list

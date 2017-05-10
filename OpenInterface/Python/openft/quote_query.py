@@ -388,7 +388,7 @@ class StockBasicInfoQuery:
             return RET_OK, "", []
 
         basic_info_list = [{"code": merge_stock_str(int(market), record['StockCode']),
-                            "name": record["Name"],
+                            "name": record["StockName"],
                             "lot_size": int(record["LotSize"]),
                             "stock_type": rev_sec_type_map[int(record["StockType"])],
                             "stock_child_type": (rev_wrt_type_map[int(record["StockChildType"])] if
@@ -453,17 +453,15 @@ class MarketSnapshotQuery:
             return RET_OK, "", []
 
         snapshot_list = [{'code': merge_stock_str(int(record['MarketType']), record['StockCode']),
-                          # 'data_date': datetime.fromtimestamp(int(record['UpdateTime'])).strftime("%Y-%m-%d"),
-                          # 'data_time': datetime.fromtimestamp(int(record['UpdateTime'])).strftime("%H:%M:%S"),
                           'update_time': str(record['UpdateTimeStr']),
                           'last_price': float(record['NominalPrice']) / 1000,
                           'open_price': float(record['OpenPrice']) / 1000,
                           'high_price': float(record['HighestPrice']) / 1000,
                           'low_price': float(record['LowestPrice']) / 1000,
                           'prev_close_price': float(record['LastClose']) / 1000,
-                          'volume': int(record['SharesTraded']),
+                          'volume': record['Volume'],
                           'turnover': float(record['Turnover']) / 1000,
-                          'turnover_rate': float(record['TurnoverRatio']) / 1000,
+                          'turnover_rate': float(record['TurnoverRate']) / 1000,
                           'suspension': True if int(record['SuspendFlag']) == 1 else False,
                           'listing_date': datetime.fromtimestamp(int(record['ListingDate'])).strftime("%Y-%m-%d"),
                           'circular_market_val': float(record['CircularMarketVal']) / 1000,
@@ -523,15 +521,14 @@ class RtDataQuery:
             return RET_OK, "", []
 
         # stock_code = merge_stock_str(int(rsp_data['Market']), rsp_data['StockCode'])
-        rt_list = [{# "code": stock_code,
-                    "time": record['Time'],
+        rt_list = [{"time": record['Time'],
                     "data_status": True if int(record['DataStatus']) == 1 else False,
                     "opened_mins": record['OpenedMins'],
-                    "cur_price": float(record['Cur']) / 1000,
+                    "cur_price": float(record['CurPrice']) / 1000,
                     "last_close": float(record['LastClose']) / 1000,
                     "avg_price": float(record['AvgPrice']) / 1000,
-                    "tdvolume": record['TDVolume'],
-                    "tdvalue": float(record['TDValue'])/1000
+                    "turnover": float(record['Turnover'])/1000,
+                    "volume": record['Volume']
                     } for record in rt_data_list]
 
         return RET_OK, "", rt_list
@@ -578,10 +575,7 @@ class SubplateQuery:
         if raw_plate_list is None or len(raw_plate_list) == 0:
             return RET_OK, "", []
 
-        plate_class = str(rev_plate_class_map[int(rsp_data['PlateClass'])])
-        plate_list = [{"market": str(rev_mkt_map[int(record['Market'])]),
-                       "plate_class": plate_class,
-                       "plate_code": str(record['StockCode']),
+        plate_list = [{"code": merge_stock_str(int(record['Market']), record['StockCode']),
                        "plate_name": record['StockName'],
                        "plate_id": record['StockID']
                        }for record in raw_plate_list]
@@ -594,18 +588,22 @@ class PlateStockQuery:
         pass
 
     @classmethod
-    def pack_req(cls, market, stock_code):
-        if market not in mkt_map:
-            error_str = ERROR_STR_PREFIX + "market is %s which not valid. (%s)" % (market, ",".join(x for x in mkt_map))
+    def pack_req(cls, plate_code):
+        ret_code, content = split_stock_str(plate_code)
+        if ret_code != RET_OK:
+            msg = content
+            error_str = ERROR_STR_PREFIX + msg
             return RET_ERROR, error_str, None
 
-        if stock_code is None or isinstance(stock_code, str) is False:
-            error_str = ERROR_STR_PREFIX + "stock_code is %s which not valid." % stock_code
+        market, stock_code = content
+        if market not in rev_mkt_map:
+            error_str = ERROR_STR_PREFIX + "market is %s, which is not valid. (%s)" \
+                                           % (market, ",".join([x for x in mkt_map]))
             return RET_ERROR, error_str, None
 
         req = {"Protocol": "1027",
                "Version": "1",
-               "ReqParam": {"Market": str(mkt_map[market]),
+               "ReqParam": {"Market": str(market),
                             "StockCode": str(stock_code)}
                }
         req_str = json.dumps(req) + '\r\n'
@@ -628,11 +626,11 @@ class PlateStockQuery:
 
         raw_stock_list = rsp_data["PlateSubIDsArr"]
         stock_list = [{"lot_size": int(record['LotSize']),
-                       "market": str(rev_mkt_map[int(record['Market'])]),
+                       "code": merge_stock_str(int(record['Market']), record['StockCode']),
                        "stock_name": record['StockName'],
                        "owner_market": merge_stock_str(int(record['OwnerMarketType']), record['OwnerStockCode']),
                        "stock_child_type": (str(rev_wrt_type_map['StockChildType'])
-                                            if int(record['OwnerMarketType']) != 0 else 0),
+                                            if int(record['StockType']) == 5 else 0),
                        "stock_type": rev_sec_type_map[int(record['StockType'])]
                        }for record in raw_stock_list]
 
@@ -778,8 +776,8 @@ class HistoryKlineQuery:
                        "high": float(record['High'])/price_base,
                        "low": float(record['Low'])/price_base,
                        "close": float(record['Close'])/price_base,
-                       "volume": record['TDVol'],
-                       "turnover": float(record['TDVal'])/1000
+                       "volume": record['Volume'],
+                       "turnover": float(record['Turnover'])/1000
                        }
                       for record in raw_kline_list]
 
@@ -1080,14 +1078,14 @@ class StockQuoteQuery:
         quote_list = [{'code': merge_stock_str(int(record['Market']), record['StockCode']),
                        'data_date': record['Date'],
                        'data_time': record['Time'],
-                       'last_price': float(record['Cur'])/1000,
+                       'last_price': float(record['CurPrice'])/1000,
                        'open_price': float(record['Open'])/1000,
                        'high_price': float(record['High'])/1000,
                        'low_price': float(record['Low'])/1000,
                        'prev_close_price': float(record['LastClose'])/1000,
-                       'volume': int(record['TDVol']),
-                       'turnover':  float(record['TDVal'])/1000,
-                       'turnover_rate': float(record['Turnover'])/1000,
+                       'volume': int(record['Volume']),
+                       'turnover':  float(record['Turnover'])/1000,
+                       'turnover_rate': float(record['TurnoverRate'])/1000,
                        'amplitude': float(record['Amplitude'])/1000,
                        'suspension': True if int(record['Suspension']) == 1 else False,
                        'listing_date': record['ListTime']
@@ -1242,8 +1240,8 @@ class CurKlineQuery:
                        "high": float(record['High'])/1000,
                        "low": float(record['Low'])/1000,
                        "close": float(record['Close'])/1000,
-                       "volume": record['TDVol'],
-                       "turnover": float(record['TDVal'])/1000,
+                       "volume": record['Volume'],
+                       "turnover": float(record['Turnover'])/1000,
                        "k_type": k_type
                        }
                       for record in raw_kline_list]
