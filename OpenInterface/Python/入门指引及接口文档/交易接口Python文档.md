@@ -81,6 +81,7 @@ ret_code失败时，ret_data返回为错误描述字符串；
 正常情况下，ret_code为0，ret_data为一个dataframe, 其中包括：
 
 **envtype**: 交易环境参数。0是真实交易，1是仿真交易
+**orderid**: 订单ID。
 
 
 **失败情况**：
@@ -452,6 +453,7 @@ ret_code失败时，ret_data返回为错误描述字符串；
 正常情况下，ret_code为0，ret_data为一个dataframe, 其中包括：
 
 **envtype**: 环境参数，0是真实环境，1是仿真环境。
+**orderid**: 订单ID。
 
 **失败情况**：
 

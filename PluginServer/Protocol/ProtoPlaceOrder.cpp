@@ -222,18 +222,18 @@ void CProtoPlaceOrder::GetProtoBodyField_Req(VT_PROTO_FIELD &vtField, const Prot
 void CProtoPlaceOrder::GetProtoBodyField_Ack(VT_PROTO_FIELD &vtField, const ProtoAckBodyType &ackData)
 {
 	static BOOL arOptional[] = {
-		FALSE, FALSE, FALSE, FALSE,		
+		FALSE, FALSE, FALSE, FALSE,TRUE,
 	};
 	static EProtoFildType arFieldType[] = {
-		ProtoFild_Int32, ProtoFild_Int32, ProtoFild_Int64, ProtoFild_Int32, 
+		ProtoFild_Int32, ProtoFild_Int32, ProtoFild_Int64, ProtoFild_Int32, ProtoFild_Int64,
 	};
 	static LPCSTR arFieldKey[] = {
-		"EnvType",		"Cookie",		"LocalID",		"SvrResult",
+		"EnvType", "Cookie", "LocalID", "SvrResult", "OrderID"
 	};
 
 	ProtoAckBodyType &body = const_cast<ProtoAckBodyType &>(ackData);
 	void *arPtr[] = {
-		&body.nEnvType,		&body.nCookie,		&body.nLocalID,		&body.nSvrResult,		
+		&body.nEnvType,	&body.nCookie, &body.nLocalID, &body.nSvrResult, &body.nSvrOrderID,
 	};
 
 	CHECK_OP(_countof(arOptional) == _countof(arFieldType), NOOP);

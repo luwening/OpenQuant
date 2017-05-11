@@ -336,8 +336,8 @@ void CProtoRTData::GetRTDataArrField(VT_PROTO_FIELD &vtField, const RTDataAckIte
 	};
 	static LPCSTR arFieldKey[] = {
 		"DataStatus", "Time", "OpenedMins", 
-		"Cur", "LastClose", "AvgPrice", 
-		"TDVolume", "TDValue",
+		"CurPrice", "LastClose", "AvgPrice", 
+		"Volume", "Turnover",
 	};
 
 	RTDataAckItem &item = const_cast<RTDataAckItem &>(ackItem);

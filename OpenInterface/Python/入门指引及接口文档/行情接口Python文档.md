@@ -256,6 +256,8 @@ handler必须是以下几种类的子类对象：
 | **OrderBookHandlerBase**  | 摆盘处理基类   |
 | **CurKlineHandlerBase**   | 实时K线处理基类 |
 | **TickerHandlerBase**     | 逐笔处理基类   |
+| **RTDataHandlerBase**     | 分时数据处理基类   |
+| **BrokerHandlerBase**     | 经纪队列处理基类   |
 
 
 
@@ -442,7 +444,7 @@ ret_code失败时，ret_data返回为错误描述字符串；
 **total_market_val**:		  总市值；float
 **wrt_valid**： 		是否是窝轮；bool
 **wrt_conversion_ratio**:		换股比率；float
-**wrt_type**：		窝轮类型；1=认购证 2=认沽证 3=牛证 4=熊证 str
+**wrt_type**：		窝轮类型；1=认购证 2=认沽证 3=牛证 4=熊证 string
 **wrt_strike_price**：		行使价格；float
 **wrt_maturity_date**:		格式化窝轮到期时间； string
 **wrt_end_trade**:		格式化窝轮最后交易时间；string
@@ -456,6 +458,16 @@ ret_code失败时，ret_data返回为错误描述字符串；
 **wrt_premium**:		窝轮溢价；float
 
 返回DataFrame，包含上述字段
+
+**窝轮类型** wrt_type，（字符串类型）： 
+| 窝轮类型  | 标识        |
+| ----- | --------- |
+| "CALL"    | 认购证   |
+| "PUT"    | 认沽证     |
+| "BULL"   | 牛证   |
+| "BEAR"   | 熊证 |
+| "N/A"    |  未知或服务器没相关数据   |
+
 
 返回数据量不一定与codelist长度相等， 用户需要自己判断
 
@@ -492,8 +504,8 @@ ret_code失败时，ret_data返回为错误描述字符串；
 **cur_price**：当前价格：float 
 **last_close**: 昨天收盘的价格，float 
 **avg_price**: 平均价格，float 
-**tdvolume**: 成交量，long
-**tdvalue**:  成交额，float
+**volume**: 成交量，float
+**turnover**:  成交额，float
 
 **失败情况**：
 1. code不合法
@@ -509,7 +521,7 @@ ret_code, ret_data = quote_ctx.get_plate_list(market, plate_class)
 
 **功能**： 获取板块集合下的子板块列表
 **参数**：
-**market**：市场标识
+**market**：市场标识，注意这里不区分沪，深,输入沪或者深都会返回沪深市场的子板块（这个是和客户端保持一致的）
 **plate_class** ：板块分类, string; 例如，"ALL", "INDUSTRY"
 
 **板块分类类型** ，（字符串类型）：
@@ -526,10 +538,9 @@ ret_code失败时，ret_data返回为错误描述字符串；
 客户端无符合条件数据时，ret_code为成功，返回None 
 
 正常情况下返回K线数据为一个DataFrame包含:
-**market**： 市场标识；int
-**plate_class**：  板块分类：int
-**plate_code**： 板块代码；string
+**code**： 板块代码；string
 **plate_name**： 板块名称；string
+**plate_id**: 板块ID：string 
 港股美股市场的地域分类数据暂时为空
 
 **失败情况**：
@@ -542,26 +553,43 @@ ret_code失败时，ret_data返回为错误描述字符串；
 
 ### 获取板块下的股票列表  get_plate_stock
 ```python
-ret_code, ret_data = quote_ctx.get_plate_stock(market, stock_code)
+ret_code, ret_data = quote_ctx.get_plate_stock(plate_code)
 ```
 
 
-**功能**：获取特定板块下的股票列表
+**功能**：获取特定板块下的股票列表,注意这里不区分沪，深,输入沪或者深都会返回沪深市场
 
 **参数**：
-**market**: 市场标识, string，例如，”HK”，”US”；具体见市场标识说明
-**stock_code**: 板块代码, string, 例如，”BK1001”，”BK1002”，先利用获取子版块列表函数获取子版块代码
+**plate_code**: 板块代码, string, 例如，”SH.BK0001”，”SH.BK0002”，先利用获取子版块列表函数获取子版块代码
 
 **返回**：
 ret_code失败时，ret_data返回为错误描述字符串；
 客户端无符合条件数据时，ret_code为成功，ret_data返回None 
+
 正常情况下，ret_data为一个dataframe，其中包括：
-**market**：市场标识；string，例如： ”HK”，“US”
+**code**：；股票代码：string，例如： ”SZ.000158”，“SZ.000401”
 **lot_size**：每手股数；int
 **stock_name**：股票名称；string，例如： ”天然乳品”，”大庆乳业”
 **owner_market**: 所属股票的市场，仅支持窝轮，其他为空，string
 **stock_child_type**: 股票子类型；仅支持窝轮，其他为0，string，例如："BEAR"，"BULL"
 **stock_type**：股票类型：string, 例如，"BOND", "STOCK"
+ 
+| 股票类型  | 标识        |
+| --------- | --------- |
+| "STOCK"   | 正股    |
+| "IDX"     | 指数    |
+| "ETF"     | ETF基金 |
+| "WARRANT" | 涡轮牛熊  |
+| "BOND"    | 债券    |
+
+**股票子类型** wrt_type，（字符串类型）： 
+| 股票子类型  | 标识        |
+| ----- | --------- |
+| "CALL"    | 认购证   |
+| "PUT"    | 认沽证     |
+| "BULL"   | 牛证   |
+| "BEAR"   | 熊证 |
+| "N/A"    |  未知或服务器没相关数据   |
 
 **失败情况**：
 1. 市场或板块代码不合法，或者该板块不存在 
@@ -845,7 +873,7 @@ ret_code失败时，ret_data为错误描述字符串；
 
     class OrderBookTest(OrderBookHandlerBase):
         def on_recv_rsp(self, rsp_str):
-            ret_code, content = super(OrderBookTest,self).on_recv_rsp(rsp_str) # 基类的on_recv_rsp方法解包返回了实时K线信息，格式与get_order_book一样
+            ret_code, content = super(OrderBookTest,self).on_recv_rsp(rsp_str) # 基类的on_recv_rsp方法解包返回摆盘信息，格式与get_order_book一样
             if ret_code != RET_OK:
                 print("OrderBookTest: error, msg: %s" % content)
                 return RET_ERROR, content
@@ -877,8 +905,8 @@ ret_code失败时，ret_data为错误描述字符串；
 **cur_price** 当前价格 
 **last_close**  昨天收盘的价格
 **avg_price** 平均价格
-**tdvolume** 成交量
-**tdvalue**  成交额
+**volume** 成交量
+**turnover**  成交额
 
 
 **失败情况**：
@@ -892,7 +920,7 @@ ret_code失败时，ret_data为错误描述字符串；
 
     class RTDataTest(RTDataHandlerBase):
         def on_recv_rsp(self, rsp_str):
-            ret_code, content = super(RTDataTest,self).on_recv_rsp(rsp_str) 
+            ret_code, content = super(RTDataTest,self).on_recv_rsp(rsp_str) # 基类的on_recv_rsp方法解包返回分时数据，格式与get_rt_data一样
             if ret_code != RET_OK:
                 print("RTDataTest: error, msg: %s" % content)
                 return RET_ERROR, content
@@ -940,7 +968,7 @@ bid_data是卖盘的数据，包括：
 
     class BrokerTest(BrokerHandlerBase):
         def on_recv_rsp(self, rsp_str):
-            ret_code, ask_content, bid_content = super(BrokerTest, self).on_recv_rsp(rsp_str) 
+            ret_code, ask_content, bid_content = super(BrokerTest, self).on_recv_rsp(rsp_str) # 基类的on_recv_rsp方法解包返回经纪队列，格式与get_broker_queue一样
             if ret_code != RET_OK:
                 print("BrokerTest: error, msg: %s %s " % ask_content % bid_content)
                 return RET_ERROR, ask_content, bid_content
