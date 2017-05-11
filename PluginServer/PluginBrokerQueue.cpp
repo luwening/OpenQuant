@@ -405,7 +405,6 @@ void CPluginBrokerQueue::PushStockData(INT64 nStockID, SOCKET sock)
 	CProtoQuote::ProtoAckDataType ack;
 	ack.head.nProtoID = PROTO_ID_PUSH_BROKER_QUEUE;
 	ack.head.ddwErrCode = 0;
-	ack.head.nProtoVer = 1;
 	ack.body = ackbody;
 
 	CProtoQuote proto;

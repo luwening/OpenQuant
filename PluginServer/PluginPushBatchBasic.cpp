@@ -93,9 +93,7 @@ void CPluginPushBatchBasic::PushStockData(INT64 nStockID, SOCKET sock)
 		CProtoQuote::ProtoAckDataType ack;
 		ack.head.nProtoID = PROTO_ID_PUSH_BATCHPRICE;
 		ack.head.ddwErrCode = 0;
-		ack.head.nProtoVer = 1;
 		ack.body = ackbody;
-
 
 		CProtoQuote proto;
 		proto.SetProtoData_Ack(&ack);
