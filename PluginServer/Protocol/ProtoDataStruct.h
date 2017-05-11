@@ -68,9 +68,9 @@ enum ProtoErrCode
 {
 	PROTO_ERR_NO_ERROR	= 0,
 
-	PROTO_ERR_UNKNOWN_ERROR = 400,
-	PROTO_ERR_VER_NOT_SUPPORT = 401,
-	PROTO_ERR_STOCK_NOT_FIND = 402,
+	PROTO_ERR_UNKNOWN_ERROR = 400,   //未知错误
+	PROTO_ERR_VER_NOT_SUPPORT = 401,  //版本号不支持
+	PROTO_ERR_STOCK_NOT_FIND = 402,   //未知股票
 	PROTO_ERR_COMMAND_NOT_SUPPORT = 403,
 	PROTO_ERR_PARAM_ERR = 404,
 	PROTO_ERR_FREQUENCY_ERR = 405,
@@ -80,10 +80,12 @@ enum ProtoErrCode
 
 	PROTO_ERR_SERVER_BUSY	= 501,
 	PROTO_ERR_SERVER_TIMEROUT = 502,
+	PROTO_ERR_NETWORK = 503,
 };
 
 //////////////////////////////////////////////////////////////////////////
 //通用协议头部
+#define  ProtoHead_Version  1 
 
 struct ProtoHead
 {
@@ -91,4 +93,12 @@ struct ProtoHead
 	int   nProtoID;
 	INT64 ddwErrCode;
 	std::string strErrDesc;
+
+	ProtoHead()
+	{
+		nProtoVer = ProtoHead_Version;
+		nProtoID = 0;
+		ddwErrCode = 0;
+	}
+
 };

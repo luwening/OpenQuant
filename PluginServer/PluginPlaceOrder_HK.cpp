@@ -122,7 +122,7 @@ void CPluginPlaceOrder_HK::SetTradeReqData(int nCmdID, const Json::Value &jsnVal
 	{
 		TradeAckType ack;
 		ack.head = req.head;
-		ack.head.ddwErrCode = PROTO_ERR_UNKNOWN_ERROR;
+		ack.head.ddwErrCode = UtilPlugin::ConvertErrCode((QueryDataErrCode)nReqResult);
 		ack.head.strErrDesc = UtilPlugin::GetErrStrByCode((QueryDataErrCode)nReqResult);
 
 		ack.body.nCookie = body.nCookie;

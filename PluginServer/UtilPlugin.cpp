@@ -93,3 +93,40 @@ std::string UtilPlugin::GetErrStrByCode(QueryDataErrCode eCode)
 
 	return strTmp;
 }
+
+ProtoErrCode UtilPlugin::ConvertErrCode(QueryDataErrCode eCode)
+{
+	ProtoErrCode eRet = PROTO_ERR_UNKNOWN_ERROR;
+	switch (eCode)
+	{
+	case QueryData_Suc:
+		eRet = PROTO_ERR_NO_ERROR;
+		break;
+	case QueryData_FailUnknown:
+		eRet = PROTO_ERR_UNKNOWN_ERROR;
+		break;
+	case QueryData_FailMaxSubNum:
+		eRet = PROTO_ERR_MAXSUB_ERR;
+		break;
+	case QueryData_FailCodeNoFind:
+		eRet = PROTO_ERR_STOCK_NOT_FIND;
+		break;
+	case QueryData_FailGuidNoFind:
+		eRet = PROTO_ERR_PARAM_ERR;
+		break;
+	case QueryData_FailNoImplInf:
+		break;
+	case QueryData_FailFreqLimit:
+		eRet = PROTO_ERR_FREQUENCY_ERR;
+		break;
+	case QueryData_FailNetwork:
+		eRet = PROTO_ERR_NETWORK;
+		break;
+	case QueryData_FailErrParam:
+		eRet = PROTO_ERR_PARAM_ERR;
+		break;
+	default:
+		break;
+	}
+	return eRet;
+}

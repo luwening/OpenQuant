@@ -67,7 +67,6 @@ void CPluginPushTickerPrice::PushStockData(INT64 ddwStockHash, SOCKET sock)
 		CProtoQuote::ProtoAckDataType ack;
 		ack.head.nProtoID = PROTO_ID_PUSH_TICKER;
 		ack.head.ddwErrCode = 0;
-		ack.head.nProtoVer = 1;
 		ack.body = ackbody;
 
 		StockMktType eMkt = StockMkt_HK;

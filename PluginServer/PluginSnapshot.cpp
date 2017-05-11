@@ -126,14 +126,13 @@ void CPluginSnapshot::SetQuoteReqData(int nCmdID, const Json::Value &jsnVal, SOC
 	if ( queryErr != QueryData_Suc || pReqInfo->nReqCookie == 0 )
 	{
 		delete pReqInfo;
-		LPCWSTR pszErrDesc = L"快照服务未知错误";
-		int nErrCode = PROTO_ERR_UNKNOWN_ERROR;
-		if ( queryErr == QueryData_FailFreqLimit )
-		{
-			nErrCode = PROTO_ERR_SERVER_BUSY;
-			pszErrDesc = L"有太多待决的快照请求";
-		}
-		ReplyDataDefError(sock, nErrCode, pszErrDesc);
+		
+		int nErrCode = UtilPlugin::ConvertErrCode(queryErr);
+		std::string strErr = UtilPlugin::GetErrStrByCode(queryErr);
+		std::wstring strTmp;
+		CA::UTF2Unicode(strErr.c_str(), strTmp);
+
+		ReplyDataDefError(sock, nErrCode, strTmp.c_str());
 		return;
 	}
 
