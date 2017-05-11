@@ -36,6 +36,7 @@
 ---
 
 ### 历史数据及除权除息下载问题
+### [历史K线下载指引](https://github.com/FutunnOpen/OpenQuant/blob/master/OpenInterface/Python/入门指引及接口文档/历史K线下载指引.md)
 
 - 在富途牛牛安装目录的plugin文件夹内有历史数据下载配置文件(ftplugin.ini)，请先详细阅读再进行操作。
 - 如果不想下载新数据、可以将开始时间和暂停下载时间设置为相同时间。

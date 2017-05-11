@@ -28,7 +28,7 @@
 
 **历史数据导入**
 
-1. 在http://pan.baidu.com/s/1gf7SvJX中下载历史数据导入包，提供了三大市场的历史数据，可以全部下载，也可以根据个人需求相应下载。 
+1. 在<http://pan.baidu.com/s/1gf7SvJX>中下载历史数据导入包，提供了三大市场的历史数据，可以全部下载，也可以根据个人需求相应下载。 
    ![image](https://github.com/FutunnOpen/OpenQuant/raw/master/Resources/HistDataDownload.png)
 
 2. 将上述下载好的数据导入包放在默认目录或者自定义目录下。 
@@ -42,7 +42,7 @@
 
 3. 先重启富途牛牛，在打开富途牛牛的安装目录C:\Program Files (x86)\FTNN，找到FTHistData.exe并运行，即可实现历史数据的导入。在更新历史数据界面会提示导入数据进度，提示更新完成表示导入数据已成功。 
 
-4. 新数据在上述链接http://pan.baidu.com/s/1gf7SvJX中获得，重复步骤1，2，3即可（只有第一次导入在自定义目录中才需要修改配置文件，以后导入数据不需要重复修改配置文件）。 
+4. 新数据在上述链接<http://pan.baidu.com/s/1gf7SvJX>中获得，重复步骤1，2，3即可（只有第一次导入在自定义目录中才需要修改配置文件，以后导入数据不需要重复修改配置文件）。 
 
 
 
