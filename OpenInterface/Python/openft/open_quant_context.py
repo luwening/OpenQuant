@@ -975,7 +975,7 @@ class OpenHKTradeContext:
         if ret_code != RET_OK:
             return RET_ERROR, msg
 
-        col_list = ['envtype']
+        col_list = ['envtype', 'orderid']
         place_order_table = pd.DataFrame(place_order_list, columns=col_list)
 
         return RET_OK, place_order_table
@@ -1195,7 +1195,7 @@ class OpenUSTradeContext:
         if ret_code != RET_OK:
             return RET_ERROR, msg
 
-        col_list = ['envtype']
+        col_list = ['envtype', 'orderid']
         place_order_table = pd.DataFrame(place_order_list, columns=col_list)
 
         return RET_OK, place_order_table
