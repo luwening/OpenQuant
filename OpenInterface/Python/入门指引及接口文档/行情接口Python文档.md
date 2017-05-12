@@ -611,15 +611,17 @@ ret_code, ask_data, bid_data = quote_ctx.get_broker_queue(code)
 **返回**：
 ret_code失败时，ret_data返回为错误描述字符串；
 客户端无符合条件数据时，ret_code为成功，ask_data, bid_data返回None 
-正常情况下，ask_data, bid_data均为dataframe，其中ask_data是买盘的数据，包括：
-**ask_broker_id**：经纪买盘id；int
-**ask_broker_name**：经纪买盘名称；string，例如： ”高盛”，”法巴”
+正常情况下，ask_data, bid_data均为dataframe，
+其中bid_data是买盘的数据，包括：
+**bid_broker_id**: 经纪买盘id；int
+**bid_broker_name**：经纪买盘名称；string，例如： ”高盛”，”法巴”
+**bid_broker_pos**: 经纪档位：int, 例如：0，1
+
+其中ask_data是卖盘的数据，包括：
+**ask_broker_id**：经纪卖盘id；int
+**ask_broker_name**：经纪卖盘名称；string，例如： ”高盛”，”法巴”
 **ask_broker_pos**: 经纪档位：int, 例如：0，1
 
-其中bid_data是卖盘的数据，包括：
-**bid_broker_id**: 经纪卖盘id；int
-**bid_broker_name**：经纪卖盘名称；string，例如： ”高盛”，”法巴”
-**bid_broker_pos**: 经纪档位：int, 例如：0，1
 
 **失败情况**：
 1. 股票代码不合法，不存在
