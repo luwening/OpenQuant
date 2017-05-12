@@ -946,15 +946,17 @@ ret_code, ret_data = quote_ctx.get_broker_queue(code)
 ret_code失败时，ret_data为错误描述字符串；
 客户端无符合条件数据时，ret为成功，ret_data返回None
 通常情况下，返回
-ask_data是买盘的数据
+bid_data是买盘的数据，包括：
+**bid_broker_id** 经纪卖盘id
+**bid_broker_name** 经纪卖盘名称
+**bid_broker_pos** 经纪档位
+
+ask_data是卖盘的数据
 **ask_broker_id** 经纪买盘id
 **ask_broker_name**  经纪买盘名称
 **ask_broker_pos** 经纪档位
 
-bid_data是卖盘的数据，包括：
-**bid_broker_id** 经纪卖盘id
-**bid_broker_name** 经纪卖盘名称
-**bid_broker_pos** 经纪档位
+
 
 
 **失败情况**：
