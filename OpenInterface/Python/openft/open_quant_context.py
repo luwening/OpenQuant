@@ -109,17 +109,16 @@ class RTDataHandlerBase(RspHandlerBase):
 
 class BrokerHandlerBase(RspHandlerBase):
     def on_recv_rsp(self, rsp_str):
-        ret_code_ask, msg_ask, ask_list = BrokerQueueQuery.unpack_rsp(rsp_str)
-        ret_code_bid, msg_bid, bid_list = BrokerQueueQuery.unpack_bid_rsp(rsp_str)
-        if ret_code_ask == RET_ERROR or ret_code_bid == RET_ERROR:
-            return ret_code_bid, ret_code_ask, msg_ask, msg_bid
+        ret_code, bid_content, ask_content = BrokerQueueQuery.unpack_rsp(rsp_str)
+        if ret_code == RET_ERROR:
+            return ret_code, bid_content, ask_content
         else:
-            col_list = ['ask_broker_id', 'ask_broker_name', 'ask_broker_pos']
-            col_bid_list = ['bid_broker_id', 'bid_broker_name', 'bid_broker_pos']
-            broker_frame_table = pd.DataFrame(ask_list, columns=col_list)
-            broker_bid_frame_table = pd.DataFrame(bid_list, columns=col_bid_list)
+            bid_list = ['bid_broker_id', 'bid_broker_name', 'bid_broker_pos']
+            ask_list = ['ask_broker_id', 'ask_broker_name', 'ask_broker_pos']
+            bid_frame_table = pd.DataFrame(bid_content, columns=bid_list)
+            ask_frame_table = pd.DataFrame(ask_content, columns=ask_list)
 
-            return RET_OK, broker_frame_table, broker_bid_frame_table
+            return RET_OK, [bid_frame_table, ask_frame_table]
 
     def on_error(self, error_str):
         return error_str
@@ -615,7 +614,7 @@ class OpenQuoteContext:
             return ret_code, msg
 
         col_list = ['time', 'data_status', 'opened_mins', 'cur_price', 'last_close',
-                    'avg_price', 'tdvolume', 'tdvalue']
+                    'avg_price', 'volume', 'turnover']
 
         rt_data_table = pd.DataFrame(rt_data_list, columns=col_list)
 
@@ -645,29 +644,26 @@ class OpenQuoteContext:
         if ret_code == RET_ERROR:
             return ret_code, msg
 
-        col_list = ['market', 'plate_class', 'plate_code', 'plate_name', 'plate_id']
+        col_list = ['code', 'plate_name', 'plate_id']
 
         subplate_frame_table = pd.DataFrame(subplate_list, columns=col_list)
 
         return RET_OK, subplate_frame_table
 
-    def get_plate_stock(self, market, stock_code):
-        param_table = {'market': market, 'stock_code': stock_code}
-        for x in param_table:
-            param = param_table[x]
-            if param is None or isinstance(param, str) is False:
-                error_str = ERROR_STR_PREFIX + "the type of %s is wrong" % x
-                return RET_ERROR, error_str
+    def get_plate_stock(self, plate_code):
+        if plate_code is None or isinstance(plate_code, str) is False:
+            error_str = ERROR_STR_PREFIX + "the type of stock_code is wrong"
+            return RET_ERROR, error_str
 
         query_processor = self._get_sync_query_processor(PlateStockQuery.pack_req,
                                                          PlateStockQuery.unpack_rsp)
-        kargs = {"market": market, "stock_code": stock_code}
+        kargs = {"plate_code": plate_code}
 
         ret_code, msg, plate_stock_list = query_processor(**kargs)
         if ret_code == RET_ERROR:
             return ret_code, msg
 
-        col_list = ['market', 'lot_size', 'stock_name', 'owner_market', 'stock_child_type', 'stock_type']
+        col_list = ['code', 'lot_size', 'stock_name', 'owner_market', 'stock_child_type', 'stock_type']
 
         plate_stock_table = pd.DataFrame(plate_stock_list, columns=col_list)
 
@@ -682,24 +678,17 @@ class OpenQuoteContext:
                                                          BrokerQueueQuery.unpack_rsp)
         kargs = {"stock_str": code}
 
-        ret_code, msg, broker_list = query_processor(**kargs)
-
-        query_bid_processor = self._get_sync_query_processor(BrokerQueueQuery.pack_req,
-                                                             BrokerQueueQuery.unpack_bid_rsp)
-
-        kargs_bid = {"stock_str": code}
-
-        ret_code, msg, broker_bid_list = query_bid_processor(**kargs_bid)
+        ret_code, bid_list, ask_list = query_processor(**kargs)
 
         if ret_code == RET_ERROR:
-            return ret_code, msg
+            return ret_code, ERROR_STR_PREFIX
 
-        col_list = ['ask_broker_id', 'ask_broker_name', 'ask_broker_pos']
         col_bid_list = ['bid_broker_id', 'bid_broker_name', 'bid_broker_pos']
+        col_ask_list = ['ask_broker_id', 'ask_broker_name', 'ask_broker_pos']
 
-        broker_frame_table = pd.DataFrame(broker_list, columns=col_list)
-        broker_bid_frame_table = pd.DataFrame(broker_bid_list, columns=col_bid_list)
-        return RET_OK, broker_frame_table, broker_bid_frame_table
+        bid_frame_table = pd.DataFrame(bid_list, columns=col_bid_list)
+        sak_frame_table = pd.DataFrame(ask_list, columns=col_ask_list)
+        return RET_OK, bid_frame_table, sak_frame_table
 
     def subscribe(self, stock_code, data_type, push=False):
         """

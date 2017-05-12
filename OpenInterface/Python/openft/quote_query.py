@@ -665,36 +665,26 @@ class BrokerQueueQuery:
             return RET_ERROR, msg, None
 
         rsp_data = rsp['RetData']
-        if "BrokerAskArr" not in rsp_data:
-            error_str = ERROR_STR_PREFIX + "cannot find BrokerAskArr in client rsp. Response: %s" % rsp_str
+        if "BrokerBidArr" not in rsp_data:
+            error_str = ERROR_STR_PREFIX + "cannot find BrokerBidArr in client rsp. Response: %s" % rsp_str
             return RET_ERROR, error_str, None
 
-        raw_broker_ask = rsp_data["BrokerAskArr"]
-        broker_list = [{"ask_broker_id": record['BrokerID'],
-                        "ask_broker_name": record['BrokerName'],
-                        "ask_broker_pos": record['BrokerPos'],
-                        } for record in raw_broker_ask]
-
-        return RET_OK, "", broker_list
-
-    @classmethod
-    def unpack_bid_rsp(cls, rsp_str):
-        ret, msg, rsp = extract_pls_rsp(rsp_str)
-        if ret != RET_OK:
-            return RET_ERROR, msg, None
-
-        rsp_data = rsp['RetData']
         if "BrokerAskArr" not in rsp_data:
             error_str = ERROR_STR_PREFIX + "cannot find BrokerAskArr in client rsp. Response: %s" % rsp_str
             return RET_ERROR, error_str, None
 
         raw_broker_bid = rsp_data["BrokerBidArr"]
-        broker_list = [{"bid_broker_id": record['BrokerID'],
-                        "bid_broker_name": record['BrokerName'],
-                        "bid_broker_pos": record['BrokerPos']
-                        }for record in raw_broker_bid]
+        bid_list = [{"bid_broker_id": record['BrokerID'],
+                     "bid_broker_name": record['BrokerName'],
+                     "bid_broker_pos": record['BrokerPos']
+                     } for record in raw_broker_bid]
+        raw_broker_ask = rsp_data["BrokerAskArr"]
+        ask_list = [{"ask_broker_id": record['BrokerID'],
+                     "ask_broker_name": record['BrokerName'],
+                     "ask_broker_pos": record['BrokerPos'],
+                     } for record in raw_broker_ask]
 
-        return RET_OK, "", broker_list
+        return RET_OK, bid_list, ask_list
 
 
 class HistoryKlineQuery:
@@ -1236,12 +1226,12 @@ class CurKlineQuery:
         stock_code = merge_stock_str(int(rsp_data['Market']), rsp_data['StockCode'])
         kline_list = [{"code": stock_code,
                        "time_key": record['Time'],
-                       "open": float(record['Open'])/1000,
-                       "high": float(record['High'])/1000,
-                       "low": float(record['Low'])/1000,
-                       "close": float(record['Close'])/1000,
+                       "open": round(float(record['Open'])/1000, 3),
+                       "high": round(float(record['High'])/1000, 3),
+                       "low": round(float(record['Low'])/1000, 3),
+                       "close": round(float(record['Close'])/1000, 3),
                        "volume": record['Volume'],
-                       "turnover": float(record['Turnover'])/1000,
+                       "turnover": round(float(record['Turnover'])/1000, 3),
                        "k_type": k_type
                        }
                       for record in raw_kline_list]
