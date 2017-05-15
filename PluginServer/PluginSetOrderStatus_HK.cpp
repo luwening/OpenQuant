@@ -195,7 +195,7 @@ void  CPluginSetOrderStatus_HK::DoTryProcessTradeOpt(StockDataReq* pReq)
 	{
 		TradeAckType ack;
 		ack.head = req.head;
-		ack.head.ddwErrCode = PROTO_ERR_UNKNOWN_ERROR;
+		ack.head.ddwErrCode = UtilPlugin::ConvertErrCode((QueryDataErrCode)nReqResult);
 		CA::Unicode2UTF(L"∑¢ÀÕ ß∞‹", ack.head.strErrDesc);
 		if (nReqResult != 0)
 		{

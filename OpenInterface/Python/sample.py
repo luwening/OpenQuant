@@ -9,7 +9,7 @@ def _example_stock_quote(quote_ctx):
     """
     获取批量报价，输出 股票名称，时间，当前价，开盘价，最高价，最低价，昨天收盘价，成交量，成交额，换手率，振幅，股票状态
     """
-    stock_code_list = ["US.AAPL", "HK.00700", "SZ.000001", "HK.68106", "HK.65395"]
+    stock_code_list = ["US.AAPL", "HK.00700", "SZ.000001", "HK.68106", "HK.65395", "HK.01833"]
 
     # subscribe "QUOTE"
     for stk_code in stock_code_list:
@@ -281,22 +281,22 @@ class RTDataTest(RTDataHandlerBase):
 
 class BrokerTest(BrokerHandlerBase):
     def on_recv_rsp(self, rsp_str):
-        ret_code, ask_content, bid_content = super(BrokerTest, self).on_recv_rsp(rsp_str)
+        ret_code, content = super(BrokerTest, self).on_recv_rsp(rsp_str)
         if ret_code != RET_OK:
-            print("BrokerTest: error, msg: %s %s " % ask_content % bid_content)
-            return RET_ERROR, ask_content, bid_content
-        print("BrokerTest", ask_content)
+            print("BrokerTest: error, msg: %s %s " % content)
+            return RET_ERROR, content
+        print("BrokerTest", content[0])
         print("\n\n")
-        print("BrokerTest", bid_content)
-        return RET_OK, ask_content, bid_content
+        print("BrokerTest", content[1])
+        return RET_OK, content
 
 if __name__ == "__main__":
 
     quote_context = OpenQuoteContext(host='127.0.0.1', async_port=11111)
 
     # 获取推送数据
-    quote_context.subscribe('HK.00700', "QUOTE", push=True)
-    quote_context.set_handler(StockQuoteTest())
+    # quote_context.subscribe('HK.00700', "QUOTE", push=True)
+    # quote_context.set_handler(StockQuoteTest())
     #
     # quote_context.subscribe('HK.00700', "K_DAY", push=True)
     # quote_context.set_handler(CurKlineTest())
@@ -313,7 +313,7 @@ if __name__ == "__main__":
     #
     # quote_context.subscribe('HK.00700', "BROKER", push=True)
     # quote_context.set_handler(BrokerTest())
-    quote_context.start()
+    # quote_context.start()
 
 
     # 获取实时数据

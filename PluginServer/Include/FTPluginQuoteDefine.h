@@ -404,7 +404,7 @@ typedef struct tagStockPushInfo
 //经纪队列
 typedef struct tagQuoteBrokerItem
 {
-	bool bAskOrBid;
+	bool bAskOrBid;  //ask=卖  bid=买 
 	int nBrokerID;
 	int nBrokerPos;
 	char strBrokerName[32];
