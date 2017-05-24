@@ -298,18 +298,13 @@ if __name__ == "__main__":
     quote_context.subscribe('HK.00700', "QUOTE", push=True)
     quote_context.set_handler(StockQuoteTest())
     #
-    # quote_context.subscribe('HK.68106', "K_1M", push=True)
+    # quote_context.subscribe('HK.00700', "K_1M", push=True)
     # quote_context.set_handler(CurKlineTest())
-    #
-    # quote_context.subscribe('SZ.300390', "K_1M", push=True)
-    # quote_context.set_handler(CurKlineTest())
-
     #
     # quote_context.subscribe('HK.00700', "ORDER_BOOK", push=True)
     # quote_context.set_handler(OrderBookTest())
     #
     # quote_context.subscribe('HK.00700', "TICKER", push=True)
-    # quote_context.subscribe('HK.68106', "TICKER", push=True)
     # quote_context.set_handler(TickerTest())
     #
     # quote_context.subscribe('HK.00700', "RT_DATA", push=True)
@@ -318,7 +313,6 @@ if __name__ == "__main__":
     # quote_context.subscribe('HK.00700', "BROKER", push=True)
     # quote_context.set_handler(BrokerTest())
     quote_context.start()
-
 
     # 获取实时数据
     _example_stock_quote(quote_context)

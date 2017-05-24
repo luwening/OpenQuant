@@ -97,8 +97,8 @@ class RTDataHandlerBase(RspHandlerBase):
             return ret_code, msg
         else:
 
-            col_list = ['time', 'data_status', 'opened_mins', 'cur_price', "last_close", 'avg_price',
-                        'tdvolume', 'tdvalue']
+            col_list = ['code', 'time', 'data_status', 'opened_mins', 'cur_price', "last_close", 'avg_price',
+                        'turnover', 'volume']
             rt_data_table = pd.DataFrame(rt_data_list, columns=col_list)
 
             return RET_OK, rt_data_table
@@ -613,7 +613,7 @@ class OpenQuoteContext:
         if ret_code == RET_ERROR:
             return ret_code, msg
 
-        col_list = ['time', 'data_status', 'opened_mins', 'cur_price', 'last_close',
+        col_list = ['code', 'time', 'data_status', 'opened_mins', 'cur_price', 'last_close',
                     'avg_price', 'volume', 'turnover']
 
         rt_data_table = pd.DataFrame(rt_data_list, columns=col_list)
