@@ -910,6 +910,9 @@ void CPluginNetwork::RecvLoop()
 		{
 			//CHECK_OP(!bResult, NOOP);
 			ClearSocketRecvData(sock);
+			pInfo = NULL;
+			lock.Unlock();
+		
 			NotifySocketClosed(sock);
 			continue;
 		}
@@ -918,33 +921,48 @@ void CPluginNetwork::RecvLoop()
 		WSAResetEvent(pInfo->hEventHandle);
 		WSAEventSelect(sock, pInfo->hEventHandle, FD_CLOSE);
 		DWORD dwCloseRet = WaitForSingleObject(pInfo->hEventHandle, 0);
+		bool bNoitfySocketClose = false;
 		if ( dwCloseRet == WAIT_OBJECT_0 )
 		{
-			//CHECK_OP(false, NOOP);
 			ClearSocketRecvData(sock);
-			NotifySocketClosed(sock);
+
+			//ClearSocketRecvData调用后, pInfo指针已经野掉了
+			pInfo = NULL;  
+			bNoitfySocketClose = true;  //close涉及跨线程同步通知，放在最后执行比较好
 		}
 
-		VT_TRANS_DATA &vtFinishData = pInfo->vtDeliverData;
-		if (vtFinishData.size() != 1)
+		//正常得到数据，标志数据状态
+		if (pInfo)
 		{
-			OutputDebugStringA("PluginNetork - Check Err vtFinishData.size() !\n");
-		}
-		//CHECK_OP(vtFinishData.size() == 1, NOOP);
-		if ( !vtFinishData.empty() )
-		{
-			TransDataInfo *pData = vtFinishData[0];
-			if ( pData )
+			VT_TRANS_DATA &vtFinishData = pInfo->vtDeliverData;
+			if (vtFinishData.size() != 1)
 			{
-				pData->bSendRecvFinish = TRUE;
-				pData->buffer.len = dwBytesTrans;
+				OutputDebugStringA("PluginNetork - Check Err vtFinishData.size() !\n");
 			}
-			vtFinishData.clear();
+			if (!vtFinishData.empty())
+			{
+				TransDataInfo *pData = vtFinishData[0];
+				if (pData)
+				{
+					pData->bSendRecvFinish = TRUE;
+					pData->buffer.len = dwBytesTrans;
+				}
+				vtFinishData.erase(vtFinishData.begin());
+			}
 		}
+		//////////////////////////////////////////////////////////////////////////
+	
 		lock.Unlock();
 
-		//通知
-		if ( m_pEvtNotify )
-			m_pEvtNotify->OnReceive(sock);		
+		if (bNoitfySocketClose)
+		{
+			//Notify涉及跨线程同步通知 
+			NotifySocketClosed(sock);
+		}
+		else
+		{
+			if (m_pEvtNotify)
+				m_pEvtNotify->OnReceive(sock);
+		}
 	}
 }
