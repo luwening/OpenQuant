@@ -515,6 +515,7 @@ ret_code, ret_data = quote_ctx.get_rt_data(code)
 ret_code失败时，ret_data返回为错误描述字符串；
 客户端无符合条件数据时，ret_code为成功，ret_data返回None 
 正常情况下，ret_data为一个dataframe，其中包括：
+***code*: 股票代码： string
 **time**：时间；string 
 **data_status**：数据状态；bool，正确为True，伪造为False  
 **opened_mins**: 开盘多少分钟：int
