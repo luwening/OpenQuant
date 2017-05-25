@@ -520,8 +520,9 @@ class RtDataQuery:
         if rt_data_list is None or len(rt_data_list) == 0:
             return RET_OK, "", []
 
-        # stock_code = merge_stock_str(int(rsp_data['Market']), rsp_data['StockCode'])
+        stock_code = merge_stock_str(int(rsp_data['Market']), rsp_data['StockCode'])
         rt_list = [{"time": record['Time'],
+                    "code": stock_code,
                     "data_status": True if int(record['DataStatus']) == 1 else False,
                     "opened_mins": record['OpenedMins'],
                     "cur_price": float(record['CurPrice']) / 1000,
