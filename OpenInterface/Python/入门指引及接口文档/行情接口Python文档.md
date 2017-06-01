@@ -331,6 +331,7 @@ ret_code失败时，ret_data返回为错误描述字符串；
 **stock_type**：股票类型；string，例如： ”STOCK”，”ETF”
 **stock_child_type**: 股票子类型；仅支持窝轮，其他为0，string，例如："BEAR"，"BULL"
 **owner_stock_code**：所属正股；仅支持窝轮，其他为0
+**listing_date**: 上市日期： str
 
 **失败情况**：
 1. 市场或股票类型不合法 

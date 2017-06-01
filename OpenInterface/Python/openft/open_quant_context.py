@@ -198,6 +198,7 @@ class _SyncNetworkQueryCtx:
         s.setsockopt(sock.SOL_SOCKET, sock.SO_REUSEADDR, 1)
         s.setsockopt(sock.SOL_SOCKET, sock.SO_LINGER, 0)
         s.settimeout(10)
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
         self.s = s
 
         try:
@@ -495,7 +496,7 @@ class OpenQuoteContext:
         if ret_code == RET_ERROR:
             return ret_code, msg
 
-        col_list = ['code', 'name', 'lot_size', 'stock_type', 'stock_child_type', "owner_stock_code"]
+        col_list = ['code', 'name', 'lot_size', 'stock_type', 'stock_child_type', "owner_stock_code", "listing_date"]
 
         basic_info_table = pd.DataFrame(basic_info_list, columns=col_list)
 

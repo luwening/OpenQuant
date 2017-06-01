@@ -394,7 +394,8 @@ class StockBasicInfoQuery:
                             "stock_child_type": (rev_wrt_type_map[int(record["StockChildType"])] if
                                                  int(record["StockType"]) == 5 else 0),
                             "owner_stock_code": (merge_stock_str(int(record["OwnerMarketType"]), record["OwnerStockCode"])
-                                                 if int(record["StockType"]) == 5 else 0)
+                                                 if int(record["StockType"]) == 5 else 0),
+                            "listing_date": record["ListTime"]
                             }
                            for record in raw_basic_info_list]
         return RET_OK, "", basic_info_list
