@@ -216,7 +216,7 @@ def _example_broker_queue(quote_ctx):
             exit()
 
     for stk_code in stock_code_list:
-        ret_status, ask_data, bid_data = quote_ctx.get_broker_queue(stk_code)
+        ret_status, bid_data, ask_data = quote_ctx.get_broker_queue(stk_code)
         if ret_status == RET_ERROR:
             print(ret_data)
             exit()
