@@ -512,6 +512,9 @@ class OpenQuoteContext:
             error_str = ERROR_STR_PREFIX + "the type of end param is wrong"
             return RET_ERROR, error_str
 
+        if autype is None:
+            autype = 'None'
+
         param_table = {'code': code, 'ktype': ktype, 'autype': autype}
         for x in param_table:
             param = param_table[x]
@@ -901,6 +904,18 @@ class OpenQuoteContext:
             return ret_code, msg
 
         return RET_OK, orderbook
+
+    def get_global_state(self):
+        query_processor = self._get_sync_query_processor(GlobalStateQuery.pack_req,
+                                                         GlobalStateQuery.unpack_rsp)
+        kargs = {"state_type": 0}
+
+        ret_code, msg, state_dict = query_processor(**kargs)
+
+        if ret_code != RET_OK:
+            return ret_code, msg
+
+        return RET_OK, state_dict
 
 
 class OpenHKTradeContext:
