@@ -72,7 +72,7 @@ ktype_map = {"K_1M":     1,
 
 rev_ktype_map = {ktype_map[x]: x for x in ktype_map}
 
-autype_map = {None: 0,
+autype_map = {'None': 0,
               "qfq": 1,
               "hfq": 2
               }
@@ -1285,4 +1285,69 @@ class OrderBookQuery:
             order_book['Ask'].append(ask_record)
 
         return RET_OK, "", order_book
+
+
+
+class GlobalStateQuery:
+    """
+    Query process "FTNN.exe" global state : market state & logined state
+    """
+    def __init__(self):
+        pass
+
+    @classmethod
+    def pack_req(cls, state_type = 0):
+        """
+        Convert from user request for trading days to PLS request
+        :param state_type: for reserved, no use now !
+        :return:  json string for request
+
+        req_str: '{"Protocol":"1029","ReqParam":{"StateType":"0"},"Version":"1"}'
+        """
+        # '''Parameter check'''
+
+        # pack to json
+        req = {"Protocol": "1029",
+               "Version": "1",
+               "ReqParam": {"StateType": state_type,
+                            }
+               }
+        req_str = json.dumps(req) + '\r\n'
+        return RET_OK, "", req_str
+
+    @classmethod
+    def unpack_rsp(cls, rsp_str):
+        """
+        Convert from PLS response to user response
+        :param rsp_str:
+        :return:
+
+        Example:
+
+        rsp_str : '{"ErrCode":"0","ErrDesc":"","Protocol":"1029","RetData":{"Market_HK":"5",
+        "Market_HKFuture":"15","Market_SH":"6","Market_SZ":"6","Market_US":"11","Quote_Logined":"1","Trade_Logined":"1"
+        },"Version":"1"}\r\n\r\n'
+
+         ret,msg,content = TradeDayQuery.unpack_rsp(rsp_str)
+
+         ret : 0
+         msg : ""
+         content : {"Market_HK":"5",
+                    "Market_HKFuture":"15",
+                    "Market_SH":"6",
+                    "Market_SZ":"6",
+                    "Market_US":"11",
+                    "Quote_Logined":"1",
+                    "Trade_Logined":"1"
+                   }
+
+        """
+        # response check and unpack response json to objects
+        ret, msg, rsp = extract_pls_rsp(rsp_str)
+        if ret != RET_OK:
+            return RET_ERROR, msg, None
+
+        rsp_data = rsp['RetData']
+
+        return RET_OK, "", rsp_data
 
