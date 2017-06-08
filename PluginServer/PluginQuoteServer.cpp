@@ -2,12 +2,16 @@
 #include "PluginQuoteServer.h"
 #include "PluginNetwork.h"
 #include "Protocol/ProtoBasicPrice.h"
+#include "IFTStockUtil.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
 
 extern GUID PLUGIN_GUID;
+
+#define TimerID_FreshRTKLData  100
+#define Max_RTKL_Fresh_Try_Count 3
 
 //////////////////////////////////////////////////////////////////////////
 
@@ -18,6 +22,7 @@ CPluginQuoteServer::CPluginQuoteServer()
 	m_pQuoteOp = NULL;
 	m_pDataReport = NULL;
 	m_pNetwork = NULL;
+	m_nTimerIDRefreshRTKL = 0;
 }
 
 CPluginQuoteServer::~CPluginQuoteServer()
@@ -52,6 +57,7 @@ void CPluginQuoteServer::InitQuoteSvr(IFTPluginCore* pPluginCore, CPluginNetwork
 		m_pNetwork = NULL;
 		return;
 	}
+	IFTStockUtil::Init(m_pQuoteData);
 
 	m_BasicPrice.Init(this, m_pQuoteData);
 	m_GearPrice.Init(this, m_pQuoteData);
@@ -77,6 +83,7 @@ void CPluginQuoteServer::InitQuoteSvr(IFTPluginCore* pPluginCore, CPluginNetwork
 	m_platesetIDs.Init(this, m_pQuoteData);
 	m_plateSubIDs.Init(this, m_pQuoteData);
 	m_BrokerQueue.Init(this, m_pQuoteData);
+	m_GlobalState.Init(this, m_pQuoteData);
 
 }
 
@@ -112,6 +119,8 @@ void CPluginQuoteServer::UninitQuoteSvr()
 		m_pQuoteOp = NULL;
 		m_pPluginCore = NULL;
 		m_pNetwork = NULL;
+
+		IFTStockUtil::Uninit();
 	}
 }
 
@@ -187,6 +196,9 @@ void CPluginQuoteServer::SetQuoteReqData(int nCmdID, const Json::Value &jsnVal, 
 		break;
 	case PROTO_ID_QT_GET_BROKER_QUEUE:
 		m_BrokerQueue.SetQuoteReqData(nCmdID, jsnVal, sock);
+		break;
+	case PROTO_ID_QT_GET_GLOBAL_STATE:
+		m_GlobalState.SetQuoteReqData(nCmdID, jsnVal, sock);
 		break;
 	default:
 		CHECK_OP(false, NOOP);
@@ -368,6 +380,7 @@ void CPluginQuoteServer::CloseSocket(SOCKET sock)
 
 	m_plateSubIDs.NotifySocketClosed(sock);
 	m_BrokerQueue.NotifySocketClosed(sock);
+	m_GlobalState.NotifySocketClosed(sock);
 }
 
 void  CPluginQuoteServer::OnChanged_PriceBase(INT64  ddwStockHash)
@@ -410,6 +423,41 @@ void CPluginQuoteServer::OnPushBrokerQueue(INT64 ddwStockHash, SOCKET sock)
 	m_BrokerQueue.PushStockData(ddwStockHash, sock);
 }
 
+void CPluginQuoteServer::OnPushMarketNewTrade(StockMktType eMkt, INT64 ddwLastTradeStamp, INT64 ddwNewTradeStamp)
+{
+	CHECK_RET(m_pQuoteData, NORET);
+
+	// 断线重连也会触发这个回调， 前后的stamp是相同
+	if (ddwLastTradeStamp != ddwNewTradeStamp)
+	{
+		m_PushTickerPrice.NotifyMarketNewTrade(eMkt);
+		m_PushKLData.NotifyMarketNewTrade(eMkt);
+		m_PushRTData.NotifyMarketNewTrade(eMkt);
+	}
+	
+	//分时k线数据请求一次
+	//For Fix BUG: 盘前定阅或者牛牛断线重连后，不再收到k线推送的BUG
+	Quote_SubInfo* parSubInfo = NULL;
+	int nSubCount = 0;
+	m_pQuoteData->GetStockSubInfoList(parSubInfo, nSubCount);
+	
+	for (int i = 0; i < nSubCount && parSubInfo; i++)
+	{
+		Quote_SubInfo& info = parSubInfo[i];
+		if (IsStockSubType_RTKL(info.eStockSubType))
+		{
+			StockMktType eMktType = StockMkt_None;
+			wchar_t wstrCode[16] = { 0 }, szStockName[128] = { 0 };
+			m_pQuoteData->GetStockInfoByHashVal(info.ddwStockHash, eMktType, wstrCode, szStockName);
+
+			if (eMktType == eMkt)
+			{
+				DoTryRefreshRTKLData(info.ddwStockHash, info.eStockSubType);
+			}
+		}
+	}
+}
+
 void CPluginQuoteServer::OnPushTicker(INT64 ddwStockHash, SOCKET sock)
 {
     m_PushTickerPrice.PushStockData(ddwStockHash, sock);
@@ -427,11 +475,15 @@ void CPluginQuoteServer::OnPushRT(INT64 ddwStockHash, SOCKET sock)
 
 void CPluginQuoteServer::OnQueryStockRTData(DWORD dwCookie, int nCSResult)
 {
+	DoCheckRTKLFreshReq(dwCookie, nCSResult);
+
 	m_RTData.SendAck(dwCookie, nCSResult);
 }
 
 void CPluginQuoteServer::OnQueryStockKLData(DWORD dwCookie, int nCSResult)
 {
+	DoCheckRTKLFreshReq(dwCookie, nCSResult);
+
 	m_KLData.SendAck(dwCookie, nCSResult);
 }
 
@@ -445,8 +497,201 @@ void CPluginQuoteServer::OnReqPlateStockIDs(int nCSResult, DWORD dwCookie)
 	m_plateSubIDs.NotifyQueryPlateSubIDs(nCSResult, dwCookie);
 }
 
+void CPluginQuoteServer::OnTimeEvent(UINT nEventID)
+{
+	if (0 == m_nTimerIDRefreshRTKL || m_nTimerIDRefreshRTKL != nEventID)
+	{
+		return;
+	}
+
+	CHECK_RET(m_pQuoteData, NORET);
+	bool bRTKLFreshing = false;
+	std::vector<tagRTKLDataRefresh>::iterator it = m_vtRTKLRefresh.begin();
+	for (; it != m_vtRTKLRefresh.end(); it++)
+	{
+		if (it->dwReqCookie != 0)
+		{
+			it->nWaitSecs++;
+			//超时处理
+			if (it->nWaitSecs > REQ_TIMEOUT_MILLISECOND/1000)
+			{
+				it->nWaitSecs = 0;
+				if (it->eStockSubType == StockSubType_RT)
+				{
+					OnQueryStockRTData(it->dwReqCookie, -1);
+				}
+				else
+				{
+					OnQueryStockKLData(it->dwReqCookie, -1);
+				}
+				return;
+			}
+			bRTKLFreshing = true;
+			break;
+		}
+	}
+	if (bRTKLFreshing)
+	{
+		return;
+	}
+	it = m_vtRTKLRefresh.begin();
+	CHECK_RET(it != m_vtRTKLRefresh.end(), NORET);
+
+	StockMktType eMktType = StockMkt_None;
+	wchar_t wstrCode[16] = { 0 }, szStockName[128] = { 0 };
+	if (m_pQuoteData->GetStockInfoByHashVal(it->ddwStockHash, eMktType, wstrCode, szStockName))
+	{
+		std::string strCode = CW2A(wstrCode);
+		if (it->eStockSubType == StockSubType_RT)
+		{
+			QueryStockRTData(&it->dwReqCookie, strCode, eMktType, QuoteServer_RTData);
+		}
+		else
+		{
+			int nKLType = 0;
+			if (DoKLSubTypeConvert(it->eStockSubType, nKLType))
+			{
+				CHECK_OP(nKLType != 0, NOOP);
+				QueryStockKLData(&it->dwReqCookie, strCode, eMktType, QuoteServer_KLData, nKLType);
+			}
+		}
+	}
+}
+
+bool CPluginQuoteServer::DoKLSubTypeConvert(StockSubType eType, int& nKLType)
+{
+	bool bRet = false;
+	switch (eType)
+	{
+	case StockSubType_Simple:
+	case StockSubType_Gear:
+	case StockSubType_Ticker:
+	case StockSubType_RT:
+		break;
+	case StockSubType_KL_DAY:
+		nKLType = FT_KL_CLASS_DAY;
+		bRet = true;
+		break;
+	case StockSubType_KL_MIN5:
+		nKLType = FT_KL_CLASS_MIN_5;
+		bRet = true;
+		break;
+	case StockSubType_KL_MIN15:
+		nKLType = FT_KL_CLASS_MIN_15;
+		bRet = true;
+		break;
+	case StockSubType_KL_MIN30:
+		nKLType = FT_KL_CLASS_MIN_30;
+		bRet = true;
+		break;
+	case StockSubType_KL_MIN60:
+		nKLType = FT_KL_CLASS_MIN_60;
+		bRet = true;
+		break;
+	case StockSubType_KL_MIN1:
+		nKLType = FT_KL_CLASS_MIN_1;
+		bRet = true;
+		break;
+	case StockSubType_KL_WEEK:
+		nKLType = FT_KL_CLASS_WEEK;
+		bRet = true;
+		break;
+	case StockSubType_KL_MONTH:
+		nKLType = FT_KL_CLASS_MONTH;
+		bRet = true;
+		break;
+	case StockSubType_Broker:
+		break;
+	case StockSubType_Max:
+		break;
+	default:
+		break;
+	}
+	return bRet;
+}
+
 void CPluginQuoteServer::OnReqStockSnapshot(DWORD dwCookie, PluginStockSnapshot *arSnapshot, int nSnapshotNum)
 {
 	m_Snapshot.NotifySnapshotResult(dwCookie, arSnapshot, nSnapshotNum);
 }
 
+void CPluginQuoteServer::DoTryRefreshRTKLData(INT64 ddwStockHash, StockSubType eSubType)
+{
+	std::vector<tagRTKLDataRefresh>::iterator it = m_vtRTKLRefresh.begin();
+
+	for (; it != m_vtRTKLRefresh.end(); it++)
+	{
+		if (it->ddwStockHash == ddwStockHash && it->eStockSubType == eSubType)
+		{
+			it->nTryCount = 0;
+			return;
+		}
+	}
+	tagRTKLDataRefresh stNew;
+	stNew.ddwStockHash = ddwStockHash;
+	stNew.eStockSubType = eSubType;
+	stNew.dwReqCookie = 0;
+	stNew.nTryCount = 0;
+	m_vtRTKLRefresh.push_back(stNew);
+
+	DoCheckRTKLFreshReq(0, 0);
+}
+
+void CPluginQuoteServer::DoCheckRTKLFreshReq(DWORD dwCookie, int nCSResult)
+{
+	if (dwCookie != 0)
+	{
+		std::vector<tagRTKLDataRefresh>::iterator it = m_vtRTKLRefresh.begin();
+		for (; it != m_vtRTKLRefresh.end(); it++)
+		{
+			if (it->dwReqCookie == dwCookie)
+			{
+				if (0 == nCSResult || ++it->nTryCount >= Max_RTKL_Fresh_Try_Count)
+				{
+					m_vtRTKLRefresh.erase(it);
+				}
+				break;
+			}
+		}
+	}
+	if (m_vtRTKLRefresh.size() != 0)
+	{
+		DoStartTimerRefreshRTKL();
+	}
+	else
+	{
+		DoKillTimerRefreshRTKL();
+	}
+}
+
+void CPluginQuoteServer::DoKillTimerRefreshRTKL()
+{
+	if (m_nTimerIDRefreshRTKL != 0)
+	{
+		m_TimerWnd.StopTimer(m_nTimerIDRefreshRTKL);
+		m_nTimerIDRefreshRTKL = 0;
+	}
+}
+
+void CPluginQuoteServer::DoStartTimerRefreshRTKL()
+{
+	if (0 == m_nTimerIDRefreshRTKL)
+	{
+		if (!m_TimerWnd.GetSafeHWnd())
+		{
+			m_TimerWnd.Create();
+			m_TimerWnd.SetEventInterface(this);
+		}
+		m_nTimerIDRefreshRTKL = TimerID_FreshRTKLData;
+		m_TimerWnd.StartTimer(1, m_nTimerIDRefreshRTKL);
+	}
+}
+
+tagRTKLDataRefresh::tagRTKLDataRefresh()
+{
+	ddwStockHash = 0;
+	eStockSubType = StockSubType_None;
+	dwReqCookie = 0;
+	nTryCount = 0;
+	nWaitSecs = 0;
+}

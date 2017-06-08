@@ -536,6 +536,8 @@ struct StockListAckItem
 	INT64 nOwnerStockID; //涡轮正股
 	std::string strOwnerStockCode;
 	int nOwnerMarketType;
+	
+	std::string strListDate; //上市时间
 
 	StockListAckItem()
 	{
@@ -1494,4 +1496,47 @@ struct	BrokerQueue_Ack
 {
 	ProtoHead			head;
 	BrokerQueueAckBody	body;
+};
+
+
+
+//////////////////////////////////////////////////////////////////////////
+//获取全局状态 , PROTO_ID_GET_GLOBAL_STATE
+
+struct	GlobalStateReqBody
+{
+	int nStateType;  //no use now 
+	
+	GlobalStateReqBody()
+	{
+		nStateType = 0;
+	}
+};
+
+struct GlobalStateAckBody
+{
+	int nMarketStateHK;
+	int nMarketStateUS;
+	int nMarketStateSH;
+	int nMarketStateSZ;
+	int nMarketStateHKFuture;
+	int nQuoteLogined;
+	int nTradeLogined;
+
+	GlobalStateAckBody()
+	{
+		memset(this, 0, sizeof(*this));
+	}
+};
+
+struct	GlobalState_Req
+{
+	ProtoHead			head;
+	GlobalStateReqBody	body;
+};
+
+struct	GlobalState_Ack
+{
+	ProtoHead			head;
+	GlobalStateAckBody	body;
 };

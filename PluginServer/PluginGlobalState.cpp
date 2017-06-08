@@ -1,7 +1,7 @@
 #include "stdafx.h"
-#include "PluginBrokerQueue.h"
+#include "PluginGlobalState.h"
 #include "PluginQuoteServer.h"
-#include "Protocol/ProtoBrokerQueue.h"
+#include "Protocol/ProtoGlobalState.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -13,26 +13,24 @@
 #define EVENT_ID_ACK_REQUEST	368
 
 //tomodify 2
-#define PROTO_ID_QUOTE		PROTO_ID_QT_GET_GEAR_PRICE
-#define QUOTE_SERVER_TYPE	QuoteServer_BrokerQueue
-typedef CProtoBrokerQueue		CProtoQuote;
 
+typedef CProtoGlobalState		CProtoQuote;
 
 //////////////////////////////////////////////////////////////////////////
 
-CPluginBrokerQueue::CPluginBrokerQueue()
+CPluginGlobalState::CPluginGlobalState()
 {
 	m_pQuoteData = NULL;
 	m_pQuoteServer = NULL;
 	m_bStartTimerHandleTimeout = FALSE;
 }
 
-CPluginBrokerQueue::~CPluginBrokerQueue()
+CPluginGlobalState::~CPluginGlobalState()
 {
 	Uninit();
 }
 
-void CPluginBrokerQueue::Init(CPluginQuoteServer* pQuoteServer, IFTQuoteData*  pQuoteData)
+void CPluginGlobalState::Init(CPluginQuoteServer* pQuoteServer, IFTQuoteData*  pQuoteData)
 {
 	if ( m_pQuoteServer != NULL )
 		return;
@@ -52,7 +50,7 @@ void CPluginBrokerQueue::Init(CPluginQuoteServer* pQuoteServer, IFTQuoteData*  p
 	m_MsgHandler.Create();
 }
 
-void CPluginBrokerQueue::Uninit()
+void CPluginGlobalState::Uninit()
 {
 	if ( m_pQuoteServer != NULL )
 	{
@@ -68,9 +66,9 @@ void CPluginBrokerQueue::Uninit()
 	}
 }
 
-void CPluginBrokerQueue::SetQuoteReqData(int nCmdID, const Json::Value &jsnVal, SOCKET sock)
+void CPluginGlobalState::SetQuoteReqData(int nCmdID, const Json::Value &jsnVal, SOCKET sock)
 {
-	CHECK_RET(nCmdID == PROTO_ID_QT_GET_BROKER_QUEUE && sock != INVALID_SOCKET, NORET);
+	CHECK_RET(nCmdID == PROTO_ID_QT_GET_GLOBAL_STATE && sock != INVALID_SOCKET, NORET);
 	CHECK_RET(m_pQuoteData && m_pQuoteServer, NORET);
 	
 	CProtoQuote proto;
@@ -88,74 +86,27 @@ void CPluginBrokerQueue::SetQuoteReqData(int nCmdID, const Json::Value &jsnVal, 
 	}
 
 	CHECK_RET(req.head.nProtoID == nCmdID, NORET);
-	INT64 nStockID = IFTStockUtil::GetStockHashVal(req.body.strStockCode.c_str(), (StockMktType)req.body.nStockMarket);
-	if ( nStockID == 0 )
-	{
-		CHECK_OP(false, NOOP);
-		StockDataReq req_info;
-		req_info.nStockID = nStockID;
-		req_info.sock = sock;
-		req_info.req = req;
-		req_info.dwReqTick = ::GetTickCount();
-		ReplyDataReqError(&req_info, PROTO_ERR_STOCK_NOT_FIND, L"找不到股票！");
-		return;
-	}	
-	bool bIsSub = m_pQuoteData->IsSubStockOneType(nStockID, StockSubType_Broker);
-	if (!bIsSub)
-	{
-		StockDataReq req_info;
-		req_info.nStockID = nStockID;
-		req_info.sock = sock;
-		req_info.req = req;
-		req_info.dwReqTick = ::GetTickCount();
-		ReplyDataReqError(&req_info, PROTO_ERR_VER_NOT_SUPPORT, L"股票未订阅！");
-		return;
-	}
 
 	StockDataReq *pReqInfo = new StockDataReq;
 	CHECK_RET(pReqInfo, NORET);
-	pReqInfo->nStockID = nStockID;
 	pReqInfo->sock = sock;
 	pReqInfo->req = req;
 	pReqInfo->dwReqTick = ::GetTickCount();
 	m_vtReqData.push_back(pReqInfo);
 
-	int nCount = 0;
-	if (m_pQuoteData->GetBrokerQueueList(nStockID, NULL, nCount))
-	{
-		m_MsgHandler.RaiseEvent(EVENT_ID_ACK_REQUEST, 0, 0);
-	}
-	SetTimerHandleTimeout(true);
+	//状态数据接口始终是ready状态
+	m_MsgHandler.RaiseEvent(EVENT_ID_ACK_REQUEST, 0, 0);
+
+	//SetTimerHandleTimeout(true);
 }
 
-void CPluginBrokerQueue::NotifyQuoteDataUpdate(int nCmdID, INT64 nStockID)
+void CPluginGlobalState::NotifyQuoteDataUpdate(int nCmdID)
 {
-	CHECK_RET(nCmdID == PROTO_ID_QT_GET_BROKER_QUEUE && nStockID, NORET);
+	CHECK_RET(nCmdID == PROTO_ID_QT_GET_GLOBAL_STATE, NORET);
 	CHECK_RET(m_pQuoteData, NORET);
-	
-	bool bIsSub = m_pQuoteData->IsSubStockOneType(nStockID, StockSubType_Broker);
-	if ( !bIsSub )
-	{
-		return;
-	}
-	VT_STOCK_DATA_REQ::iterator it = m_vtReqData.begin();
-	StockDataReq* pReqItem = NULL;
-	while (it != m_vtReqData.end())
-	{
-		if (*it && (*it)->nStockID == nStockID)
-		{
-			pReqItem = *it;
-			break;
-		}
-		++it;
-	}
-	if (pReqItem)
-	{
-		ReplyAllReadyReq();
-	}
 }
 
-void CPluginBrokerQueue::OnTimeEvent(UINT nEventID)
+void CPluginGlobalState::OnTimeEvent(UINT nEventID)
 {
 	if ( TIMER_ID_HANDLE_TIMEOUT_REQ == nEventID )
 	{
@@ -163,7 +114,7 @@ void CPluginBrokerQueue::OnTimeEvent(UINT nEventID)
 	}
 }
 
-void CPluginBrokerQueue::OnMsgEvent(int nEvent,WPARAM wParam,LPARAM lParam)
+void CPluginGlobalState::OnMsgEvent(int nEvent,WPARAM wParam,LPARAM lParam)
 {
 	if ( EVENT_ID_ACK_REQUEST == nEvent )
 	{
@@ -171,7 +122,7 @@ void CPluginBrokerQueue::OnMsgEvent(int nEvent,WPARAM wParam,LPARAM lParam)
 	}	
 }
 
-void CPluginBrokerQueue::HandleTimeoutReq()
+void CPluginGlobalState::HandleTimeoutReq()
 {
 	if (m_vtReqData.empty())
 	{
@@ -217,64 +168,26 @@ void CPluginBrokerQueue::HandleTimeoutReq()
 	}
 }
 
-bool CPluginBrokerQueue::DoFillAckDataBody(INT64 nStockID, QuoteAckDataBody& ackBody)
+bool CPluginGlobalState::DoFillAckDataBody(QuoteAckDataBody& ackBody)
 {
 	CHECK_RET(m_pQuoteData, false);
 
-	//股票信息
-	StockMktType eMkt = StockMkt_HK;
-	wchar_t szStockCode[16] = { 0 }, szStockName[128] = { 0 };
-	if (!m_pQuoteData->GetStockInfoByHashVal(nStockID, eMkt, szStockCode, szStockName))
-	{
-		return false;
-	}
-	ackBody.nStockMarket = (int)eMkt;
-	CA::Unicode2UTF(szStockCode, ackBody.strStockCode);
+	NNGlobalState stState;
+	m_pQuoteData->GetNNGlobalState(&stState);
 
-	//数据项
-	ackBody.vtBrokerAsk.clear();
-	ackBody.vtBrokerBid.clear();
-
-	int nItemNum = 0;
-	Quote_BrokerItem* parItem = NULL;
-
-	//找到数据已经准备好的请求项
-	if (!m_pQuoteData->GetBrokerQueueList(nStockID, parItem, nItemNum))
-	{
-		//不存在数据, 等定阅通知
-		return false;
-	}
-
-	if (nItemNum > 0)
-	{
-		parItem = new Quote_BrokerItem[nItemNum];
-		m_pQuoteData->GetBrokerQueueList(nStockID, parItem, nItemNum);
-	}
-
-	for (int n = 0; n < nItemNum; n++)
-	{
-		Quote_BrokerItem& stItem = parItem[n];
-
-		BrokerQueueAckItem AckItem;
-		AckItem.nBrokerID = stItem.nBrokerID;
-		AckItem.nBrokerPos = stItem.nBrokerPos;
-		AckItem.strBrokerName = stItem.strBrokerName;
-
-		if (stItem.bAskOrBid)
-		{
-			ackBody.vtBrokerAsk.push_back(AckItem);
-		}
-		else
-		{
-			ackBody.vtBrokerBid.push_back(AckItem);
-		}
-	}
-	SAFE_DELETE_ARR(parItem);
-
+	ackBody.nMarketStateHK = stState.eMktHK;
+	ackBody.nMarketStateHKFuture = stState.eMktHKFuture;
+	ackBody.nMarketStateSH = stState.eMktSH;
+	ackBody.nMarketStateSZ = stState.eMktSZ;
+	ackBody.nMarketStateUS = stState.eMktUS;
+	
+	ackBody.nQuoteLogined = stState.bQuoteSvrLogined;
+	ackBody.nTradeLogined = stState.bTradeSvrLogined;
+	 
 	return true;
 }
 
-void CPluginBrokerQueue::ReplyAllReadyReq()
+void CPluginGlobalState::ReplyAllReadyReq()
 {
 	CHECK_RET(m_pQuoteData && m_pQuoteServer, NORET);
 
@@ -289,7 +202,7 @@ void CPluginBrokerQueue::ReplyAllReadyReq()
 		CProtoQuote::ProtoReqBodyType &reqBody = pReqData->req.body;
 		QuoteAckDataBody ackBody;
 
-		if (!DoFillAckDataBody(pReqData->nStockID, ackBody))
+		if (!DoFillAckDataBody(ackBody))
 		{
 			continue;
 		}
@@ -301,7 +214,7 @@ void CPluginBrokerQueue::ReplyAllReadyReq()
 	}
 }
 
-void CPluginBrokerQueue::ReplyStockDataReq(StockDataReq *pReq, const QuoteAckDataBody &data)
+void CPluginGlobalState::ReplyStockDataReq(StockDataReq *pReq, const QuoteAckDataBody &data)
 {
 	CHECK_RET(pReq && m_pQuoteServer, NORET);
 
@@ -327,7 +240,7 @@ void CPluginBrokerQueue::ReplyStockDataReq(StockDataReq *pReq, const QuoteAckDat
 	}
 }
 
-void CPluginBrokerQueue::ReplyDataReqError(StockDataReq *pReq, int nErrCode, LPCWSTR pErrDesc)
+void CPluginGlobalState::ReplyDataReqError(StockDataReq *pReq, int nErrCode, LPCWSTR pErrDesc)
 {
 	CHECK_RET(pReq && m_pQuoteServer, NORET);
 
@@ -357,7 +270,7 @@ void CPluginBrokerQueue::ReplyDataReqError(StockDataReq *pReq, int nErrCode, LPC
 
 }
 
-void CPluginBrokerQueue::SetTimerHandleTimeout(bool bStartOrStop)
+void CPluginGlobalState::SetTimerHandleTimeout(bool bStartOrStop)
 {
 	if ( m_bStartTimerHandleTimeout )
 	{
@@ -377,7 +290,7 @@ void CPluginBrokerQueue::SetTimerHandleTimeout(bool bStartOrStop)
 	}
 }
 
-void CPluginBrokerQueue::ReleaseAllReqData()
+void CPluginGlobalState::ReleaseAllReqData()
 {
 	VT_STOCK_DATA_REQ::iterator it = m_vtReqData.begin();
 	for (; it != m_vtReqData.end(); ++it)
@@ -388,45 +301,12 @@ void CPluginBrokerQueue::ReleaseAllReqData()
 	m_vtReqData.clear();
 }
 
-
-void CPluginBrokerQueue::PushStockData(INT64 nStockID, SOCKET sock)
-{
-	CHECK_RET(m_pQuoteData, NORET);
-
-	QuoteAckDataBody ackbody;
-	if (!DoFillAckDataBody(nStockID, ackbody))
-	{
-		return;
-	}
-
-	CProtoQuote::ProtoAckDataType ack;
-	ack.head.nProtoID = PROTO_ID_PUSH_BROKER_QUEUE;
-	ack.head.ddwErrCode = 0;
-	ack.body = ackbody;
-
-	CProtoQuote proto;
-	proto.SetProtoData_Ack(&ack);
-
-	Json::Value jsnAck;
-	if (proto.MakeJson_Ack(jsnAck))
-	{
-		std::string strOut;
-		CProtoParseBase::ConvJson2String(jsnAck, strOut, true);
-		m_pQuoteServer->ReplyQuoteReq(PROTO_ID_PUSH_BROKER_QUEUE, strOut.c_str(), (int)strOut.size(), sock);
-	}
-	else
-	{
-		CHECK_OP(false, NOOP);
-	}
-
-}
-
-void CPluginBrokerQueue::NotifySocketClosed(SOCKET sock)
+void CPluginGlobalState::NotifySocketClosed(SOCKET sock)
 {
 	DoClearReqInfo(sock);
 }
 
-void CPluginBrokerQueue::DoClearReqInfo(SOCKET socket)
+void CPluginGlobalState::DoClearReqInfo(SOCKET socket)
 {
 	VT_STOCK_DATA_REQ& vtReq = m_vtReqData;
 

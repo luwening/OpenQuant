@@ -240,7 +240,7 @@ void CPluginQueryStockSub::HandleTimeoutReq()
 				continue;
 			}
 
-			if ( int(dwTickNow - pReq->dwReqTick) > 5000 )
+			if (int(dwTickNow - pReq->dwReqTick) > REQ_TIMEOUT_MILLISECOND)
 			{
 				CStringA strTimeout;
 				strTimeout.Format("QueryStockSub req timeout");

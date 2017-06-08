@@ -6,7 +6,7 @@
 /**
 * 该插件接口要求的FTCore匹配版本号
 */
-#define  FTCore_Support_Ver  111
+#define  FTCore_Support_Ver  112
 
 /**
  *	由牛牛客户端实现的插件宿主接口

@@ -269,7 +269,7 @@ void CProtoPushBatchBasic::GetAckBatchBasicArrField(VT_PROTO_FIELD &vtField, con
 		&item.nStockMarket,	&item.strStockCode,	&item.nHigh,
 		&item.nOpen,	  	&item.nLastClose,   &item.nLow,	
 		&item.nCur,	        &item.nSuspension,  &item.nTurnoverRate,
-		&item.nVolume,      &item.nValue,       &item.nAmpli,       
+		&item.nValue,		&item.nVolume,		&item.nAmpli,
 		&item.strDate,      &item.strTime,	    &item.strListTime,
 	};
 

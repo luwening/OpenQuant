@@ -196,7 +196,7 @@ void CPluginPlatesetIDs::HandleTimeoutReq()
 			it_req = vtReq.erase(it_req);
 			continue;
 		}
-		if (int(dwTickNow - pReq->dwReqTick) > 15000)
+		if (int(dwTickNow - pReq->dwReqTick) > REQ_TIMEOUT_MILLISECOND)
 		{
 			//tomodify timeout
 			CStringA strTimeout;

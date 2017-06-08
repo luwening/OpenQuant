@@ -27,6 +27,7 @@
 #include "PluginPlatesetIDs.h"
 #include "PluginPlateSubIDs.h"
 #include "PluginBrokerQueue.h"
+#include "PluginGlobalState.h"
 
 class CPluginNetwork;
 
@@ -52,9 +53,20 @@ enum QuoteServerType
 	QuoteServer_PushTickerPrice = 18,
 };
 
+struct tagRTKLDataRefresh
+{
+	INT64 ddwStockHash;
+	StockSubType eStockSubType;
+	DWORD dwReqCookie;
+	int nTryCount;
+	int nWaitSecs;
+	tagRTKLDataRefresh();
+};
+
 class CPluginQuoteServer: 	
 	public IQuoteInfoCallback,
-	public IQuoteKLCallback
+	public IQuoteKLCallback,
+	public CTimerWndInterface
 {
 public:
 	CPluginQuoteServer();
@@ -88,7 +100,7 @@ protected:
 	virtual void  OnPushKL(INT64  ddwStockHash, SOCKET sock, StockSubType eStockSubType);
 	virtual void  OnPushRT(INT64  ddwStockHash, SOCKET sock);
 	virtual void  OnPushBrokerQueue(INT64 ddwStockHash, SOCKET sock);
-
+	virtual void  OnPushMarketNewTrade(StockMktType eMkt, INT64 ddwLastTradeStamp, INT64 ddwNewTradeStamp);
 	//IQuoteKLCallback
 	virtual void  OnQueryStockRTData(DWORD dwCookie, int nCSResult);
 	virtual void  OnQueryStockKLData(DWORD dwCookie, int nCSResult);
@@ -96,6 +108,17 @@ protected:
 	//°å¿éÇëÇó
 	virtual void  OnReqPlatesetIDs(int nCSResult, DWORD dwCookie);
 	virtual void  OnReqPlateStockIDs(int nCSResult, DWORD dwCookie);
+
+	//CTimerWndInterface
+	virtual void OnTimeEvent(UINT nEventID);
+
+private:
+	bool DoKLSubTypeConvert(StockSubType eType, int& nKLType);
+	void DoTryRefreshRTKLData(INT64 ddwStockHash, StockSubType eSubType);
+	void DoCheckRTKLFreshReq(DWORD dwCookie, int nCSResult);
+
+	void DoKillTimerRefreshRTKL();
+	void DoStartTimerRefreshRTKL();
 
 protected:
 	IFTPluginCore		*m_pPluginCore;
@@ -134,5 +157,10 @@ protected:
 
 	CPluginPlateSubIDs  m_plateSubIDs;
 	CPluginBrokerQueue  m_BrokerQueue;
+	CPluginGlobalState	m_GlobalState;
 
+	CTimerMsgWndEx m_TimerWnd;
+	UINT m_nTimerIDRefreshRTKL;
+	std::vector<tagRTKLDataRefresh> m_vtRTKLRefresh;
+	
 };

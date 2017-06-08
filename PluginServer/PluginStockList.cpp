@@ -158,6 +158,7 @@ void CPluginStockList::ReplyAllRequest()
 				stkItem.nOwnerMarketType = 0;
 				stkItem.strOwnerStockCode = "";
 			}
+			CA::Unicode2UTF(pInfo->chListDate, stkItem.strListDate);
 			ackBody.vtStockList.push_back(stkItem);
 		}
 		ReplyStockDataReq(pReqData, ackBody);

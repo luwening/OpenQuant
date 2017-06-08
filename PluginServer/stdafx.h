@@ -57,3 +57,4 @@
 #include "CM/CMHelper.h"
 #include "CM/ca_api.h"
 #include "UtilPlugin.h"
+#include "IFTStockUtil.h"
