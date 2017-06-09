@@ -59,7 +59,7 @@ void CPluginPushTickerPrice::PushStockData(INT64 ddwStockHash, SOCKET sock)
 	std::vector<PluginTickItem> vtTickPrice;
 	vtTickPrice.resize(200);
 	int nTickFillCount = m_pQuoteData->FillTickArr(ddwStockHash, _vect2Ptr(vtTickPrice), _vectIntSize(vtTickPrice), nLastSequnce);
-	if ( nTickFillCount >= 0 )
+	if ( nTickFillCount > 0)
 	{
 		QuoteAckDataBody ackbody;
 		ackbody.nNextSequence = -1;
@@ -76,7 +76,7 @@ void CPluginPushTickerPrice::PushStockData(INT64 ddwStockHash, SOCKET sock)
 		CA::Unicode2UTF(szStockCode, ack.body.strStockCode);
 
 		int nValidNum = min(nTickFillCount, 200);
-		INT64 nMaxSequence = 0;
+		INT64 nMaxSequence = nLastSequnce;
 		for ( int n = 0; n < nValidNum; n++ )
 		{
 			PushTickerAckItem tickItem;
@@ -113,7 +113,6 @@ void CPluginPushTickerPrice::PushStockData(INT64 ddwStockHash, SOCKET sock)
 			}
 		}
 	}
-
 }
 
 void CPluginPushTickerPrice::NotifySocketClosed(SOCKET sock)

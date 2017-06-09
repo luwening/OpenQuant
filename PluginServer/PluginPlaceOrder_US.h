@@ -6,10 +6,11 @@
 #include "TimerWnd.h"
 #include "MsgHandler.h"
 #include "JsonCpp/json.h"
+#include "DelayOrderIDCvt_US.h"
 
 class CPluginUSTradeServer;
 
-class CPluginPlaceOrder_US : public CTimerWndInterface, public CMsgHandlerEventInterface
+class CPluginPlaceOrder_US : public CTimerWndInterface, public CMsgHandlerEventInterface, public IOrderIDCvtNotify_US
 {
 public:
 	CPluginPlaceOrder_US();
@@ -30,6 +31,10 @@ protected:
 	virtual void OnMsgEvent(int nEvent,WPARAM wParam,LPARAM lParam);
 
 protected:
+	//IOrderIDCvtNotify_US
+	virtual void OnCvtOrderID_Local2Svr(int nResult, Trade_Env eEnv, INT64 nLocalID, INT64 nServerID);
+
+protected:
 	//tomodify 1
 	typedef PlaceOrder_Req	TradeReqType;
 	typedef PlaceOrder_Ack	TradeAckType;
@@ -40,6 +45,13 @@ protected:
 		DWORD	dwReqTick;
 		DWORD	dwLocalCookie;
 		TradeReqType req;
+		bool bWaitSvrIDAfterPlacedOK;
+		StockDataReq()
+		{
+			dwReqTick = 0;
+			dwLocalCookie = 0;
+			bWaitSvrIDAfterPlacedOK = false;
+		}
 	};
 	
 	typedef std::vector<StockDataReq*>		VT_REQ_TRADE_DATA;	
@@ -62,4 +74,6 @@ protected:
 	CMsgHandler			m_MsgHandler;
 
 	VT_REQ_TRADE_DATA	m_vtReqData;
+
+	CDelayOrderIDCvt_US  m_stOrderIDCvt;
 };
