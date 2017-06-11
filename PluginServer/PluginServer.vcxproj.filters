@@ -42,6 +42,9 @@
     <Filter Include="Comm">
       <UniqueIdentifier>{20f84aa1-2504-43cd-a78c-589627dc7238}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Util">
+      <UniqueIdentifier>{86eb04d7-3455-44f5-b5a4-e186ad56bf5c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="JsonCpp\autolink.h">
@@ -71,15 +74,6 @@
     <ClInclude Include="JsonCpp\writer.h">
       <Filter>JsonCpp</Filter>
     </ClInclude>
-    <ClInclude Include="DelayOrderIDCvt_HK.h">
-      <Filter>头源文件</Filter>
-    </ClInclude>
-    <ClInclude Include="DelayOrderIDCvt_US.h">
-      <Filter>头源文件</Filter>
-    </ClInclude>
-    <ClInclude Include="FormatTime.h">
-      <Filter>头源文件</Filter>
-    </ClInclude>
     <ClInclude Include="PluginServer.h">
       <Filter>头源文件</Filter>
     </ClInclude>
@@ -87,12 +81,6 @@
       <Filter>头源文件</Filter>
     </ClInclude>
     <ClInclude Include="stdafx.h">
-      <Filter>头源文件</Filter>
-    </ClInclude>
-    <ClInclude Include="UsTimezone.h">
-      <Filter>头源文件</Filter>
-    </ClInclude>
-    <ClInclude Include="UtilPlugin.h">
       <Filter>头源文件</Filter>
     </ClInclude>
     <ClInclude Include="Include\FTPluginCore.h">
@@ -383,6 +371,33 @@
     <ClInclude Include="PluginBrokerQueue.h">
       <Filter>Server\quote</Filter>
     </ClInclude>
+    <ClInclude Include="Protocol\ProtoGlobalState.h">
+      <Filter>Protocol\quote</Filter>
+    </ClInclude>
+    <ClInclude Include="PluginGlobalState.h">
+      <Filter>Server\quote</Filter>
+    </ClInclude>
+    <ClInclude Include="UtilPlugin.h">
+      <Filter>Util</Filter>
+    </ClInclude>
+    <ClInclude Include="IFTStockUtil.h">
+      <Filter>Util</Filter>
+    </ClInclude>
+    <ClInclude Include="IFTStockUtilImpl.h">
+      <Filter>Util</Filter>
+    </ClInclude>
+    <ClInclude Include="UsTimezone.h">
+      <Filter>Util</Filter>
+    </ClInclude>
+    <ClInclude Include="FormatTime.h">
+      <Filter>Util</Filter>
+    </ClInclude>
+    <ClInclude Include="DelayOrderIDCvt_HK.h">
+      <Filter>Util</Filter>
+    </ClInclude>
+    <ClInclude Include="DelayOrderIDCvt_US.h">
+      <Filter>Util</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="JsonCpp\json_internalarray.inl">
@@ -411,25 +426,10 @@
     <ClCompile Include="JsonCpp\json_writer.cpp">
       <Filter>JsonCpp</Filter>
     </ClCompile>
-    <ClCompile Include="DelayOrderIDCvt_HK.cpp">
-      <Filter>头源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="DelayOrderIDCvt_US.cpp">
-      <Filter>头源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="FormatTime.cpp">
-      <Filter>头源文件</Filter>
-    </ClCompile>
     <ClCompile Include="PluginServer.cpp">
       <Filter>头源文件</Filter>
     </ClCompile>
     <ClCompile Include="stdafx.cpp">
-      <Filter>头源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="UsTimezone.cpp">
-      <Filter>头源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="UtilPlugin.cpp">
       <Filter>头源文件</Filter>
     </ClCompile>
     <ClCompile Include="Protocol\CppJsonConv.cpp">
@@ -692,6 +692,33 @@
     </ClCompile>
     <ClCompile Include="PluginBrokerQueue.cpp">
       <Filter>Server\quote</Filter>
+    </ClCompile>
+    <ClCompile Include="Protocol\ProtoGlobalState.cpp">
+      <Filter>Protocol\quote</Filter>
+    </ClCompile>
+    <ClCompile Include="PluginGlobalState.cpp">
+      <Filter>Server\quote</Filter>
+    </ClCompile>
+    <ClCompile Include="UtilPlugin.cpp">
+      <Filter>Util</Filter>
+    </ClCompile>
+    <ClCompile Include="IFTStockUtilImpl.cpp">
+      <Filter>Util</Filter>
+    </ClCompile>
+    <ClCompile Include="IFTStockUtil.cpp">
+      <Filter>Util</Filter>
+    </ClCompile>
+    <ClCompile Include="UsTimezone.cpp">
+      <Filter>Util</Filter>
+    </ClCompile>
+    <ClCompile Include="FormatTime.cpp">
+      <Filter>Util</Filter>
+    </ClCompile>
+    <ClCompile Include="DelayOrderIDCvt_HK.cpp">
+      <Filter>Util</Filter>
+    </ClCompile>
+    <ClCompile Include="DelayOrderIDCvt_US.cpp">
+      <Filter>Util</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

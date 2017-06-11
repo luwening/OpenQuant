@@ -292,7 +292,7 @@ class BrokerTest(BrokerHandlerBase):
 
 if __name__ == "__main__":
 
-    quote_context = OpenQuoteContext(host='127.0.0.1', async_port=11111)
+    quote_context = OpenQuoteContext(host='127.0.0.1', port=11111)
 
     # 获取推送数据
     quote_context.subscribe('HK.00700', "QUOTE", push=True)

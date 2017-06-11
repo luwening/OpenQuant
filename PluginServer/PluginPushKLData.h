@@ -18,6 +18,8 @@ public:
 	void PushStockData(INT64 nStockID, SOCKET sock, StockSubType eStockSubType);
 
 	void NotifySocketClosed(SOCKET sock);
+	void NotifyMarketNewTrade(StockMktType eMkt);
+
 protected:
 	struct	StockDataReq
 	{

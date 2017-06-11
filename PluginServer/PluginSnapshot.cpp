@@ -97,10 +97,9 @@ void CPluginSnapshot::SetQuoteReqData(int nCmdID, const Json::Value &jsnVal, SOC
 	std::vector<INT64> vtReqStockID;
 	for (int n = 0; n < nStockNum; n++ )
 	{
-		std::wstring strCode;
-		CA::UTF2Unicode(req.body.vtReqSnapshot[n].strStockCode.c_str(), strCode);
-		INT64 nStockID = m_pQuoteData->GetStockHashVal(strCode.c_str(), (StockMktType)req.body.vtReqSnapshot[n].nStockMarket);
-		if ( nStockID == 0 )
+		INT64 nStockID = IFTStockUtil::GetStockHashVal(req.body.vtReqSnapshot[n].strStockCode.c_str(),
+				(StockMktType)req.body.vtReqSnapshot[n].nStockMarket);
+		if (0 == nStockID)
 		{
 			CHECK_OP(false, NOOP);
 			StockDataReq req_info;			
@@ -111,9 +110,6 @@ void CPluginSnapshot::SetQuoteReqData(int nCmdID, const Json::Value &jsnVal, SOC
 			return;
 		}
 		vtReqStockID.push_back(nStockID);
-		StockMktCode &mc = m_mapStockIDCode[nStockID];
-		mc.strCode = req.body.vtReqSnapshot[n].strStockCode;
-		mc.nMarketType = req.body.vtReqSnapshot[n].nStockMarket;
 	}
 
 	StockDataReq *pReqInfo = new StockDataReq;
@@ -188,9 +184,12 @@ void CPluginSnapshot::NotifySnapshotResult(DWORD dwCookie, PluginStockSnapshot *
 	{
 		const PluginStockSnapshot &snapSrc = arSnapshot[n];
 		SnapshotAckItem &snapDst = ack.body.vtSnapshot[n];
+		StockMktCodeEx stMktCode;
+		IFTStockUtil::GetStockMktCode(snapSrc.stock_id, stMktCode);
+
 		snapDst.nStockID = snapSrc.stock_id;
-		snapDst.strStockCode = m_mapStockIDCode[snapSrc.stock_id].strCode;
-		snapDst.nStockMarket = m_mapStockIDCode[snapSrc.stock_id].nMarketType;
+		snapDst.strStockCode = stMktCode.strCode;
+		snapDst.nStockMarket = stMktCode.eMarketType;
 		snapDst.instrument_type = snapSrc.instrument_type;
 
 		snapDst.last_close_price = INT64(snapSrc.last_close_price * c_priceMultiply);
@@ -340,8 +339,8 @@ void CPluginSnapshot::ClearQuoteDataCache()
 				m_mapCacheData.erase(nStockID);
 				it_todel = m_mapCacheToDel.erase(it_todel);
 
-				StockMktCode stkMktCode;
-				if ( m_pQuoteServer && GetStockMktCode(nStockID, stkMktCode) )
+				StockMktCodeEx stkMktCode;
+				if ( m_pQuoteServer && IFTStockUtil::GetStockMktCode(nStockID, stkMktCode) )
 				{				
 					//m_pQuoteServer->SubscribeQuote(stkMktCode.strCode, (StockMktType)stkMktCode.nMarketType, QUOTE_SERVER_TYPE, false);					
 				}
@@ -391,7 +390,7 @@ void CPluginSnapshot::HandleTimeoutReq()
 				continue;
 			}
 
-			if ( int(dwTickNow - pReq->dwReqTick) > 5000 )
+			if (int(dwTickNow - pReq->dwReqTick) > REQ_TIMEOUT_MILLISECOND)
 			{
 				//tomodify timeout
 				CStringA strTimeout;
@@ -594,18 +593,6 @@ void CPluginSnapshot::SetTimerClearCache(bool bStartOrStop)
 	}
 }
 
-bool CPluginSnapshot::GetStockMktCode(INT64 nStockID, StockMktCode &stkMktCode)
-{
-	MAP_STOCK_ID_CODE::iterator it_find = m_mapStockIDCode.find(nStockID);
-	if ( it_find != m_mapStockIDCode.end())
-	{
-		stkMktCode = it_find->second;
-		return true;
-	}
-
-	CHECK_OP(false, NOOP);
-	return false;
-}
 
 void CPluginSnapshot::ClearAllReqCache()
 {
@@ -624,7 +611,6 @@ void CPluginSnapshot::ClearAllReqCache()
 	m_mapReqInfo.clear();
 	m_mapCacheData.clear();
 	m_mapCacheToDel.clear();
-	m_mapStockIDCode.clear();
 }
 
 void CPluginSnapshot::DoClearReqInfo(SOCKET socket)

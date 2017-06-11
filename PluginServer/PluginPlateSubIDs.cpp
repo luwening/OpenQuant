@@ -78,10 +78,8 @@ void CPluginPlateSubIDs::SetQuoteReqData(int nCmdID, const Json::Value &jsnVal, 
 		return;
 	}
 	CHECK_RET(req.head.nProtoID == nCmdID, NORET);
-	std::wstring strCode;
-	CA::UTF2Unicode(req.body.strStockCode.c_str(), strCode);
-
-	INT64 nPlateID = m_pQuoteData->GetStockHashVal(strCode.c_str(), (StockMktType)req.body.nStockMarket);
+	
+	INT64 nPlateID = IFTStockUtil::GetStockHashVal(req.body.strStockCode.c_str(), (StockMktType)req.body.nStockMarket);
 	if (0 == nPlateID)
 	{
 		CHECK_OP(false, NOOP);
@@ -199,7 +197,7 @@ void CPluginPlateSubIDs::HandleTimeoutReq()
 			it_req = vtReq.erase(it_req);
 			continue;
 		}
-		if (int(dwTickNow - pReq->dwReqTick) > 15000)
+		if (int(dwTickNow - pReq->dwReqTick) > REQ_TIMEOUT_MILLISECOND)
 		{
 			//tomodify timeout
 			CStringA strTimeout;

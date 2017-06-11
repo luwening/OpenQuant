@@ -24,6 +24,7 @@ public:
 	void PushStockData(INT64 ddwStockHash, SOCKET sock);
 	
 	void NotifySocketClosed(SOCKET sock);
+	void NotifyMarketNewTrade(StockMktType eMkt);
 
 protected:
 	struct	StockDataReq

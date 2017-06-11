@@ -196,6 +196,14 @@ interface IFTQuoteData
 	@返回值：flase表示数据不存在， 需要定阅等待数据push
 	*/
 	virtual bool GetBrokerQueueList(INT64 nStockID, Quote_BrokerItem* parID, int& nCount) = 0;
+
+	/**
+	* 获取全局状态
+	@GetNNGlobalState   
+	@NNGlobalState  返回对象
+	@返回值：void 
+	*/
+	virtual void GetNNGlobalState(NNGlobalState* pState) = 0;
 };
 
 /**
@@ -270,6 +278,12 @@ interface IQuoteInfoCallback
 	* 推送经纪队列
 	*/
 	virtual void  OnPushBrokerQueue(INT64  ddwStockHash, SOCKET sock) = 0;
+
+	/**
+	* 新交易日推送
+	*/
+	virtual void  OnPushMarketNewTrade(StockMktType eMkt, INT64 ddwLastTradeStamp, INT64 ddwNewTradeStamp) = 0;
+
 };
 
 interface IQuoteKLCallback

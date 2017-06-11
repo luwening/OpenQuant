@@ -102,7 +102,7 @@ void CPluginPushRTData::PushStockData(INT64 nStockID, SOCKET sock)
 			{
 				PushRTDataAckItem item;
 				item.nDataStatus = pQuoteRT[n].nDataStatus;
-				if ( item.nDataStatus != 1 )
+				if (!IS_RTKL_VALID_PUSH_DATA_STATUS(pQuoteRT[n].nDataStatus))
 				{
 					break;
 				}
@@ -173,5 +173,32 @@ void CPluginPushRTData::NotifySocketClosed(SOCKET sock)
 	if (itmap != m_mapPushInfo.end())
 	{
 		m_mapPushInfo.erase(itmap);
+	}
+}
+
+//市场切换了交易日，记录的推送信息要清掉 
+void CPluginPushRTData::NotifyMarketNewTrade(StockMktType eMkt)
+{
+	CHECK_RET(m_pQuoteData, NORET);
+
+	std::map<SOCKET, std::vector<Stock_PushInfo>>::iterator itmap = m_mapPushInfo.begin();
+	for (; itmap != m_mapPushInfo.end(); itmap++)
+	{
+		std::vector<Stock_PushInfo>& vtStock = itmap->second;
+		std::vector<Stock_PushInfo>::iterator itStock = vtStock.begin();
+		while (itStock != vtStock.end())
+		{
+			StockMktType eStockMkt = StockMkt_None;
+			wchar_t szStockCode[16] = {}, szStockName[128] = { 0 };
+			m_pQuoteData->GetStockInfoByHashVal(itStock->ddwStockID, eStockMkt, szStockCode, szStockName);
+			if (eMkt == eStockMkt)
+			{
+				itStock = vtStock.erase(itStock);
+			}
+			else
+			{
+				++itStock;
+			}
+		}
 	}
 }

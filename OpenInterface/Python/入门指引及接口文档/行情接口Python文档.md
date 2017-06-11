@@ -321,6 +321,15 @@ ret_code, ret_data = quote_ctx.get_stock_basicinfo(market, stock_type='STOCK')
 **market**: 市场标识, string，例如，”HK”，”US”；具体见市场标识说明
 **stock_type**: 证券类型, string, 例如，”STOCK”，”ETF”；具体见证券类型说明
 
+**证券类型** stock_type，（字符串类型）： 
+| 股票类型  | 标识        |
+| ----- | --------- |
+| 正股    | "STOCK"   |
+| 指数    | "IDX"     |
+| ETF基金 | "ETF"     |
+| 涡轮牛熊  | "WARRANT" |
+| 债券    | "BOND"    |
+
 **返回**：
 ret_code失败时，ret_data返回为错误描述字符串；
 客户端无符合条件数据时，ret_code为成功，ret_data返回None 
@@ -474,6 +483,7 @@ ret_code失败时，ret_data返回为错误描述字符串；
 **wrt_delta**: 		窝轮对冲值；float
 **wrt_implied_volatility**:		窝轮引伸波幅；float
 **wrt_premium**:		窝轮溢价；float
+**lot_size**：每手股数；int
 
 返回DataFrame，包含上述字段
 

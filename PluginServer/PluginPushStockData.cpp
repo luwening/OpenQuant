@@ -76,9 +76,8 @@ void CPluginPushStockData::SetQuoteReqData(int nCmdID, const Json::Value &jsnVal
 	}
 
 	CHECK_RET(req.head.nProtoID == nCmdID, NORET);
-	std::wstring strCode;
-	CA::UTF2Unicode(req.body.strStockCode.c_str(), strCode);
-	INT64 nStockID = m_pQuoteData->GetStockHashVal(strCode.c_str(), (StockMktType)req.body.nStockMarket);
+ 
+	INT64 nStockID = IFTStockUtil::GetStockHashVal(req.body.strStockCode.c_str(), (StockMktType)req.body.nStockMarket);
 	if ( nStockID == 0 )
 	{
 		CHECK_OP(false, NOOP);

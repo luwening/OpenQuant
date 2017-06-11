@@ -122,6 +122,8 @@
     <ClInclude Include="DelayOrderIDCvt_HK.h" />
     <ClInclude Include="DelayOrderIDCvt_US.h" />
     <ClInclude Include="FormatTime.h" />
+    <ClInclude Include="IFTStockUtil.h" />
+    <ClInclude Include="IFTStockUtilImpl.h" />
     <ClInclude Include="IManage_SecurityNum.h" />
     <ClInclude Include="Include\FTPluginCore.h" />
     <ClInclude Include="Include\FTPluginQuoteDefine.h" />
@@ -145,6 +147,7 @@
     <ClInclude Include="PluginChangeOrder_US.h" />
     <ClInclude Include="PluginExRightInfo.h" />
     <ClInclude Include="PluginGearPrice.h" />
+    <ClInclude Include="PluginGlobalState.h" />
     <ClInclude Include="PluginHistoryKL.h" />
     <ClInclude Include="PluginHKTradeServer.h" />
     <ClInclude Include="PluginKLData.h" />
@@ -192,6 +195,7 @@
     <ClInclude Include="Protocol\ProtoDataStruct_Trade.h" />
     <ClInclude Include="Protocol\ProtoExRightInfo.h" />
     <ClInclude Include="Protocol\ProtoGearPrice.h" />
+    <ClInclude Include="Protocol\ProtoGlobalState.h" />
     <ClInclude Include="Protocol\ProtoHistoryKL.h" />
     <ClInclude Include="Protocol\ProtoKLData.h" />
     <ClInclude Include="Protocol\ProtoOrderErrorPush.h" />
@@ -242,6 +246,8 @@
     <ClCompile Include="DelayOrderIDCvt_HK.cpp" />
     <ClCompile Include="DelayOrderIDCvt_US.cpp" />
     <ClCompile Include="FormatTime.cpp" />
+    <ClCompile Include="IFTStockUtil.cpp" />
+    <ClCompile Include="IFTStockUtilImpl.cpp" />
     <ClCompile Include="IManage_SecurityNum.cpp" />
     <ClCompile Include="JsonCpp\json_op.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -276,6 +282,7 @@
     <ClCompile Include="PluginChangeOrder_US.cpp" />
     <ClCompile Include="PluginExRightInfo.cpp" />
     <ClCompile Include="PluginGearPrice.cpp" />
+    <ClCompile Include="PluginGlobalState.cpp" />
     <ClCompile Include="PluginHistoryKL.cpp" />
     <ClCompile Include="PluginHKTradeServer.cpp" />
     <ClCompile Include="PluginKLData.cpp" />
@@ -321,6 +328,7 @@
     <ClCompile Include="Protocol\ProtoDataStruct.cpp" />
     <ClCompile Include="Protocol\ProtoExRightInfo.cpp" />
     <ClCompile Include="Protocol\ProtoGearPrice.cpp" />
+    <ClCompile Include="Protocol\ProtoGlobalState.cpp" />
     <ClCompile Include="Protocol\ProtoHistoryKL.cpp" />
     <ClCompile Include="Protocol\ProtoKLData.cpp" />
     <ClCompile Include="Protocol\ProtoOrderErrorPush.cpp" />

@@ -91,9 +91,7 @@ void CPluginKLData::SetQuoteReqData(int nCmdID, const Json::Value &jsnVal, SOCKE
 
 	CHECK_RET(req.head.nProtoID == nCmdID, NORET);
 
-	std::wstring strCode;
-	CA::UTF2Unicode(req.body.strStockCode.c_str(), strCode);
-	INT64 nStockID = m_pQuoteData->GetStockHashVal(strCode.c_str(), (StockMktType)req.body.nStockMarket);
+	INT64 nStockID = IFTStockUtil::GetStockHashVal(req.body.strStockCode.c_str(), (StockMktType)req.body.nStockMarket);
 	if ( nStockID == 0 )
 	{
 		CHECK_OP(false, NOOP);
@@ -140,13 +138,6 @@ void CPluginKLData::SetQuoteReqData(int nCmdID, const Json::Value &jsnVal, SOCKE
 		req_info.dwReqTick = ::GetTickCount();
 		ReplyDataReqError(&req_info, PROTO_ERR_PARAM_ERR, L"²ÎÊý´íÎó£¡");
 		return;
-	}
-
-	if ( m_mapStockIDCode.find(nStockID) == m_mapStockIDCode.end() )
-	{
-		StockMktCode &mkt_code = m_mapStockIDCode[nStockID];
-		mkt_code.nMarketType = req.body.nStockMarket;
-		mkt_code.strCode = req.body.strStockCode;
 	}
 
 	StockDataReq *pReqInfo = new StockDataReq;
@@ -425,8 +416,8 @@ void CPluginKLData::ClearQuoteDataCache()
 				m_mapCacheData.erase(std::make_pair(nStockID, nKLType));
 				it_todel = m_mapCacheToDel.erase(it_todel);
 
-				StockMktCode stkMktCode;
-				if ( m_pQuoteServer && GetStockMktCode(nStockID, stkMktCode) )
+				StockMktCodeEx stkMktCode;
+				if ( m_pQuoteServer && IFTStockUtil::GetStockMktCode(nStockID, stkMktCode) )
 				{				
 					//m_pQuoteServer->SubscribeQuote(stkMktCode.strCode, (StockMktType)stkMktCode.nMarketType, QUOTE_SERVER_TYPE, false, nKLType);					
 				}
@@ -477,7 +468,7 @@ void CPluginKLData::HandleTimeoutReq()
 				continue;
 			}
 
-			if ( int(dwTickNow - pReq->dwReqTick) > 5000 )
+			if (int(dwTickNow - pReq->dwReqTick) > REQ_TIMEOUT_MILLISECOND)
 			{
 				CStringA strTimeout;
 				strTimeout.Format("KLData req timeout, market=%d, code=%s", pReq->req.body.nStockMarket, pReq->req.body.strStockCode.c_str());
@@ -672,18 +663,6 @@ void CPluginKLData::SetTimerClearCache(bool bStartOrStop)
 	}
 }
 
-bool CPluginKLData::GetStockMktCode(INT64 nStockID, StockMktCode &stkMktCode)
-{
-	MAP_STOCK_ID_CODE::iterator it_find = m_mapStockIDCode.find(nStockID);
-	if ( it_find != m_mapStockIDCode.end())
-	{
-		stkMktCode = it_find->second;
-		return true;
-	}
-
-	CHECK_OP(false, NOOP);
-	return false;
-}
 
 void CPluginKLData::ClearAllReqCache()
 {
@@ -702,7 +681,6 @@ void CPluginKLData::ClearAllReqCache()
 	m_mapReqInfo.clear();
 	m_mapCacheData.clear();
 	m_mapCacheToDel.clear();
-	m_mapStockIDCode.clear();
 }
 
 void CPluginKLData::SendAck(DWORD dwCookie, int nCSResult)

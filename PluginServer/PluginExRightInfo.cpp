@@ -81,9 +81,8 @@ void CPluginExRightInfo::SetQuoteReqData(int nCmdID, const Json::Value &jsnVal, 
 	vtReqStockID.reserve(nStockNum);
 	for (int n = 0; n < nStockNum; n++ )
 	{
-		std::wstring strCode;
-		CA::UTF2Unicode(req.body.vtReqExRightInfo[n].strStockCode.c_str(), strCode);
-		INT64 nStockID = m_pQuoteData->GetStockHashVal(strCode.c_str(), (StockMktType)req.body.vtReqExRightInfo[n].nStockMarket);
+		INT64 nStockID = IFTStockUtil::GetStockHashVal(req.body.vtReqExRightInfo[n].strStockCode.c_str(), 
+				(StockMktType)req.body.vtReqExRightInfo[n].nStockMarket);
 		if ( nStockID == 0 )
 		{
 			CHECK_OP(false, NOOP);

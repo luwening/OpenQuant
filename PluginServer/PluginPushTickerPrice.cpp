@@ -59,7 +59,7 @@ void CPluginPushTickerPrice::PushStockData(INT64 ddwStockHash, SOCKET sock)
 	std::vector<PluginTickItem> vtTickPrice;
 	vtTickPrice.resize(200);
 	int nTickFillCount = m_pQuoteData->FillTickArr(ddwStockHash, _vect2Ptr(vtTickPrice), _vectIntSize(vtTickPrice), nLastSequnce);
-	if ( nTickFillCount >= 0 )
+	if ( nTickFillCount > 0)
 	{
 		QuoteAckDataBody ackbody;
 		ackbody.nNextSequence = -1;
@@ -76,7 +76,7 @@ void CPluginPushTickerPrice::PushStockData(INT64 ddwStockHash, SOCKET sock)
 		CA::Unicode2UTF(szStockCode, ack.body.strStockCode);
 
 		int nValidNum = min(nTickFillCount, 200);
-		INT64 nMaxSequence = 0;
+		INT64 nMaxSequence = nLastSequnce;
 		for ( int n = 0; n < nValidNum; n++ )
 		{
 			PushTickerAckItem tickItem;
@@ -113,7 +113,6 @@ void CPluginPushTickerPrice::PushStockData(INT64 ddwStockHash, SOCKET sock)
 			}
 		}
 	}
-
 }
 
 void CPluginPushTickerPrice::NotifySocketClosed(SOCKET sock)
@@ -122,6 +121,33 @@ void CPluginPushTickerPrice::NotifySocketClosed(SOCKET sock)
 	if (itmap != m_mapPushInfo.end())
 	{
 		m_mapPushInfo.erase(itmap);
+	}
+}
+
+//市场切换了交易日，记录的推送信息要清掉 
+void CPluginPushTickerPrice::NotifyMarketNewTrade(StockMktType eMkt)
+{
+	CHECK_RET(m_pQuoteData, NORET);
+
+	std::map<SOCKET, std::vector<Stock_PushInfo>>::iterator itmap = m_mapPushInfo.begin();
+	for (; itmap != m_mapPushInfo.end(); itmap++)
+	{
+		std::vector<Stock_PushInfo>& vtStock = itmap->second;
+		std::vector<Stock_PushInfo>::iterator itStock = vtStock.begin();
+		while (itStock != vtStock.end())
+		{
+			StockMktType eStockMkt = StockMkt_None;
+			wchar_t szStockCode[16] = {}, szStockName[128] = { 0 };
+			m_pQuoteData->GetStockInfoByHashVal(itStock->ddwStockID, eStockMkt, szStockCode, szStockName);
+			if (eMkt == eStockMkt)
+			{
+				itStock = vtStock.erase(itStock);
+			}
+			else
+			{
+				++itStock;
+			}
+		}
 	}
 }
 
