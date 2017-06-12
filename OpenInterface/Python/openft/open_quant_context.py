@@ -3,7 +3,7 @@
 from .quote_query import *
 from .trade_query import *
 from multiprocessing import Queue
-from threading import *
+from threading import Lock, Thread
 import socket
 import select
 import sys
@@ -364,6 +364,10 @@ class OpenContextBase(object):
         self._handlers_ctx = None
         self._proc_run = False
         self._net_proc = None
+        self._sync_lock = Lock()
+
+        if not self.__sync_socket_enable and not self.__async_socket_enable:
+            raise 'you should sepcify at least one socket type to create !'
 
         self._socket_reconnect_and_wait_ready()
 
@@ -462,18 +466,22 @@ class OpenContextBase(object):
         send_req = self._send_sync_req
 
         def sync_query_processor(**kargs):
-            ret_code, msg, req_str = pack_func(**kargs)
-            if ret_code == RET_ERROR:
-                return ret_code, msg, None
+            try:
+                self._sync_lock.acquire()
+                ret_code, msg, req_str = pack_func(**kargs)
+                if ret_code == RET_ERROR:
+                    return ret_code, msg, None
 
-            ret_code, msg, rsp_str = send_req(req_str)
-            if ret_code == RET_ERROR:
-                return ret_code, msg, None
+                ret_code, msg, rsp_str = send_req(req_str)
+                if ret_code == RET_ERROR:
+                    return ret_code, msg, None
 
-            ret_code, msg, content = unpack_func(rsp_str)
-            if ret_code == RET_ERROR:
-                return ret_code, msg, None
-            return RET_OK, msg, content
+                ret_code, msg, content = unpack_func(rsp_str)
+                if ret_code == RET_ERROR:
+                    return ret_code, msg, None
+                return RET_OK, msg, content
+            finally:
+                self._sync_lock.release()
         return sync_query_processor
 
     def _stop_net_proc(self):
@@ -518,8 +526,9 @@ class OpenContextBase(object):
                 del tmp_del
 
             #create sync socket and loop wait to connect api server
-            self._sync_net_ctx = _SyncNetworkQueryCtx(self.__host, self.__port, long_conn=True)
-            self.__wait_socket_ready()
+            if self.__sync_socket_enable:
+                self._sync_net_ctx = _SyncNetworkQueryCtx(self.__host, self.__port, long_conn=True)
+                self.__wait_socket_ready()
 
             #create async socket (for push data)
             if self.__async_socket_enable:
@@ -532,9 +541,10 @@ class OpenContextBase(object):
             self.on_api_socket_reconnected()
 
             #run thread to check sync socket state
-            self._check_sync_sock = Thread(target=self._thread_check_sync_sock)
-            self._check_sync_sock.setDaemon(True)
-            self._check_sync_sock.start()
+            if self.__async_socket_enable:
+                self._check_sync_sock = Thread(target=self._thread_check_sync_sock)
+                self._check_sync_sock.setDaemon(True)
+                self._check_sync_sock.start()
         finally:
             self._is_socket_reconnecting = False
 
@@ -591,8 +601,14 @@ class OpenQuoteContext(OpenContextBase):
 
     def on_api_socket_reconnected(self):
         # auto subscribe
-        for (stock_code, data_type, push) in self._ctx_subscribe:
-            self.subscribe(stock_code, data_type, push)
+        set_sub = self._ctx_subscribe.copy()
+        for (stock_code, data_type, push) in set_sub:
+            for i in range(3):
+                ret, _= self.subscribe(stock_code, data_type, push)
+                if ret == 0:
+                    break
+                else:
+                    sleep(1)
 
     def get_trading_days(self, market, start_date=None, end_date=None):
 
@@ -1066,6 +1082,7 @@ class OpenHKTradeContext(OpenContextBase):
                 ret, data = self.unlock_trade(self._ctx_unlock)
                 if ret == RET_OK:
                     break
+                sleep(1)
 
     def unlock_trade(self, password):
         query_processor = self._get_sync_query_processor(UnlockTrade.pack_req,
