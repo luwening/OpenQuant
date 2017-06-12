@@ -287,11 +287,14 @@ class _AsyncNetworkManager(asyncore.dispatcher_with_send):
         self.__close_handler = close_handler
 
         asyncore.dispatcher_with_send.__init__(self)
-        self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.connect((self.__host, self.__port))
+        self._socket_create_and_connect()
+
         time.sleep(0.1)
         self.rsp_buf = b''
         self.handler_ctx = handler_ctx
+
+    def reconnect(self):
+        self._socket_create_and_connect()
 
     def handle_read(self):
         """
@@ -328,6 +331,13 @@ class _AsyncNetworkManager(asyncore.dispatcher_with_send):
     def handle_close(self):
       if self.__close_handler is not None:
           self.__close_handler._notify_async_socket_close(self)
+
+    def _socket_create_and_connect(self):
+        if self.socket is not None:
+            self.close()
+        if self.__host is not None and self.__port is not None:
+            self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.connect((self.__host, self.__port))
 
 
 def _net_proc(async_ctx, req_queue):
@@ -515,11 +525,6 @@ class OpenContextBase(object):
             if self._check_sync_sock is not None:
                 self._check_sync_sock = None
 
-            if self._async_ctx is not None:
-                tmp_del = self._async_ctx
-                self._async_ctx = None
-                del tmp_del
-
             if self._sync_net_ctx is not None:
                 tmp_del = self._sync_net_ctx
                 self._sync_net_ctx = None
@@ -532,16 +537,19 @@ class OpenContextBase(object):
 
             #create async socket (for push data)
             if self.__async_socket_enable:
-                self._handlers_ctx = HandlerContext()
-                self._req_queue = Queue()
-                self._async_ctx = _AsyncNetworkManager(self.__host, self.__port, self._handlers_ctx, self)
-                self._net_proc = Thread(target=_net_proc, args=(self._async_ctx, self._req_queue,))
+                if self._async_ctx is None:
+                    self._handlers_ctx = HandlerContext()
+                    self._req_queue = Queue()
+                    self._async_ctx = _AsyncNetworkManager(self.__host, self.__port, self._handlers_ctx, self)
+                    self._net_proc = Thread(target=_net_proc, args=(self._async_ctx, self._req_queue,))
+                else:
+                    self._async_ctx.reconnect()
 
             # notify reconnected
             self.on_api_socket_reconnected()
 
             #run thread to check sync socket state
-            if self.__async_socket_enable:
+            if self.__sync_socket_enable:
                 self._check_sync_sock = Thread(target=self._thread_check_sync_sock)
                 self._check_sync_sock.setDaemon(True)
                 self._check_sync_sock.start()
