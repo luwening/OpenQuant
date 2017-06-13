@@ -481,7 +481,7 @@ class MarketSnapshotQuery:
                           'wrt_delta': float(record['Wrt_Delta']) / 1000,
                           'wrt_implied_volatility': float(record['Wrt_ImpliedVolatility']) / 1000,
                           'wrt_premium': float(record['Wrt_Premium']) / 1000,
-                          'lot_size': int(record['LotSize'])
+                          'lot_size':int(record['LotSize'])
                           } for record in raw_snapshot_list]
 
         return RET_OK, "", snapshot_list
