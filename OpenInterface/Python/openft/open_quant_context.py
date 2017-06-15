@@ -1,16 +1,18 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 
 from .quote_query import *
 from .trade_query import *
 from multiprocessing import Queue
-from threading import Thread
+from threading import RLock, Thread
 import socket
+import select
 import sys
 import pandas as pd
 import asyncore
 import socket as sock
 import time
-
+from time import sleep
+from abc import ABCMeta, abstractmethod
 
 class RspHandlerBase(object):
     def __init__(self):
@@ -184,11 +186,14 @@ class _SyncNetworkQueryCtx:
     connection is persisted after a query session finished, waiting for next query.
 
     """
-    def __init__(self, host, port, long_conn=False):
+    def __init__(self, host, port, long_conn=True, connected_handler = None):
         self.s = None
         self.__host = host
         self.__port = port
         self.long_conn = long_conn
+        self._socket_lock = RLock()
+        self._connected_handler = connected_handler
+        self._is_loop_connecting = False
 
     def _create_session(self):
         if self.long_conn is True and self.s is not None:
@@ -201,28 +206,29 @@ class _SyncNetworkQueryCtx:
         s.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
         self.s = s
 
+    def close_socket(self):
+        self._socket_lock.acquire()
+        self._force_close_session()
+        self._socket_lock.release()
+
+    def is_sock_ok(self, timeout_select):
+        self._socket_lock.acquire()
         try:
-            self.s.connect((self.__host, self.__port))
-        except Exception:
-            err = sys.exc_info()[1]
-            error_str = ERROR_STR_PREFIX + str(err)
-            self._force_close_session()
-            return RET_ERROR, error_str
+            ret = self._is_socket_ok(timeout_select)
+        finally:
+            self._socket_lock.release()
+        return ret
 
-        return RET_OK, ""
+    def _is_socket_ok(self, timeout_select):
+        if self.s == None:
+            return False
+        _, _, sel_except = select.select([self.s], [], [], timeout_select)
+        if self.s in sel_except:
+            return False
+        return  True
 
-    def _force_close_session(self):
-        if self.s is None:
-            return
-        self.s.close()
-        self.s = None
-
-    def _close_session(self):
-
-        if self.s is None or self.long_conn is True:
-            return
-        self.s.close()
-        self.s = None
+    def reconnect(self):
+        self._socket_create_and_loop_connect()
 
     def network_query(self, req_str):
         """
@@ -230,37 +236,117 @@ class _SyncNetworkQueryCtx:
         :param req_str
         :return: rsp_str
         """
-
-        ret, msg = self._create_session()
-        if ret != RET_OK:
-            return ret, msg, None
-
-        s_buf = str2binary(req_str)
         try:
+            ret, msg = self._create_session()
+            self._socket_lock.acquire()
+            if ret != RET_OK:
+                return ret, msg, None
+
+            rsp_str = ''
+            s_buf = str2binary(req_str)
             s_cnt = self.s.send(s_buf)
+
+            rsp_buf = b''
+            while rsp_buf.find(b'\r\n\r\n') < 0:
+
+                try:
+                    recv_buf = self.s.recv(5 * 1024 * 1024)
+                    rsp_buf += recv_buf
+                except Exception:
+                    err = sys.exc_info()[1]
+                    error_str = ERROR_STR_PREFIX + str(
+                        err) + ' when recving after sending %s bytes. For req: ' % s_cnt + req_str
+                    self._force_close_session()
+                    return RET_ERROR, error_str, None
+
+            rsp_str = binary2str(rsp_buf)
+            self._close_session()
         except Exception:
             err = sys.exc_info()[1]
             error_str = ERROR_STR_PREFIX + str(err) + ' when sending. For req: ' + req_str
 
             self._force_close_session()
             return RET_ERROR, error_str, None
+        finally:
+            self._socket_lock.release()
 
-        rsp_buf = b''
-        while rsp_buf.find(b'\r\n\r\n') < 0:
+        return RET_OK, "", rsp_str
 
+    def _socket_create_and_loop_connect(self):
+        '''
+        :return: (err_code, err_msg)
+        '''
+        self._socket_lock.acquire()
+        is_socket_lock = True
+
+        if self._is_loop_connecting:
+            return RET_ERROR, "is loop connecting, can't create_session"
+        self._is_loop_connecting = True
+
+        if self.s is not None:
+            self._force_close_session()
+
+        while True:
             try:
-                recv_buf = self.s.recv(5 * 1024 * 1024)
-                rsp_buf += recv_buf
+                if not is_socket_lock:
+                    is_socket_lock = True
+                    self._socket_lock.acquire()
+                s = sock.socket(sock.AF_INET, sock.SOCK_STREAM)
+                s.setsockopt(sock.SOL_SOCKET, sock.SO_REUSEADDR, 0)
+                s.setsockopt(sock.SOL_SOCKET, sock.SO_LINGER, 0)
+                s.settimeout(10)
+                #s.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+                self.s = s
+                self.s.connect((self.__host, self.__port))
             except Exception:
                 err = sys.exc_info()[1]
-                error_str = ERROR_STR_PREFIX + str(
-                    err) + ' when recving after sending %s bytes. For req: ' % s_cnt + req_str
-                self._force_close_session()
-                return RET_ERROR, error_str, None
+                err_msg = ERROR_STR_PREFIX + str(err)
+                print("socket connect err:{}".format(err_msg))
+                sleep(1)
+                continue
 
-        rsp_str = binary2str(rsp_buf)
-        self._close_session()
-        return RET_OK, "", rsp_str
+            if self._connected_handler is not None:
+                is_socket_lock = False
+                self._socket_lock.release()
+
+                sock_ok, is_retry = self._connected_handler._notify_sync_socket_connected(self)
+                if not sock_ok:
+                    self._force_close_session()
+                    if is_retry:
+                        print("wait to connect futunn plugin server")
+                        sleep(1)
+                        continue
+                    else:
+                        return RET_ERROR, "obj is closed"
+                else:
+                    break
+        self._is_loop_connecting = False
+        if is_socket_lock:
+            is_socket_lock = False
+            self._socket_lock.release()
+
+        return RET_OK, ''
+
+    def _create_session(self):
+        if self.long_conn is True and self.s is not None:
+            return RET_OK, ""
+        ret, msg = self._socket_create_and_loop_connect()
+        if ret != RET_OK:
+            return ret, msg
+        return RET_OK, ""
+
+    def _force_close_session(self):
+        if self.s is None:
+            return
+        self.s.close()
+        del self.s
+        self.s = None
+
+    def _close_session(self):
+        if self.s is None or self.long_conn is True:
+            return
+        self.s.close()
+        self.s = None
 
     def __del__(self):
         if self.s is not None:
@@ -270,16 +356,23 @@ class _SyncNetworkQueryCtx:
 
 class _AsyncNetworkManager(asyncore.dispatcher_with_send):
 
-    def __init__(self, host, port, handler_ctx):
+    def __init__(self, host, port, handler_ctx, close_handler = None):
         self.__host = host
         self.__port = port
+        self.__close_handler = close_handler
 
         asyncore.dispatcher_with_send.__init__(self)
-        self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.connect((self.__host, self.__port))
+        self._socket_create_and_connect()
+
         time.sleep(0.1)
         self.rsp_buf = b''
         self.handler_ctx = handler_ctx
+
+    def reconnect(self):
+        self._socket_create_and_connect()
+
+    def close_socket(self):
+        self.close()
 
     def handle_read(self):
         """
@@ -313,6 +406,17 @@ class _AsyncNetworkManager(asyncore.dispatcher_with_send):
     def __del__(self):
         self.close()
 
+    def handle_close(self):
+      if self.__close_handler is not None:
+          self.__close_handler._notify_async_socket_close(self)
+
+    def _socket_create_and_connect(self):
+        if self.socket is not None:
+            self.close()
+        if self.__host is not None and self.__port is not None:
+            self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.connect((self.__host, self.__port))
+
 
 def _net_proc(async_ctx, req_queue):
     """
@@ -330,45 +434,82 @@ def _net_proc(async_ctx, req_queue):
 
         asyncore.loop(timeout=0.001, count=5)
 
+class OpenContextBase(object):
+    metaclass__ = ABCMeta
 
-class OpenQuoteContext:
-    def __init__(self, host="127.0.0.1", port=11111):
-        """
-        create a context to established a network connection
-        :param host:the address of the network connection
-        :param sync_port:network connection port for synchronous communication
-        :param async_port:network connection port for asynchronous communication,receiving client data push
-        """
+    def __init__(self, host, port, sync_enable, async_enable):
         self.__host = host
-        self.__sync_port = port
-        self.__async_port = port
+        self.__port = port
+        self.__sync_socket_enable = sync_enable
+        self.__async_socket_enable = async_enable
+        self._async_ctx = None
+        self._sync_net_ctx = None
+        self._thread_check_sync_sock = None
+        self._thread_is_exit = False
+        self._check_last_req_time = None
+        self._is_socket_reconnecting = False
+        self._is_obj_closed = False
 
-        self._req_queue = Queue()
-        self._handlers_ctx = HandlerContext()
-
-        self._async_ctx = _AsyncNetworkManager(self.__host, self.__async_port, self._handlers_ctx)
+        self._req_queue = None
+        self._handlers_ctx = None
         self._proc_run = False
-        self._sync_net_ctx = _SyncNetworkQueryCtx(self.__host, self.__sync_port, long_conn=True)
-        self._net_proc = Thread(target=_net_proc,
-                                args=(self._async_ctx,
-                                      self._req_queue,))
+        self._net_proc = None
+        self._sync_query_lock = RLock()
+
+        if not self.__sync_socket_enable and not self.__async_socket_enable:
+            raise 'you should sepcify at least one socket type to create !'
+
+        self._socket_reconnect_and_wait_ready()
 
     def __del__(self):
-        if self._proc_run:
-            self._proc_run = False
-            self._stop_net_proc()
-            self._net_proc.join(timeout=5)
+       self._close()
 
-    def set_handler(self, handler):
-        return self._handlers_ctx.set_handler(handler)
+    @abstractmethod
+    def close(self):
+        '''
+        to call close old obj before loop create new, otherwise socket will encounter erro 10053 or more!
+        '''
+        self._close()
+
+    @abstractmethod
+    def on_api_socket_reconnected(self):
+        '''
+        # callback after reconnect ok
+        '''
+        print("on_api_socket_reconnected obj ID={}".format(id(self)))
+        pass
+
+    def _close(self):
+
+        self._is_obj_closed = True
+        self.stop()
+
+        if self._thread_check_sync_sock is not None:
+            self._thread_check_sync_sock.join(timeout=10)
+            self._thread_check_sync_sock = None
+            assert  self._thread_is_exit
+
+        if self._sync_net_ctx is not None:
+            self._sync_net_ctx.close_socket()
+            self._sync_net_ctx = None
+
+        if self._async_ctx is not None:
+            self._async_ctx.close_socket()
+            self._async_ctx = None
+
+        if self._sync_query_lock is not None:
+            self._sync_query_lock = None
+
+        self._req_queue = None
+        self._handlers_ctx = None
 
     def start(self):
         """
         start the receiving thread,asynchronously receive the data pushed by the client
         """
-        self._net_proc = Thread(target=_net_proc,
-                                args=(self._async_ctx,
-                                      self._req_queue,))
+        if self._proc_run is True or self._net_proc is None:
+            return
+
         self._net_proc.start()
         self._proc_run = True
 
@@ -379,10 +520,31 @@ class OpenQuoteContext:
         if self._proc_run:
             self._stop_net_proc()
             self._net_proc.join(timeout=5)
+            self._net_proc = None
             self._proc_run = False
-        self._net_proc = Thread(target=_net_proc,
-                                args=(self._async_ctx,
-                                      self._req_queue,))
+
+    def set_handler(self, handler):
+        '''
+        set async push hander obj
+        :param handler: RspHandlerBase deviced obj
+        :return: ret_error or ret_ok
+        '''
+        if self._handlers_ctx is not None:
+            return self._handlers_ctx.set_handler(handler)
+        return RET_ERROR
+
+    def get_global_state(self):
+        '''
+        get api server(exe) global state
+        :return: RET_OK, state_dict | err_code, msg
+        '''
+        query_processor = self._get_sync_query_processor(GlobalStateQuery.pack_req,
+                                                         GlobalStateQuery.unpack_rsp)
+        kargs = {"state_type": 0}
+        ret_code, msg, state_dict = query_processor(**kargs)
+        if ret_code != RET_OK:
+            return ret_code, msg
+        return RET_OK, state_dict
 
     def _send_sync_req(self, req_str):
         """
@@ -420,19 +582,34 @@ class OpenQuoteContext:
         send_req = self._send_sync_req
 
         def sync_query_processor(**kargs):
-            ret_code, msg, req_str = pack_func(**kargs)
-            if ret_code == RET_ERROR:
-                return ret_code, msg, None
 
-            ret_code, msg, rsp_str = send_req(req_str)
-            if ret_code == RET_ERROR:
-                return ret_code, msg, None
+            msg_obj_del = "the object may have been deleted!"
+            if self._is_obj_closed or self._sync_query_lock is None:
+                return RET_ERROR, msg_obj_del, None
+            try:
+                self._sync_query_lock.acquire()
+                if self._is_obj_closed:
+                    return RET_ERROR, msg_obj_del, None
 
-            ret_code, msg, content = unpack_func(rsp_str)
-            if ret_code == RET_ERROR:
-                return ret_code, msg, None
-            return RET_OK, msg, content
+                ret_code, msg, req_str = pack_func(**kargs)
+                if ret_code == RET_ERROR:
+                    return ret_code, msg, None
 
+                ret_code, msg, rsp_str = send_req(req_str)
+                if ret_code == RET_ERROR:
+                    return ret_code, msg, None
+
+                ret_code, msg, content = unpack_func(rsp_str)
+                if ret_code == RET_ERROR:
+                    return ret_code, msg, None
+                return RET_OK, msg, content
+            finally:
+                try:
+                    if self._sync_query_lock:
+                        self._sync_query_lock.release()
+                except Exception:
+                    err = sys.exc_info()[1]
+                    print(err)
         return sync_query_processor
 
     def _stop_net_proc(self):
@@ -453,6 +630,127 @@ class OpenQuoteContext:
             error_str = ERROR_STR_PREFIX + "Cannot send stop request. queue is full. The size: %s" \
                                            % self._req_queue.qsize()
             return RET_ERROR, error_str
+
+    def _socket_reconnect_and_wait_ready(self):
+        '''
+        sync_socket & async_socket recreate
+        :return: None
+        '''
+        if self._is_socket_reconnecting or self._is_obj_closed or self._sync_query_lock is None:
+            return
+
+        try:
+            self._is_socket_reconnecting = True
+            self._sync_query_lock.acquire()
+
+            #create async socket (for push data)
+            if self.__async_socket_enable:
+                if self._async_ctx is None:
+                    self._handlers_ctx = HandlerContext()
+                    self._req_queue = Queue()
+                    self._async_ctx = _AsyncNetworkManager(self.__host, self.__port, self._handlers_ctx, self)
+                    if self._net_proc is None:
+                        self._net_proc = Thread(target=_net_proc, args=(self._async_ctx, self._req_queue,))
+                else:
+                    self._async_ctx.reconnect()
+
+            # create sync socket and loop wait to connect api server
+            if self.__sync_socket_enable:
+                self._thread_check_sync_sock = None
+                if self._sync_net_ctx is None:
+                    self._sync_net_ctx = _SyncNetworkQueryCtx(self.__host, self.__port, long_conn=True, connected_handler=self)
+                self._sync_net_ctx.reconnect()
+
+            # notify reconnected
+            self.on_api_socket_reconnected()
+
+            #run thread to check sync socket state
+            if self.__sync_socket_enable:
+                self._thread_check_sync_sock = Thread(target=self._thread_check_sync_sock_fun)
+                self._thread_check_sync_sock.setDaemon(True)
+                self._thread_check_sync_sock.start()
+        finally:
+            try:
+                self._is_socket_reconnecting = False
+                if self._sync_query_lock:
+                    self._sync_query_lock.release()
+            except Exception:
+                err = sys.exc_info()[1]
+                print(err)
+
+    def _notify_sync_socket_connected(self, sync_ctxt):
+        '''
+        :param sync_ctxt:
+        :return: (is_socket_ok[bool], is_to_retry_connect[bool])
+        '''
+        if self._is_obj_closed or self._sync_net_ctx is None or self._sync_net_ctx is not sync_ctxt:
+            return False, False
+
+        is_ready = False
+        ret_code, state_dict = self.get_global_state()
+        if ret_code == 0:
+            is_ready = int(state_dict['Quote_Logined']) != 0 and int(state_dict['Trade_Logined']) != 0
+        return is_ready, True
+
+    def _notify_async_socket_close(self, async_ctx):
+        '''
+         AsyncNetworkManager onclose callback
+        '''
+        if self._is_obj_closed or self._async_ctx is None or async_ctx is not self._async_ctx:
+            return
+        # auto reconnect
+        self._socket_reconnect_and_wait_ready()
+
+    def _thread_check_sync_sock_fun(self):
+        '''
+        thread fun : timer to check socket state
+        '''
+        thread_handle = self._thread_check_sync_sock
+        while True:
+            if self._is_obj_closed or self._thread_check_sync_sock is not thread_handle:
+                self._thread_is_exit = True
+                return
+            sync_net_ctx = self._sync_net_ctx
+            if sync_net_ctx is None:
+                self._thread_is_exit = True
+                return
+            # select sock to get err state
+            if not sync_net_ctx.is_sock_ok(0.01):
+                if self._thread_check_sync_sock is thread_handle and not self._is_obj_closed:
+                    print("thread check socket error")
+                    self._socket_reconnect_and_wait_ready()
+                self._thread_is_exit = True
+                return
+            else:
+                sleep(0.1)
+            #send req loop per 10 seconds
+            cur_time = datetime.now().timestamp()
+            if (self._check_last_req_time is None) or (cur_time - self._check_last_req_time > 10):
+                self._check_last_req_time = cur_time
+                if self._thread_check_sync_sock is thread_handle:
+                    self.get_global_state()
+
+class OpenQuoteContext(OpenContextBase):
+    def __init__(self, host = '127.0.0.1', port = 11111):
+        self._ctx_subscribe = set()
+        super(OpenQuoteContext, self).__init__(host, port, True, True)
+
+    def close(self):
+        '''
+        to call close old obj before loop create new, otherwise socket will encounter erro 10053 or more!
+        '''
+        super(OpenQuoteContext, self).close()
+
+    def on_api_socket_reconnected(self):
+        # auto subscribe
+        set_sub = self._ctx_subscribe.copy()
+        for (stock_code, data_type, push) in set_sub:
+            for i in range(3):
+                ret, _= self.subscribe(stock_code, data_type, push)
+                if ret == 0:
+                    break
+                else:
+                    sleep(1)
 
     def get_trading_days(self, market, start_date=None, end_date=None):
 
@@ -716,6 +1014,9 @@ class OpenQuoteContext:
         kargs = {'stock_str': stock_code, 'data_type': data_type}
         ret_code, msg, _ = query_processor(**kargs)
 
+        # update subscribe context info
+        self._ctx_subscribe.add((stock_code, data_type, push))
+
         if ret_code != RET_OK:
             return RET_ERROR, msg
 
@@ -750,6 +1051,9 @@ class OpenQuoteContext:
                                                          SubscriptionQuery.unpack_unsubscribe_rsp)
         # the keys of kargs should be corresponding to the actual function arguments
         kargs = {'stock_str': stock_code, 'data_type': data_type}
+
+        # update subscribe context info
+        self._ctx_subscribe.remove((stock_code, data_type, unpush))
 
         ret_code, msg, _ = query_processor(**kargs)
 
@@ -905,52 +1209,28 @@ class OpenQuoteContext:
 
         return RET_OK, orderbook
 
-    def get_global_state(self):
-        query_processor = self._get_sync_query_processor(GlobalStateQuery.pack_req,
-                                                         GlobalStateQuery.unpack_rsp)
-        kargs = {"state_type": 0}
 
-        ret_code, msg, state_dict = query_processor(**kargs)
-
-        if ret_code != RET_OK:
-            return ret_code, msg
-
-        return RET_OK, state_dict
-
-
-class OpenHKTradeContext:
+class OpenHKTradeContext(OpenContextBase):
     cookie = 100000
 
     def __init__(self, host="127.0.0.1", port=11111):
-        self.__host = host
-        self.__sync_port = port
-        self._sync_net_ctx = _SyncNetworkQueryCtx(self.__host, self.__sync_port, long_conn=True)
+        self._ctx_unlock = None
+        super(OpenHKTradeContext, self).__init__(host, port, True, False)
 
-    def _send_sync_req(self, req_str):
-        ret, msg, content = self._sync_net_ctx.network_query(req_str)
-        if ret != RET_OK:
-            return RET_ERROR, msg, None
-        return RET_OK, msg, content
+    def close(self):
+        '''
+        to call close old obj before loop create new, otherwise socket will encounter erro 10053 or more!
+        '''
+        super(OpenHKTradeContext, self).close()
 
-    def _get_sync_query_processor(self, pack_func, unpack_func):
-        send_req = self._send_sync_req
-
-        def sync_query_processor(**kargs):
-            ret_code, msg, req_str = pack_func(**kargs)
-            if ret_code == RET_ERROR:
-                return ret_code, msg, None
-
-            ret_code, msg, rsp_str = send_req(req_str)
-
-            if ret_code == RET_ERROR:
-                return ret_code, msg, None
-
-            ret_code, msg, content = unpack_func(rsp_str)
-            if ret_code == RET_ERROR:
-                return ret_code, msg, None
-            return RET_OK, msg, content
-
-        return sync_query_processor
+    def on_api_socket_reconnected(self):
+        # auto unlock
+        if self._ctx_unlock is not None:
+            for i in range(3):
+                ret, data = self.unlock_trade(self._ctx_unlock)
+                if ret == RET_OK:
+                    break
+                sleep(1)
 
     def unlock_trade(self, password):
         query_processor = self._get_sync_query_processor(UnlockTrade.pack_req,
@@ -963,6 +1243,9 @@ class OpenHKTradeContext:
         if ret_code != RET_OK:
             return RET_ERROR, msg
 
+        # reconnected to auto unlock
+        if RET_OK == ret_code:
+            self._ctx_unlock = password
         return RET_OK, None
 
     def place_order(self, price, qty, strcode, orderside, ordertype=0, envtype=0):
@@ -1138,39 +1421,26 @@ class OpenHKTradeContext:
         return RET_OK, deal_list_table
 
 
-class OpenUSTradeContext:
+class OpenUSTradeContext(OpenContextBase):
     cookie = 100000
 
-    def __init__(self, host="127.0.0.1", sync_port=11111, async_port=11111):
-        self.__host = host
-        self.__sync_port = sync_port
-        self._sync_net_ctx = _SyncNetworkQueryCtx(self.__host, self.__sync_port, long_conn=True)
+    def __init__(self, host="127.0.0.1", port=11111):
+        self._ctx_unlock = None
+        super(OpenUSTradeContext, self).__init__(host, port, True, False)
 
-    def _send_sync_req(self, req_str):
-        ret, msg, content = self._sync_net_ctx.network_query(req_str)
-        if ret != RET_OK:
-            return RET_ERROR, msg, None
-        return RET_OK, msg, content
+    def close(self):
+        '''
+        to call close old obj before loop create new, otherwise socket will encounter erro 10053 or more!
+        '''
+        super(OpenUSTradeContext, self).close()
 
-    def _get_sync_query_processor(self, pack_func, unpack_func):
-        send_req = self._send_sync_req
-
-        def sync_query_processor(**kargs):
-            ret_code, msg, req_str = pack_func(**kargs)
-            if ret_code == RET_ERROR:
-                return ret_code, msg, None
-
-            ret_code, msg, rsp_str = send_req(req_str)
-
-            if ret_code == RET_ERROR:
-                return ret_code, msg, None
-
-            ret_code, msg, content = unpack_func(rsp_str)
-            if ret_code == RET_ERROR:
-                return ret_code, msg, None
-            return RET_OK, msg, content
-
-        return sync_query_processor
+    def on_api_socket_reconnected(self):
+        #auto unlock
+        if self._ctx_unlock is not None:
+            for i in range(3):
+                ret, data = self.unlock_trade(self._ctx_unlock)
+                if ret == RET_OK:
+                    break
 
     def unlock_trade(self, password):
         query_processor = self._get_sync_query_processor(UnlockTrade.pack_req,
@@ -1182,6 +1452,10 @@ class OpenUSTradeContext:
 
         if ret_code != RET_OK:
             return RET_ERROR, msg
+
+        #reconnected to auto unlock
+        if RET_OK == ret_code:
+            self._ctx_unlock = password
 
         return RET_OK, None
 
