@@ -15,7 +15,7 @@ import threading
   使用请先配置正确参数:
   api_svr_ip: (string)ip
   api_svr_port: (int)port
-  unlock_password: (string)交易解锁密码
+  unlock_password: (string)交易解锁密码, 必需修改！！！
   test_code: (string)股票
   trade_env: (int)0 真实交易 1仿真交易  ( 美股暂不支持仿真）
 '''
@@ -24,7 +24,7 @@ import threading
 api_svr_ip = '127.0.0.1'
 api_svr_port = 11111
 unlock_password = ""
-test_code = 'HK.800000' #'US.BABA' #'HK.00700'
+test_code = 'HK.00700' #'US.BABA' #'HK.00700'
 trade_env = 0
 #
 
@@ -33,18 +33,18 @@ def make_order_and_cancel(api_svr_ip, api_svr_port , unlock_password, test_code,
         raise "请先配置交易解锁密码!"
 
     # 创建行情api
-    quote_ctx = OpenQuoteContext(host=api_svr_ip, async_port=api_svr_port)
+    quote_ctx = OpenQuoteContext(host=api_svr_ip, port=api_svr_port)
     # 定阅摆盘
     quote_ctx.subscribe(test_code, "ORDER_BOOK", push=False)
 
     # 创建交易api
     is_hk_trade = 'HK.' in (test_code)
     if is_hk_trade:
-        trade_ctx = OpenHKTradeContext(host=api_svr_ip, async_port=api_svr_port)
+        trade_ctx = OpenHKTradeContext(host=api_svr_ip, port=api_svr_port)
     else:
         if trade_env != 0:
             raise "美股交易接口不支持仿真环境"
-        trade_ctx = OpenUSTradeContext(host=api_svr_ip, async_port=api_svr_port)
+        trade_ctx = OpenUSTradeContext(host=api_svr_ip, port=api_svr_port)
 
     # 每手
     lot_size = 0
@@ -123,6 +123,9 @@ def make_order_and_cancel(api_svr_ip, api_svr_port , unlock_password, test_code,
                     break
                 else:
                     sleep(2)
+    #detroy obj
+    quote_ctx.close()
+    trade_ctx.close()
 
 
 if __name__ == "__main__":
