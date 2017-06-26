@@ -206,6 +206,7 @@
     <ClInclude Include="Protocol\ProtoPlateSubIDs.h" />
     <ClInclude Include="Protocol\ProtoPushBatchBasic.h" />
     <ClInclude Include="Protocol\ProtoPushGearPrice.h" />
+    <ClInclude Include="Protocol\ProtoPushHeartBeat.h" />
     <ClInclude Include="Protocol\ProtoPushKLData.h" />
     <ClInclude Include="Protocol\ProtoPushRTData.h" />
     <ClInclude Include="Protocol\ProtoPushStockData.h" />
@@ -339,6 +340,7 @@
     <ClCompile Include="Protocol\ProtoPlateSubIDs.cpp" />
     <ClCompile Include="Protocol\ProtoPushBatchBasic.cpp" />
     <ClCompile Include="Protocol\ProtoPushGearPrice.cpp" />
+    <ClCompile Include="Protocol\ProtoPushHeartBeat.cpp" />
     <ClCompile Include="Protocol\ProtoPushKLData.cpp" />
     <ClCompile Include="Protocol\ProtoPushRTData.cpp" />
     <ClCompile Include="Protocol\ProtoPushStockData.cpp" />

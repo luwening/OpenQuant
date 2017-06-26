@@ -3,6 +3,7 @@
 #include "PluginNetwork.h"
 #include "Protocol/ProtoBasicPrice.h"
 #include "IFTStockUtil.h"
+#include "Protocol/ProtoPushHeartBeat.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -455,6 +456,27 @@ void CPluginQuoteServer::OnPushMarketNewTrade(StockMktType eMkt, INT64 ddwLastTr
 				DoTryRefreshRTKLData(info.ddwStockHash, info.eStockSubType);
 			}
 		}
+	}
+}
+
+void CPluginQuoteServer::OnPushHeartBeat(SOCKET sock, UINT64 nTimeStampNow)
+{
+	PushHeartBeat_Ack ack;
+	ack.head.nProtoID = PROTO_ID_PUSH_HEART_BEAT;
+	ack.body.nTimeStamp = nTimeStampNow;
+	CProtoPushHeartBeat proto;
+	proto.SetProtoData_Ack(&ack);
+
+	Json::Value jsnAck;
+	if (proto.MakeJson_Ack(jsnAck))
+	{
+		std::string strOut;
+		CProtoPushHeartBeat::ConvJson2String(jsnAck, strOut, true);
+		ReplyQuoteReq(ack.head.nProtoID, strOut.c_str(), (int)strOut.size(), sock);
+	}
+	else
+	{
+		CHECK_OP(false, NOOP);
 	}
 }
 

@@ -182,7 +182,36 @@ static BOOL DivStr(const CString& str, const CString &strDiv, std::vector<CStrin
 	}
 	return true;
 }
+
+
+//////////////////////////////////////////////////////////////////////////
+// 创建目录
+static BOOL CreateDirectory(CString strPath)
+{
+	ASSERT_RET(!strPath.IsEmpty(), FALSE);
+
+	if (strPath.Right(1) != _T("\\"))
+	{
+		//最后一位不是\则被认为路径带文件名
+		int nPos = strPath.ReverseFind('\\');
+		strPath = strPath.Left(nPos + 1);
+	}
+
+	int nPos = -1;
+	while ((nPos = strPath.Find('\\', nPos + 1)) > 0)
+	{
+		CString strTemp = strPath.Left(nPos + 1);
+		ASSERT_RET(!strTemp.IsEmpty(), FALSE);
+
+		if (!PathFileExists(strTemp))
+			ASSERT_RET(::CreateDirectory(strTemp, NULL), FALSE);
+	}
+
+	return TRUE;
+}
+
 _CA_END
 
 #endif
+
 

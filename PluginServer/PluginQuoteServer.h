@@ -101,6 +101,8 @@ protected:
 	virtual void  OnPushRT(INT64  ddwStockHash, SOCKET sock);
 	virtual void  OnPushBrokerQueue(INT64 ddwStockHash, SOCKET sock);
 	virtual void  OnPushMarketNewTrade(StockMktType eMkt, INT64 ddwLastTradeStamp, INT64 ddwNewTradeStamp);
+	virtual void  OnPushHeartBeat(SOCKET sock, UINT64 nTimeStampNow);
+
 	//IQuoteKLCallback
 	virtual void  OnQueryStockRTData(DWORD dwCookie, int nCSResult);
 	virtual void  OnQueryStockKLData(DWORD dwCookie, int nCSResult);

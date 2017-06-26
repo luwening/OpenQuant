@@ -58,3 +58,6 @@
 #include "CM/ca_api.h"
 #include "UtilPlugin.h"
 #include "IFTStockUtil.h"
+#include "CM/CMlog.h"
+
+#define theLog  CMLog(_T("FTNN_API.txt"))
