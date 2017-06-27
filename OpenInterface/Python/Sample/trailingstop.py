@@ -233,9 +233,9 @@ def trailingstop(
     while True:
         if trailing_stop_handler.finished:
             pricelist = trailing_stop_handler.pricelist
-            plt.plot(np.arange(len(pricelist)), pricelist, color='blue')
+            plt.plot(np.arange(len(pricelist)), pricelist, color='b')
             stoplist = trailing_stop_handler.stoplist
-            plt.plot(np.arange(len(stoplist)), stoplist)
+            plt.plot(np.arange(len(stoplist)), stoplist, color='r')
             plt.show()
             break
     quote_ctx.stop()
