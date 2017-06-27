@@ -1070,6 +1070,34 @@ struct PushBatchBasic_Ack
 	PushBatchBasicAckBody	body;
 };
 
+//
+//heart beat
+//
+struct PushHeartBeatReqBody
+{
+	DWORD dwReserved;
+};
+struct PushHeartBeat_Req
+{
+	ProtoHead head;
+	PushHeartBeatReqBody body;
+};
+
+struct PushHeartBeatAckBody
+{
+	UINT64 nTimeStamp;
+	PushHeartBeatAckBody()
+	{
+		nTimeStamp = 0;
+	}
+};
+
+struct PushHeartBeat_Ack
+{
+	ProtoHead head;
+	PushHeartBeatAckBody body;
+};
+
 //////////////////////////////////////////////////////////////////////////
 //ÍÆËÍ°ÚÅÌ, PROTO_ID_PUSH_GERA
 

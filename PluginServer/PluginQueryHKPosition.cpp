@@ -254,7 +254,7 @@ void CPluginQueryHKPosition::HandleTimeoutReq()
 			continue;
 		}		
 
-		if ( int(dwTickNow - pReq->dwReqTick) > 8000 )
+		if (int(dwTickNow - pReq->dwReqTick) > REQ_TIMEOUT_MILLISECOND)
 		{
 			TradeAckType ack;
 			ack.head = pReq->req.head;

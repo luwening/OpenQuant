@@ -21,7 +21,7 @@ public:
 	void UninitNetwork();
 	void SendData(SOCKET sock, const char *pBuf, int nBufLen);
 	void PushData(const char *pBuf, int nBufLen);
-	bool GetRecvData(SOCKET &sock, const char *&pBuf, int &nBufLen);	
+	bool GetRecvData(SOCKET sock, const char *&pBuf, int &nBufLen);	
 	int  GetConnectNum();
 	
 
@@ -85,11 +85,13 @@ protected:
 	void SetNewConnectSocket(SOCKET sock);
 
 	//断开连接:收发线程
-	void NotifySocketClosed(SOCKET sock);
+	void NotifySocketClosed(SOCKET sock, LPCTSTR pstrLogInfo = NULL);
 
 	//清理断开的连接:连接线程
 	void ClearClosedSocket();
-	
+
+	bool IsSocketInDisconList(SOCKET sock);
+
 	
 	//线程
 	static DWORD WINAPI ThreadAccept(LPVOID lParam);

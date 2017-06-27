@@ -398,6 +398,9 @@
     <ClInclude Include="DelayOrderIDCvt_US.h">
       <Filter>Util</Filter>
     </ClInclude>
+    <ClInclude Include="Protocol\ProtoPushHeartBeat.h">
+      <Filter>Protocol\quote</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="JsonCpp\json_internalarray.inl">
@@ -719,6 +722,9 @@
     </ClCompile>
     <ClCompile Include="DelayOrderIDCvt_US.cpp">
       <Filter>Util</Filter>
+    </ClCompile>
+    <ClCompile Include="Protocol\ProtoPushHeartBeat.cpp">
+      <Filter>Protocol\quote</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

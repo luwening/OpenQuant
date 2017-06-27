@@ -1173,9 +1173,16 @@ Value::isValidIndex( ArrayIndex index ) const
 const Value &
 Value::operator[]( const char *key ) const
 {
-   JSON_ASSERT( type_ == nullValue  ||  type_ == objectValue );
+  // crash fix [6/26/2017 ysq]
+  if (type_ != objectValue)
+  {
+	  return null;
+  }
+  /*
+  JSON_ASSERT( type_ == nullValue  ||  type_ == objectValue );
    if ( type_ == nullValue )
       return null;
+  */
 #ifndef JSON_VALUE_USE_INTERNAL_MAP
    CZString actualKey( key, CZString::noDuplication );
    ObjectValues::const_iterator it = value_.map_->find( actualKey );
@@ -1251,9 +1258,17 @@ Value::get( const std::string &key,
 Value
 Value::removeMember( const char* key )
 {
+	// crash fix [6/26/2017 ysq]
+	if (type_ != objectValue)
+	{
+		return null;
+	}
+/*
    JSON_ASSERT( type_ == nullValue  ||  type_ == objectValue );
    if ( type_ == nullValue )
       return null;
+*/
+
 #ifndef JSON_VALUE_USE_INTERNAL_MAP
    CZString actualKey( key, CZString::noDuplication );
    ObjectValues::iterator it = value_.map_->find( actualKey );
@@ -1315,9 +1330,17 @@ Value::isMember( const CppTL::ConstString &key ) const
 Value::Members 
 Value::getMemberNames() const
 {
+	// crash fix [6/26/2017 ysq]
+	if (type_ != objectValue)
+	{
+		return Value::Members();
+	}
+/*
    JSON_ASSERT( type_ == nullValue  ||  type_ == objectValue );
    if ( type_ == nullValue )
        return Value::Members();
+*/
+
    Members members;
    members.reserve( value_.map_->size() );
 #ifndef JSON_VALUE_USE_INTERNAL_MAP

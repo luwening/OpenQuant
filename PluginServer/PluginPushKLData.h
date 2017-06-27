@@ -4,10 +4,12 @@
 #include "Include/FTPluginTradeInterface.h"
 #include "Protocol/ProtoDataStruct_Quote.h"
 #include "JsonCpp/json.h"
+#include "MsgHandler.h"
+#include <set>
 
 class CPluginQuoteServer;
 
-class CPluginPushKLData
+class CPluginPushKLData: public CMsgHandlerEventInterface
 {
 public:
 	CPluginPushKLData();
@@ -19,6 +21,13 @@ public:
 
 	void NotifySocketClosed(SOCKET sock);
 	void NotifyMarketNewTrade(StockMktType eMkt);
+
+protected:
+	// CMsgHandlerEventInterface
+	virtual void OnMsgEvent(int nEvent, WPARAM wParam, LPARAM lParam);
+
+private:
+	void OnPushTrigerRTKLDataError();
 
 protected:
 	struct	StockDataReq
@@ -45,6 +54,9 @@ protected:
 protected:
 	CPluginQuoteServer* m_pQuoteServer;
 	IFTQuoteData*		m_pQuoteData;
+	CMsgHandler			m_MsgHandler;
+	std::set<std::pair<INT64, int>> m_setPushTrigerRTKLError;
+	DWORD  m_dwTickLastTrigerKLError;
 
 	std::map<SOCKET, std::vector<Stock_PushInfo>> m_mapPushInfo;
 };

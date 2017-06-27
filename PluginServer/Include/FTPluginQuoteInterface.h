@@ -284,6 +284,10 @@ interface IQuoteInfoCallback
 	*/
 	virtual void  OnPushMarketNewTrade(StockMktType eMkt, INT64 ddwLastTradeStamp, INT64 ddwNewTradeStamp) = 0;
 
+	/**
+	* ÐÄÌøÍÆËÍ
+	*/
+	virtual void  OnPushHeartBeat(SOCKET sock, UINT64 nTimeStampNow) = 0;
 };
 
 interface IQuoteKLCallback
