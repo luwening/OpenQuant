@@ -36,11 +36,11 @@ from math import floor
 api_svr_ip = '127.0.0.1'
 api_svr_port = 11111
 unlock_password = "a"
-code = 'HK.00005'  # 'US.BABA' #'HK.00700'
+code = 'HK.00941'  # 'US.BABA' #'HK.00700'
 trade_env = 1
 method = 0
 drop = 0.05
-volume = 800
+volume = 0
 how_to_sell = 1
 diff = 0
 #
@@ -52,21 +52,22 @@ RET_ERROR = -1
 
 
 class StockSeller:
+    # 传入的 quot_ctx和trade_ctx已经做好了订阅和解锁交易等工作
+    # 以某个价格下单
     @staticmethod
     def simple_sell(
             quote_ctx,
             trade_ctx,
-            passwd,
             stock_code,
             trade_price,
             trade_env):
         lot_size = 0
         while True:
-            if trade_env == 0:
-                ret, data = trade_ctx.unlock_trade(passwd)
-                if ret != RET_OK:
-                    print('trying to unlock trade {}'.format(data))
-                    continue
+            # if trade_env == 0:
+            #     ret, data = trade_ctx.unlock_trade(passwd)
+            #     if ret != RET_OK:
+            #         print('trying to unlock trade {}'.format(data))
+            #         continue
             if lot_size == 0:
                 ret, data = quote_ctx.get_market_snapshot([stock_code])
                 lot_size = data.loc[0, 'lot_size'] if ret == 0 else 0
@@ -84,15 +85,16 @@ class StockSeller:
                 envtype=trade_env)
             return
 
+    # 以bid[0]价格下单
     @staticmethod
-    def smart_sell(quote_ctx, trade_ctx, passwd, stock_code, trade_env):
+    def smart_sell(quote_ctx, trade_ctx, stock_code, trade_env):
         lot_size = 0
         while True:
-            if trade_env == 0:
-                ret, data = trade_ctx.unlock_trade(passwd)
-                if ret != RET_OK:
-                    print('trying to unlock trade {}'.format(data))
-                    continue
+            # if trade_env == 0:
+            #     ret, data = trade_ctx.unlock_trade(passwd)
+            #     if ret != RET_OK:
+            #         print('trying to unlock trade {}'.format(data))
+            #         continue
             if lot_size == 0:
                 ret, data = quote_ctx.get_market_snapshot([stock_code])
                 lot_size = data.loc[0, 'lot_size'] if ret == 0 else 0
@@ -154,7 +156,7 @@ class TrailingStopHandler(StockQuoteHandlerBase):
         ret_code, content = super(
             TrailingStopHandler, self).on_recv_rsp(rsp_str)
         if self.finished:
-            return ret_code,content
+            return ret_code, content
         if ret_code != RET_OK:
             print("StockQuoteTest: error, msg: %s" % content)
             return RET_ERROR, content
@@ -173,7 +175,6 @@ class TrailingStopHandler(StockQuoteHandlerBase):
                 StockSeller.simple_sell(
                     quote_ctx=self.quote_ctx,
                     trade_ctx=self.trade_ctx,
-                    passwd=self.unlock_password,
                     stock_code=self.code,
                     trade_price=self.stop - self.diff,
                     trade_env=self.trade_env)
@@ -181,7 +182,6 @@ class TrailingStopHandler(StockQuoteHandlerBase):
                 StockSeller.smart_sell(
                     quote_ctx=self.quote_ctx,
                     trade_ctx=self.trade_ctx,
-                    passwd=self.unlock_password,
                     stock_code=self.code,
                     trade_env=self.trade_env)
             self.finished = True
@@ -201,8 +201,20 @@ def trailingstop(
         volume=1000,
         how_to_sell=1,
         diff=0):
-    if unlock_password == "":
-        raise "请先配置交易解锁密码!"
+    # 参数检查
+    # 检查how_to_sell
+    if how_to_sell != 0 and how_to_sell != 1:
+        print('how_to_sell must be 0 or 1')
+        raise 'how_to_sell value error'
+    # 检查trade_env
+    if trade_env != 0 and trade_env != 1:
+        print('trade_env must be 0 or 1')
+        raise 'trade_env value error'
+    # 检查method
+    if method != 0 and method != 1:
+        print('method must be 0 or 1')
+        raise 'method value error'
+    # 检查api_svr_ip 和api_svr_port
     quote_ctx = OpenQuoteContext(host=api_svr_ip, port=api_svr_port)
     trade_ctx = None
     is_hk_trade = 'HK.' in (code)
@@ -212,6 +224,32 @@ def trailingstop(
         if trade_env != 0:
             raise "美股交易接口不支持仿真环境"
         trade_ctx = OpenUSTradeContext(host=api_svr_ip, port=api_svr_port)
+    # 检查解锁密码
+    if unlock_password == "":
+        raise "请先配置交易解锁密码!"
+    if trade_env == 0:
+        ret, data = trade_ctx.unlock_trade(unlock_password)
+        if ret != RET_OK:
+            print('解锁交易失败')
+            raise '解锁交易失败'
+    # 检查volume
+    ret, data = trade_ctx.position_list_query(envtype=trade_env)
+    if ret != RET_OK:
+        print('can not get position list')
+        raise '无法获取持仓列表'
+    qty = data[data['code'] == code].loc[0, 'qty']
+    qty = int(qty)
+    if volume == 0:
+        # 把全部持仓卖出
+        volume = qty
+    elif volume < 0:
+        print("volume lower than 0")
+        raise "voluem lower than 0"
+    else:
+        # 检查是否拥有足够的持仓
+        if qty < volume:
+            print('qty lower than volume')
+            raise '你没有足够的持仓'
     stop = None
     ret, data = quote_ctx.subscribe(code, 'QUOTE', push=True)
     if ret != RET_OK:
@@ -264,14 +302,12 @@ def demo():
         elif price > stop + drop:
             stop = price - drop
         elif price <= stop:
-            # sell count stocks at price-diff
+            # sell count stocks at (price-diff)
             print('sell the stock {0} at price {1},{2}'.format(
                 count, price - diff, i))
             break
         stop_list.append(stop)
     stop_list = np.array(stop_list)
-    # stop_list = np.concatenate(
-    #     (stop_list, stop_list[-1]+np.zeros(len(price_list)-len(stop_list))))
     x = np.arange(len(price_list))
     plt.plot(x, price_list, color='b')
     x = np.arange(len(stop_list))
