@@ -675,6 +675,8 @@ DWORD WINAPI CPluginNetwork::ThreadSend(LPVOID lParam)
 void CPluginNetwork::SendLoop()
 {
 	DWORD dwNextWaitExitTime = 0;
+	WSAEVENT  hEvtCheckClose = WSACreateEvent();
+
 	while (true)
 	{
 		if (WaitForSingleObject(m_hEvtNotifyExit, dwNextWaitExitTime) == WAIT_OBJECT_0)
@@ -760,6 +762,7 @@ void CPluginNetwork::SendLoop()
 		}
 
 		dwNextWaitExitTime = 0;
+		std::vector<SOCKET>  vtWaited; //记录等待处理好的event 
 		//循环处理多个event
 		while (true)
 		{
@@ -788,6 +791,7 @@ void CPluginNetwork::SendLoop()
 			vtSocket.erase(vtSocket.begin() + nIndex);
 			vtEvent.erase(vtEvent.begin() + nIndex);
 			WSAResetEvent(evt);
+			vtWaited.push_back(sock);
 
 			lock.Lock();
 
@@ -806,9 +810,11 @@ void CPluginNetwork::SendLoop()
 			}
 			if (dwBytesTrans == 0 || bBadSocket)
 			{
+				ClearSocketSendData(sock);
+				lock.Unlock();
+
 				CString strError;
 				strError.Format(_T("SendLoop - BytesTrans=%d  badSocket=%d"), dwBytesTrans, (int)bBadSocket);
-				ClearSocketSendData(sock);
 				NotifySocketClosed(sock, strError);
 				continue;
 			}
@@ -834,6 +840,37 @@ void CPluginNetwork::SendLoop()
 			if (m_pEvtNotify)
 				m_pEvtNotify->OnSend(sock);
 		} //while (true) events 
+
+		//针对没有等待到的event检测是否已经关闭
+		lock.Lock();
+		std::vector<SOCKET> vtNotifyClose;
+		MAP_SOCK_RTINFO::iterator itSendInfo = m_mapSendingInfo.begin();
+		for (; itSendInfo != m_mapSendingInfo.end(); ++itSendInfo)
+		{
+			SOCKET sock = itSendInfo->first;
+			std::vector<SOCKET>::iterator itSock = std::find(vtWaited.begin(), vtWaited.end(), sock);
+			if (itSock == vtWaited.end())
+			{
+				WSAResetEvent(hEvtCheckClose);
+				WSAEventSelect(sock, hEvtCheckClose, FD_CLOSE);
+				DWORD dwRet = WaitForSingleObject(hEvtCheckClose, 0);
+				if (WAIT_OBJECT_0 == dwRet)
+				{
+					vtNotifyClose.push_back(sock);
+				}
+			}
+		}
+		for (UINT i = 0; i < vtNotifyClose.size(); i++)
+		{
+			ClearSocketSendData(vtNotifyClose[i]);
+		}
+		lock.Unlock();
+
+		for (UINT i = 0; i < vtNotifyClose.size(); i++)
+		{
+			NotifySocketClosed(vtNotifyClose[i], L" SendLoop Check Close Error -  event not waited");
+		}
+
 	}//while (true) begin
 }
 
@@ -848,6 +885,7 @@ DWORD WINAPI CPluginNetwork::ThreadRecv(LPVOID lParam)
 void CPluginNetwork::RecvLoop()
 {
 	DWORD dwNextWaitExitTime = 0;
+	WSAEVENT  hEvtCheckClose = WSACreateEvent();
 	while (true)
 	{
 		if (WaitForSingleObject(m_hEvtNotifyExit, dwNextWaitExitTime) == WAIT_OBJECT_0)
@@ -934,7 +972,7 @@ void CPluginNetwork::RecvLoop()
 			continue;
 		}
 		dwNextWaitExitTime = 0;
-
+		std::vector<SOCKET>  vtWaited; //记录等待处理好的event 
 		//循环处理多个event
 		while (true)
 		{
@@ -963,6 +1001,7 @@ void CPluginNetwork::RecvLoop()
 			vtSocket.erase(vtSocket.begin() + nIndex);
 			vtEvent.erase(vtEvent.begin() + nIndex);
 			WSAResetEvent(evt);
+			vtWaited.push_back(sock);
 
 			lock.Lock();
 
@@ -1034,7 +1073,7 @@ void CPluginNetwork::RecvLoop()
 			if (bNoitfySocketClose)
 			{
 				//Notify涉及跨线程同步通知 
-				NotifySocketClosed(sock, L"Check Close Error");
+				NotifySocketClosed(sock, L" RecvLoop Check Close Error -  event waited");
 			}
 			else
 			{
@@ -1042,5 +1081,38 @@ void CPluginNetwork::RecvLoop()
 					m_pEvtNotify->OnReceive(sock);
 			}
 		} //while (true) event
+
+		//针对没有等待到的event检测是否已经关闭
+		lock.Lock();
+		std::vector<SOCKET> vtNotifyClose;
+		MAP_SOCK_RTINFO::iterator itRecvInfo = m_mapRecvingInfo.begin();
+		for (; itRecvInfo != m_mapRecvingInfo.end(); ++itRecvInfo)
+		{
+			SOCKET sock = itRecvInfo->first;
+			std::vector<SOCKET>::iterator itSock = std::find(vtWaited.begin(), vtWaited.end(), sock);
+			if (itSock == vtWaited.end())
+			{
+				WSAResetEvent(hEvtCheckClose);
+				WSAEventSelect(sock, hEvtCheckClose, FD_CLOSE);
+				DWORD dwRet = WaitForSingleObject(hEvtCheckClose, 0);
+				if (WAIT_OBJECT_0 == dwRet)
+				{
+					vtNotifyClose.push_back(sock);
+				}
+			}
+		}
+		for (UINT i = 0; i < vtNotifyClose.size(); i++)
+		{
+			ClearSocketRecvData(vtNotifyClose[i]);
+		}
+		lock.Unlock();
+
+		for (UINT i = 0; i < vtNotifyClose.size(); i++)
+		{
+			NotifySocketClosed(vtNotifyClose[i], L" RecvLoop Check Close Error -  event not waited");
+		}
 	}// while (true) - begin 
+
+	WSACloseEvent(hEvtCheckClose);
+	hEvtCheckClose = NULL;
 }
