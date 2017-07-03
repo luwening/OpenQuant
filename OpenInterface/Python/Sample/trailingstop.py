@@ -5,10 +5,11 @@ folder = path.path(__file__).abspath()
 openft_folder = folder.parent.parent
 sys.path.append(openft_folder)
 from openft.open_quant_context import *
+from emailplugin import EmailNotification
 import numpy as np
 import matplotlib.pyplot as plt
 from math import floor
-
+import time
 '''
     跟踪止损:跟踪止损是一种更高级的条件单，需要指定如下参数，以便制造出移动止损价
         跟踪止损的详细介绍：https://www.futu5.com/faq/topic214
@@ -45,6 +46,10 @@ how_to_sell = 1
 diff = 0
 #
 
+# 邮件通知参数
+enable_email_notification = False
+receiver = 'your email address'
+
 # 程序中的一些全局变量，不需要修改
 RET_OK = 0
 RET_ERROR = -1
@@ -77,12 +82,21 @@ class StockSeller:
                 elif lot_size <= 0:
                     raise BaseException('lot_size error {}'.format(stock_code))
             qty = floor(volume / lot_size) * lot_size
-            trade_ctx.place_order(
+            ret, data = trade_ctx.place_order(
                 price=trade_price,
                 qty=qty,
                 strcode=stock_code,
                 orderside=1,
                 envtype=trade_env)
+            if ret != RET_OK:
+                print('place order failed {}'.format(data))
+                EmailNotification.sendemail(
+                    receiver, '下单失败', '下单失败:{}'.format(data))
+            else:
+                print('下单成功')
+                EmailNotification.sendemail(
+                    receiver, '下单成功', '下单成功：股票代码{},数量{}，价格{}，订单ID{}'.format(
+                        stock_code, qty, trade_price, data['orderid']))
             return
 
     # 以bid[0]价格下单
@@ -114,12 +128,21 @@ class StockSeller:
                 continue
             price = data['Bid'][0][0]
             print('bid price is {}'.format(price))
-            trade_ctx.place_order(
+            ret, data = trade_ctx.place_order(
                 price=price,
                 qty=qty,
                 strcode=stock_code,
                 orderside=1,
                 envtype=trade_env)
+            if ret != RET_OK:
+                print('place order failed {}'.format(data))
+                EmailNotification.sendemail(
+                    receiver, '下单失败', '下单失败:{}'.format(data))
+            else:
+                print('下单成功')
+                EmailNotification.sendemail(
+                    receiver, '下单成功', '下单成功：股票代码{},数量{}，价格{}，订单ID{}'.format(
+                        stock_code, qty, price, data['orderid']))
             return
 
 
@@ -200,8 +223,10 @@ def trailingstop(
         drop=1,
         volume=1000,
         how_to_sell=1,
-        diff=0):
+        diff=0,
+        enable_email_notification=False):
     # 参数检查
+    EmailNotification.setenable(enable_email_notification)
     # 检查how_to_sell
     if how_to_sell != 0 and how_to_sell != 1:
         print('how_to_sell must be 0 or 1')
