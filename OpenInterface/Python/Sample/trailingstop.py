@@ -34,21 +34,22 @@ import time
 '''
 
 # 全局参数配置
-api_svr_ip = '127.0.0.1'
+api_svr_ip = '119.29.141.202'
+# api_svr_ip = '127.0.0.1'
 api_svr_port = 11111
 unlock_password = "a"
-code = 'HK.00941'  # 'US.BABA' #'HK.00700'
+code = 'HK.00700'  # 'US.BABA' #'HK.00700'
 trade_env = 1
 method = 0
-drop = 0.05
-volume = 0
+drop = 0.2
+volume = 300
 how_to_sell = 1
 diff = 0
 #
 
 # 邮件通知参数
-enable_email_notification = False
-receiver = 'your email address'
+enable_email_notification = True
+receiver = 'your receiver email address'
 
 # 程序中的一些全局变量，不需要修改
 RET_OK = 0
@@ -91,12 +92,12 @@ class StockSeller:
             if ret != RET_OK:
                 print('place order failed {}'.format(data))
                 EmailNotification.sendemail(
-                    receiver, '下单失败', '下单失败:{}'.format(data))
+                    receiver, '下单失败', '下单失败:{}[FutuOpenAPI]'.format(data))
             else:
                 print('下单成功')
                 EmailNotification.sendemail(
-                    receiver, '下单成功', '下单成功：股票代码{},数量{}，价格{}，订单ID{}'.format(
-                        stock_code, qty, trade_price, data['orderid']))
+                    receiver, '下单成功', '下单成功：股票代码{},数量{}，价格{}，订单ID{}[FutuOpenAPI]'.format(
+                        stock_code, qty, trade_price, int(data['orderid'])))
             return
 
     # 以bid[0]价格下单
@@ -137,12 +138,12 @@ class StockSeller:
             if ret != RET_OK:
                 print('place order failed {}'.format(data))
                 EmailNotification.sendemail(
-                    receiver, '下单失败', '下单失败:{}'.format(data))
+                    receiver, '下单失败', '下单失败:{}[FutuOpenAPI]'.format(data))
             else:
                 print('下单成功')
                 EmailNotification.sendemail(
-                    receiver, '下单成功', '下单成功：股票代码{},数量{}，价格{}，订单ID{}'.format(
-                        stock_code, qty, price, data['orderid']))
+                    receiver, '下单成功', '下单成功：股票代码{},数量{}，价格{}，订单ID{}[FutuOpenAPI]'.format(
+                        stock_code, qty, price, int(data['orderid'])))
             return
 
 
@@ -353,4 +354,5 @@ if __name__ == '__main__':
         drop,
         volume,
         how_to_sell,
-        diff)
+        diff,
+        enable_email_notification)
