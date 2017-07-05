@@ -45,6 +45,7 @@ drop = 0.2
 volume = 300
 how_to_sell = 1
 diff = 0
+check_time=2 # 每隔check_time秒，smart_sell会检查订单状态,需要>=2
 #
 
 # 邮件通知参数
@@ -66,14 +67,10 @@ class StockSeller:
             trade_ctx,
             stock_code,
             trade_price,
+            volume,
             trade_env):
         lot_size = 0
         while True:
-            # if trade_env == 0:
-            #     ret, data = trade_ctx.unlock_trade(passwd)
-            #     if ret != RET_OK:
-            #         print('trying to unlock trade {}'.format(data))
-            #         continue
             if lot_size == 0:
                 ret, data = quote_ctx.get_market_snapshot([stock_code])
                 lot_size = data.loc[0, 'lot_size'] if ret == 0 else 0
@@ -102,14 +99,9 @@ class StockSeller:
 
     # 以bid[0]价格下单
     @staticmethod
-    def smart_sell(quote_ctx, trade_ctx, stock_code, trade_env):
+    def smart_sell(quote_ctx, trade_ctx, stock_code,volume, trade_env):
         lot_size = 0
         while True:
-            # if trade_env == 0:
-            #     ret, data = trade_ctx.unlock_trade(passwd)
-            #     if ret != RET_OK:
-            #         print('trying to unlock trade {}'.format(data))
-            #         continue
             if lot_size == 0:
                 ret, data = quote_ctx.get_market_snapshot([stock_code])
                 lot_size = data.loc[0, 'lot_size'] if ret == 0 else 0
@@ -119,33 +111,60 @@ class StockSeller:
                 elif lot_size <= 0:
                     raise BaseException('lot_size error {}'.format(stock_code))
             qty = floor(volume / lot_size) * lot_size
-            ret, data = quote_ctx.subscribe(stock_code, 'ORDER_BOOK')
-            if ret != 0:
-                print("retrying to subscribe orderbook")
-                continue
-            ret, data = quote_ctx.get_order_book(stock_code)
-            if ret != RET_OK:
-                print('can not get orderbook,retrying')
-                continue
-            price = data['Bid'][0][0]
-            print('bid price is {}'.format(price))
-            ret, data = trade_ctx.place_order(
-                price=price,
-                qty=qty,
-                strcode=stock_code,
-                orderside=1,
-                envtype=trade_env)
-            if ret != RET_OK:
-                print('place order failed {}'.format(data))
-                EmailNotification.sendemail(
-                    receiver, '下单失败', '下单失败:{}[FutuOpenAPI]'.format(data))
-            else:
-                print('下单成功')
-                EmailNotification.sendemail(
-                    receiver, '下单成功', '下单成功：股票代码{},数量{}，价格{}，订单ID{}[FutuOpenAPI]'.format(
-                        stock_code, qty, price, int(data['orderid'])))
+            # 开始卖
+            #每chekc_time秒检查订单状态
+            while qty>=0:
+                # 订阅
+                ret, data = quote_ctx.subscribe(stock_code, 'ORDER_BOOK')
+                if ret != 0:
+                    print("retrying to subscribe orderbook")
+                    continue
+                ret, data = quote_ctx.get_order_book(stock_code)
+                if ret != RET_OK:
+                    print('can not get orderbook,retrying')
+                    continue
+                # 以Bid[0]卖出
+                price = data['Bid'][0][0]
+                print('bid price is {}'.format(price))
+                # 下单
+                ret, data = trade_ctx.place_order(
+                    price=price,
+                    qty=qty,
+                    strcode=stock_code,
+                    orderside=1,
+                    envtype=trade_env)
+                if ret != RET_OK:
+                    print('place order failed {}'.format(data))
+                    EmailNotification.sendemail(
+                        receiver, '下单失败', '下单失败:{}[FutuOpenAPI]'.format(data))
+                    sys.exit(-1)
+                else:
+                    print('下单成功')
+                orderid=data['orderid']
+                # 停顿一下
+                time.sleep(check_time)
+                # 查询订单状态
+                ret,data=trade_ctx.order_list_query(envtype=trade_env)
+                if ret!=RET_OK:
+                    print('获取订单状态失败')
+                    sys.exit(-1)
+                status=data[data['orderid']==orderid].loc[0,'status']
+                dealt_qty=data['dealt_qty']
+                qty-=dealt_qty
+                if status==3:
+                    #全部成交
+                    print('全部成交{}'.format(status))
+                    EmailNotification.sendemail(
+                        receiver, '交易成功', '交易成功：股票代码{},数量{}，价格{}，订单ID{}[FutuOpenAPI]'.format(
+                            stock_code, qty, price, int(data['orderid'])))
+                    break
+                else:
+                    # 没有全部成交或者等待成效
+                    ret,data=trade_ctx.set_order_status(0,orderid=orderid)
+                    if ret!=RET_OK:
+                        print('撤单失败{}'.format(data))
+                        sys.exit(-1)
             return
-
 
 class TrailingStopHandler(StockQuoteHandlerBase):
     def __init__(self,
@@ -168,7 +187,7 @@ class TrailingStopHandler(StockQuoteHandlerBase):
         self.volume = volume
         self.how_to_sell = how_to_sell
         self.diff = diff
-        # 是否完成交易
+        # 是否触发交易
         self.finished = False
         # 截止线的价格
         self.stop = None
@@ -179,11 +198,23 @@ class TrailingStopHandler(StockQuoteHandlerBase):
     def on_recv_rsp(self, rsp_str):
         ret_code, content = super(
             TrailingStopHandler, self).on_recv_rsp(rsp_str)
-        if self.finished:
-            return ret_code, content
         if ret_code != RET_OK:
             print("StockQuoteTest: error, msg: %s" % content)
             return RET_ERROR, content
+        if self.finished:
+            return ret_code, content
+        # 检查是否处于交易时间段
+        is_hk_trade = 'HK.' in (code)
+        ret,data=self.quote_ctx.get_global_state()
+        if ret!=RET_OK:
+            print('获取全局状态失败')
+            exit(-1)
+        # 如果不在盘中，什么都不做
+        hk_trading=data['Market_HK']==3 or data['Market_HK']==5
+        us_trading=data['Market_US']==3
+        trading=hk_trading if is_hk_trade else us_trading
+        if not trading:
+            return 0,content
         last_price = content.loc[0, 'last_price']
         print('last_price={}'.format(last_price))
         if self.stop is None:
@@ -201,12 +232,14 @@ class TrailingStopHandler(StockQuoteHandlerBase):
                     trade_ctx=self.trade_ctx,
                     stock_code=self.code,
                     trade_price=self.stop - self.diff,
+                    volume=volume,
                     trade_env=self.trade_env)
             else:
                 StockSeller.smart_sell(
                     quote_ctx=self.quote_ctx,
                     trade_ctx=self.trade_ctx,
                     stock_code=self.code,
+                    volume=volume,
                     trade_env=self.trade_env)
             self.finished = True
         self.pricelist.append(last_price)
@@ -281,6 +314,21 @@ def trailingstop(
     if ret != RET_OK:
         print('error {0}:{1}'.format(ret, data))
         exit(ret)
+    # 检查diff
+    if diff!=0:
+        if is_hk_trade:
+            ret,data=quote_ctx.subscribe(code,'ORDER_BOOK')
+            if ret!=RET_OK:
+                print('error {}'.format(data))
+                exit(ret)
+            min_diff=round(abs(data['Bid'][0][0]-data['Bid'][1][0]),3)
+            if floor(diff/min_diff)*min_diff!=diff:
+                print('diff应是{}的整数倍'.format(min_diff))
+                exit(-1)
+        else:
+            if round(diff,2)!=diff:
+                print('美股价差保留两位小数:{}->{}'.format(diff,round(diff,2)))
+                exit(-1)
     trailing_stop_handler = TrailingStopHandler(
         quote_ctx,
         trade_ctx,
@@ -304,43 +352,6 @@ def trailingstop(
             break
     quote_ctx.stop()
     trade_ctx.stop()
-
-
-def demo():
-    quote_ctx = OpenQuoteContext(host='127.0.0.1', port=11111)
-    code = 'HK.00700'
-    drop = 0.8
-    diff = 0.2
-    count = 100
-    stop = None
-    stop_list = []
-    quote_ctx.subscribe(code, 'RT_DATA')
-    ret, data = quote_ctx.get_rt_data(code)
-    if ret != RET_OK:
-        print('error {0}:{1}'.format(ret, data))
-        exit(ret)
-    price_list = data['cur_price']
-    time = data['time']
-    for i in range(len(price_list)):
-        price = price_list[i]
-        if stop is None:
-            stop = price - drop
-        elif price > stop + drop:
-            stop = price - drop
-        elif price <= stop:
-            # sell count stocks at (price-diff)
-            print('sell the stock {0} at price {1},{2}'.format(
-                count, price - diff, i))
-            break
-        stop_list.append(stop)
-    stop_list = np.array(stop_list)
-    x = np.arange(len(price_list))
-    plt.plot(x, price_list, color='b')
-    x = np.arange(len(stop_list))
-    plt.plot(x, stop_list, color='r')
-    plt.xlabel('time(m)')
-    plt.ylabel('price')
-    plt.show()
 
 
 if __name__ == '__main__':
