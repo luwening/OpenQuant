@@ -42,15 +42,15 @@ code = 'HK.00700'  # 'US.BABA' #'HK.00700'
 trade_env = 1
 method = 0
 drop = 0.2
-volume = 300
-how_to_sell = 1
-diff = 0
+volume = 100
+how_to_sell = 0
+diff = 0.2
 check_time=2 # 每隔check_time秒，smart_sell会检查订单状态,需要>=2
 #
 
 # 邮件通知参数
 enable_email_notification = True
-receiver = 'your receiver email address'
+receiver = 'your receiver email'
 
 # 程序中的一些全局变量，不需要修改
 RET_OK = 0
@@ -73,7 +73,7 @@ class StockSeller:
         while True:
             if lot_size == 0:
                 ret, data = quote_ctx.get_market_snapshot([stock_code])
-                lot_size = data.loc[0, 'lot_size'] if ret == 0 else 0
+                lot_size = data.iloc[0]['lot_size'] if ret == 0 else 0
                 if ret != 0:
                     print("can't get lot_size, retrying")
                     continue
@@ -104,7 +104,7 @@ class StockSeller:
         while True:
             if lot_size == 0:
                 ret, data = quote_ctx.get_market_snapshot([stock_code])
-                lot_size = data.loc[0, 'lot_size'] if ret == 0 else 0
+                lot_size = data.iloc[0]['lot_size'] if ret == 0 else 0
                 if ret != 0:
                     print("can't get lot_size, retrying")
                     continue
@@ -113,7 +113,7 @@ class StockSeller:
             qty = floor(volume / lot_size) * lot_size
             # 开始卖
             #每chekc_time秒检查订单状态
-            while qty>=0:
+            while qty>0:
                 # 订阅
                 ret, data = quote_ctx.subscribe(stock_code, 'ORDER_BOOK')
                 if ret != 0:
@@ -140,7 +140,8 @@ class StockSeller:
                     sys.exit(-1)
                 else:
                     print('下单成功')
-                orderid=data['orderid']
+                orderid=data.iloc[0]['orderid']
+                # print('orderid:{}'.format(orderid))
                 # 停顿一下
                 time.sleep(check_time)
                 # 查询订单状态
@@ -148,15 +149,18 @@ class StockSeller:
                 if ret!=RET_OK:
                     print('获取订单状态失败')
                     sys.exit(-1)
-                status=data[data['orderid']==orderid].loc[0,'status']
-                dealt_qty=data['dealt_qty']
+                status=data[data['orderid']==orderid].iloc[0]['status']
+                status=int(status)
+                dealt_qty=data[data['orderid']==orderid].iloc[0]['dealt_qty']
+                dealt_qty=int(dealt_qty)
+                # print('status={},dealt_qty={}'.format(status,dealt_qty))
                 qty-=dealt_qty
                 if status==3:
                     #全部成交
                     print('全部成交{}'.format(status))
                     EmailNotification.sendemail(
                         receiver, '交易成功', '交易成功：股票代码{},数量{}，价格{}，订单ID{}[FutuOpenAPI]'.format(
-                            stock_code, qty, price, int(data['orderid'])))
+                            stock_code, qty, price, orderid))
                     break
                 else:
                     # 没有全部成交或者等待成效
@@ -202,6 +206,7 @@ class TrailingStopHandler(StockQuoteHandlerBase):
             print("StockQuoteTest: error, msg: %s" % content)
             return RET_ERROR, content
         if self.finished:
+            # print('已经触发交易')
             return ret_code, content
         # 检查是否处于交易时间段
         is_hk_trade = 'HK.' in (code)
@@ -210,12 +215,13 @@ class TrailingStopHandler(StockQuoteHandlerBase):
             print('获取全局状态失败')
             exit(-1)
         # 如果不在盘中，什么都不做
-        hk_trading=data['Market_HK']==3 or data['Market_HK']==5
-        us_trading=data['Market_US']==3
+        hk_trading=(data['Market_HK']=='3' or data['Market_HK']=='5')
+        us_trading=data['Market_US']=='3'
         trading=hk_trading if is_hk_trade else us_trading
         if not trading:
+            print('不处在交易时段')
             return 0,content
-        last_price = content.loc[0, 'last_price']
+        last_price = content.iloc[0][ 'last_price']
         print('last_price={}'.format(last_price))
         if self.stop is None:
             self.stop = last_price - \
@@ -224,6 +230,8 @@ class TrailingStopHandler(StockQuoteHandlerBase):
             self.stop = last_price - \
                 self.drop if self.method == 0 else last_price * (1 - self.drop)
         elif self.stop >= last_price:
+            # 交易己被触发
+            self.finished = True
             # 交易股票
             print('sell the stock, stop={}'.format(self.stop))
             if how_to_sell == 0:
@@ -241,7 +249,6 @@ class TrailingStopHandler(StockQuoteHandlerBase):
                     stock_code=self.code,
                     volume=volume,
                     trade_env=self.trade_env)
-            self.finished = True
         self.pricelist.append(last_price)
         self.stoplist.append(self.stop)
         return RET_OK, content
@@ -296,7 +303,7 @@ def trailingstop(
     if ret != RET_OK:
         print('can not get position list')
         raise '无法获取持仓列表'
-    qty = data[data['code'] == code].loc[0, 'qty']
+    qty = data[data['code'] == code].iloc[0]['qty']
     qty = int(qty)
     if volume == 0:
         # 把全部持仓卖出
@@ -320,6 +327,10 @@ def trailingstop(
             ret,data=quote_ctx.subscribe(code,'ORDER_BOOK')
             if ret!=RET_OK:
                 print('error {}'.format(data))
+                exit(ret)
+            ret,data=quote_ctx.get_order_book(code)
+            if ret!=RET_OK:
+                print("can't get order bool{}".format(data))
                 exit(ret)
             min_diff=round(abs(data['Bid'][0][0]-data['Bid'][1][0]),3)
             if floor(diff/min_diff)*min_diff!=diff:
