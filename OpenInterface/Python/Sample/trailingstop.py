@@ -213,11 +213,12 @@ class TrailingStopHandler(StockQuoteHandlerBase):
         ret,data=self.quote_ctx.get_global_state()
         if ret!=RET_OK:
             print('获取全局状态失败')
-            exit(-1)
+            trading=False
+        else:
+            hk_trading=(data['Market_HK']=='3' or data['Market_HK']=='5')
+            us_trading=data['Market_US']=='3'
+            trading=hk_trading if is_hk_trade else us_trading
         # 如果不在盘中，什么都不做
-        hk_trading=(data['Market_HK']=='3' or data['Market_HK']=='5')
-        us_trading=data['Market_US']=='3'
-        trading=hk_trading if is_hk_trade else us_trading
         if not trading:
             print('不处在交易时段')
             return 0,content
