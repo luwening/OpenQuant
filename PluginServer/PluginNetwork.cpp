@@ -155,6 +155,8 @@ void CPluginNetwork::SendData(SOCKET sock, const char *pBuf, int nBufLen)
 		{
 			CHECK_OP(false, NOOP);
 			delete pBufToUse;
+
+			theLog << "CPluginNetwork::SendData - new TransDataInfo Error, Len=" << pBufToUse->nRealBufLen << endLog;
 			return;
 		}
 
@@ -221,27 +223,25 @@ void CPluginNetwork::PushData(const char *pBuf, int nBufLen)
 	}	
 }
 
-bool CPluginNetwork::GetRecvData(SOCKET &sock, const char *&pBuf, int &nBufLen)
+bool CPluginNetwork::GetRecvData(SOCKET sock, const char *&pBuf, int &nBufLen)
 {
 	CHECK_RET(sock && sock != INVALID_SOCKET, false);
 
 	CSingleLock lock(&m_csRecv, TRUE);
 
-	MAP_SOCK_TRANS_DATA::iterator itMapSock = m_mapRecvedData.begin();
-	for ( ; itMapSock != m_mapRecvedData.end(); ++itMapSock )
+	MAP_SOCK_TRANS_DATA::iterator itMapSock = m_mapRecvedData.find(sock);
+	if (itMapSock != m_mapRecvedData.end())
 	{
-		SOCKET sock_it = itMapSock->first;
 		VT_TRANS_DATA &vtData = itMapSock->second;
 		ClearFreeBuf(vtData);
 
 		VT_TRANS_DATA::iterator itData = vtData.begin();
-		for ( ; itData != vtData.end(); ++itData)
+		for (; itData != vtData.end(); ++itData)
 		{
 			TransDataInfo *pData = *itData;
 			CHECK_OP(pData, continue);
-			if ( pData->bSendRecvFinish && !pData->bToFree )
+			if (pData->bSendRecvFinish && !pData->bToFree)
 			{
-				sock = sock_it;
 				pBuf = pData->buffer.buf;
 				nBufLen = pData->buffer.len;
 				pData->bToFree = TRUE;
@@ -249,7 +249,6 @@ bool CPluginNetwork::GetRecvData(SOCKET &sock, const char *&pBuf, int &nBufLen)
 			}
 		}
 	}
-
 	return false;
 }
 
@@ -258,9 +257,23 @@ void  CPluginNetwork::SetNewConnectSocket(SOCKET sock)
 	CHECK_RET(sock != INVALID_SOCKET, NORET);
 
 	CSingleLock lock(&m_csAccpt, TRUE);	
+
 	VT_CONNECT_SOCK::iterator it_find = std::find(
-		m_vtConnSock.begin(), m_vtConnSock.end(), sock);
-	CHECK_RET(it_find == m_vtConnSock.end(), NORET);
+		m_vtConnSock.begin(), m_vtConnSock.end(), sock); 
+	
+	//发现accept后请求一直不回包， 很有可能是socket 记录出问题了,在这里加上容错处理
+	if (it_find != m_vtConnSock.end())
+	{
+		CHECK_OP(false, NOOP);	
+		theLog << "CPluginNetwork::SetNewConnectSocket Error - SOCKET Exist:" << (UINT)sock << " Is Wait To Close:" << (int)IsSocketInDisconList(sock) << endLog;
+
+		lock.Unlock();
+		{
+			NotifySocketClosed(sock, L"SetNewConnectSocket - Reused Socket");
+			ClearClosedSocket();
+		}
+		lock.Lock();
+	}
 	m_vtConnSock.push_back(sock);
 	lock.Unlock();
 	
@@ -293,12 +306,21 @@ void  CPluginNetwork::SetNewConnectSocket(SOCKET sock)
 	}
 }
 
-void  CPluginNetwork::NotifySocketClosed(SOCKET sock)
+void  CPluginNetwork::NotifySocketClosed(SOCKET sock, LPCTSTR pstrLogInfo)
 {
 	CSingleLock lock(&m_csAccpt, TRUE);
 	if ( m_pEvtNotify )
 		m_pEvtNotify->OnClose(sock);
 	m_vtDisconSock.push_back(sock);
+	if (pstrLogInfo)
+	{
+		theLog << "CPluginNetwork::NotifySocketClosed socket=" << (UINT32)sock << " Reason:" << pstrLogInfo << endLog;
+	}
+}
+bool CPluginNetwork::IsSocketInDisconList(SOCKET sock)
+{
+	CSingleLock lock(&m_csAccpt, TRUE);
+	return std::find(m_vtDisconSock.begin(), m_vtDisconSock.end(), sock) != m_vtDisconSock.end();
 }
 
 void CPluginNetwork::ClearClosedSocket()
@@ -534,6 +556,8 @@ DWORD WINAPI CPluginNetwork::ThreadAccept(LPVOID lParam)
 
 void CPluginNetwork::AccpetLoop()
 {	
+	theLog << "CPluginNetwork::AccpetLoop begin ..." << endLog;
+
 	//端口
 	CString strCfg = CA::GetMoudleFolder(AfxGetInstanceHandle());
 	strCfg.Append(L"config.ini");
@@ -582,7 +606,8 @@ void CPluginNetwork::AccpetLoop()
 		{
 			CloseHandle(m_hThreadAccept);
 			m_hThreadAccept = NULL;
-			return;
+			theLog << "CPluginNetwork::AccpetLoop wait exit" << endLog;
+			break;
 		}
 		//切换线程
 		Sleep(0);
@@ -593,18 +618,30 @@ void CPluginNetwork::AccpetLoop()
 		WSAEventSelect(sock_lstn, hAccpt, FD_ACCEPT);
 		DWORD dwRet = WaitForSingleObject((HANDLE)hAccpt, TIMEOUT_MILISECONDS);
 
-		if ( WAIT_OBJECT_0 == dwRet )
+		if (WAIT_OBJECT_0 == dwRet )
 		{
 			sockaddr_in addr_client;
 			int addr_len = sizeof(addr_client);
 			SOCKET sock_accpt = accept(sock_lstn, (sockaddr*)&addr_client, &addr_len);
 			if ( sock_accpt != INVALID_SOCKET )
 			{				
-				if ( GetConnectNum() >= WSA_MAXIMUM_WAIT_EVENTS )
+				//立即再清除一次， 避免SetNewConnectSocket失败
+				ClearClosedSocket();
+
+				if (GetConnectNum() >= WSA_MAXIMUM_WAIT_EVENTS)
+				{
+					theLog << "CPluginNetwork::AccpetLoop Error - Only Support Conntect Count = " << (int)WSA_MAXIMUM_WAIT_EVENTS << endLog;
+
 					closesocket(sock_accpt);
+				}
 				else
+				{
+					BOOL opt = TRUE;
+					setsockopt(sock_accpt, SOL_SOCKET, SO_DONTLINGER, (char*)&opt, sizeof(opt));
 					SetNewConnectSocket(sock_accpt);
-			}						
+				}
+					
+			}
 			continue;
 		}
 		else if ( WAIT_TIMEOUT == dwRet )
@@ -613,13 +650,18 @@ void CPluginNetwork::AccpetLoop()
 		}
 		else
 		{
-			//WAIT_FAILED
+			//WAIT_FAILED 容错逻辑: event 对象有问题？ 
 			CHECK_OP(false, break);
+			WSACloseEvent(hAccpt);
+			hAccpt = WSACreateEvent();
+			theLog << "CPluginNetwork::AccpetLoop Error : ret = " << dwRet << endLog; 
 		}
 	}
 
 	WSACloseEvent(hAccpt);
 	closesocket(sock_lstn);
+
+	theLog << "CPluginNetwork::AccpetLoop end..." << endLog;
 }
 
 DWORD WINAPI CPluginNetwork::ThreadSend(LPVOID lParam)
@@ -633,9 +675,11 @@ DWORD WINAPI CPluginNetwork::ThreadSend(LPVOID lParam)
 void CPluginNetwork::SendLoop()
 {
 	DWORD dwNextWaitExitTime = 0;
-	while ( true )
+	WSAEVENT  hEvtCheckClose = WSACreateEvent();
+
+	while (true)
 	{
-		if ( WaitForSingleObject(m_hEvtNotifyExit, dwNextWaitExitTime) == WAIT_OBJECT_0 )
+		if (WaitForSingleObject(m_hEvtNotifyExit, dwNextWaitExitTime) == WAIT_OBJECT_0)
 		{
 			CloseHandle(m_hThreadSend);
 			m_hThreadSend = NULL;
@@ -647,29 +691,30 @@ void CPluginNetwork::SendLoop()
 
 		//投递新数据
 		CSingleLock lock(&m_csSend, TRUE);
+		std::vector<SOCKET> vtSocketError;
 		MAP_SOCK_RTINFO::iterator itRTInfo = m_mapSendingInfo.begin();
-		for ( ; itRTInfo != m_mapSendingInfo.end(); ++itRTInfo )
+		for (; itRTInfo != m_mapSendingInfo.end(); ++itRTInfo)
 		{
 			SOCKET sock = itRTInfo->first;
 			SockRuntimeInfo *pInfo = itRTInfo->second;
 			CHECK_OP(pInfo, continue);
 
-			if ( !pInfo->vtDeliverData.empty() )
+			if (!pInfo->vtDeliverData.empty())
 				continue;
 
 			MAP_SOCK_TRANS_DATA::iterator itToSend = m_mapToSendData.find(sock);
-			if ( itToSend == m_mapToSendData.end() )
+			if (itToSend == m_mapToSendData.end())
 				continue;
 
 			VT_TRANS_DATA &vtData = itToSend->second;
 			VT_TRANS_DATA::iterator itData = vtData.begin();
 			std::vector<WSABUF> vtBuf;
-			for ( ; itData != vtData.end(); ++itData )
+			for (; itData != vtData.end(); ++itData)
 			{
 				TransDataInfo *pData = *itData;
 				CHECK_OP(pData, continue);
 
-				if ( !pData->bHasDeliver && !pData->bToFree )
+				if (!pData->bHasDeliver && !pData->bToFree)
 				{
 					CHECK_OP(!pData->bSendRecvFinish, continue);
 					pData->bHasDeliver = TRUE;
@@ -677,31 +722,33 @@ void CPluginNetwork::SendLoop()
 					vtBuf.push_back(pData->buffer);
 				}
 			}
-			
-			if ( !vtBuf.empty() )
-			{				
+
+			if (!vtBuf.empty())
+			{
 				int nRet = WSASend(sock, &vtBuf[0], vtBuf.size(), NULL, 0, &pInfo->overlap, NULL);
-				if ( nRet == SOCKET_ERROR )
+				if (nRet == SOCKET_ERROR)
 				{
 					int nErr = WSAGetLastError();
-					if ( nErr != WSA_IO_PENDING )
+					if (nErr != WSA_IO_PENDING)
 					{
 						OutputDebugStringA("CPluginNetwork::SendLoop - nErr != WSA_IO_PENDING !\n");
+						WSASetEvent(pInfo->hEventHandle);
+						vtSocketError.push_back(sock);
 					}
 				}
 			}
-		}	
-	
+		}
+
 		//等待信号
 		std::vector<WSAEVENT> vtEvent;
 		std::vector<SOCKET> vtSocket;
 		itRTInfo = m_mapSendingInfo.begin();
-		for ( ; itRTInfo != m_mapSendingInfo.end(); ++itRTInfo )
+		for (; itRTInfo != m_mapSendingInfo.end(); ++itRTInfo)
 		{
 			SOCKET sock = itRTInfo->first;
 			SockRuntimeInfo *pInfo = itRTInfo->second;
 			CHECK_OP(pInfo, continue);
-			if ( !pInfo->vtDeliverData.empty() )
+			if (!pInfo->vtDeliverData.empty())
 			{
 				vtEvent.push_back(pInfo->hEventHandle);
 				vtSocket.push_back(sock);
@@ -709,67 +756,122 @@ void CPluginNetwork::SendLoop()
 		}
 		lock.Unlock();
 
-		if ( vtEvent.empty() )
-		{			
+		if (vtEvent.empty())
+		{
 			continue;
 		}
-		
+
 		dwNextWaitExitTime = 0;
-		CHECK_OP(vtEvent.size() == vtSocket.size(), NOOP);
-		DWORD dwRet = WSAWaitForMultipleEvents((DWORD)vtEvent.size(), _vect2Ptr(vtEvent), FALSE, TIMEOUT_MILISECONDS, FALSE);
-		if ( dwRet == WSA_WAIT_TIMEOUT )
+		std::vector<SOCKET>  vtWaited; //记录等待处理好的event 
+		//循环处理多个event
+		while (true)
 		{
-			continue;
-		}
-		else if ( dwRet == WSA_WAIT_FAILED )
-		{
-			continue;
-		}
-		//切换线程
-		Sleep(0);
-		
-		//处理发送完成的数据
-		int nIndex = dwRet - WSA_WAIT_EVENT_0;
-		CHECK_OP(nIndex >= 0 && nIndex < _vectIntSize(vtSocket), continue);
-		SOCKET sock = vtSocket[nIndex];
-		WSAEVENT evt = vtEvent[nIndex];
-		WSAResetEvent(evt);
-		
+			CHECK_OP(vtEvent.size() == vtSocket.size(), NOOP);
+			if (vtEvent.size() == 0)
+				break;
+
+			DWORD dwRet = WSAWaitForMultipleEvents((DWORD)vtEvent.size(), _vect2Ptr(vtEvent), FALSE, TIMEOUT_MILISECONDS, FALSE);
+			if (dwRet == WSA_WAIT_TIMEOUT)
+			{
+				break;
+			}
+			else if (dwRet == WSA_WAIT_FAILED)
+			{
+				break;
+			}
+			//切换线程
+			Sleep(0);
+
+			//处理发送完成的数据
+			int nIndex = dwRet - WSA_WAIT_EVENT_0;
+			CHECK_OP(nIndex >= 0 && nIndex < _vectIntSize(vtSocket), break);
+			SOCKET sock = vtSocket[nIndex];
+			WSAEVENT evt = vtEvent[nIndex];
+			//删掉当前处理过的
+			vtSocket.erase(vtSocket.begin() + nIndex);
+			vtEvent.erase(vtEvent.begin() + nIndex);
+			WSAResetEvent(evt);
+			vtWaited.push_back(sock);
+
+			lock.Lock();
+
+			SockRuntimeInfo *pInfo = NULL;
+			MAP_SOCK_RTINFO::iterator itFind = m_mapSendingInfo.find(sock);
+			if (itFind != m_mapSendingInfo.end())
+			{
+				pInfo = itFind->second;
+			}
+			DWORD dwBytesTrans = 0;
+			DWORD dwFlags = 0;
+			bool bBadSocket = std::find(vtSocketError.begin(), vtSocketError.end(), sock) != vtSocketError.end();
+			if (pInfo && !bBadSocket)
+			{
+				WSAGetOverlappedResult(sock, &pInfo->overlap, &dwBytesTrans, FALSE, &dwFlags);
+			}
+			if (dwBytesTrans == 0 || bBadSocket)
+			{
+				ClearSocketSendData(sock);
+				lock.Unlock();
+
+				CString strError;
+				strError.Format(_T("SendLoop - BytesTrans=%d  badSocket=%d"), dwBytesTrans, (int)bBadSocket);
+				NotifySocketClosed(sock, strError);
+				continue;
+			}
+
+			VT_TRANS_DATA &vtFinishData = pInfo->vtDeliverData;
+			VT_TRANS_DATA::iterator itFinishData = vtFinishData.begin();
+			for (; itFinishData != vtFinishData.end(); ++itFinishData)
+			{
+				TransDataInfo *pData = *itFinishData;
+				CHECK_OP(pData, NOOP);
+				if (pData)
+				{
+					pData->bSendRecvFinish = TRUE;
+					pData->bToFree = TRUE;
+				}
+			}
+			vtFinishData.clear();
+
+			//清理及通知		
+			FreeSendFinishBuf(sock);
+			lock.Unlock();
+
+			if (m_pEvtNotify)
+				m_pEvtNotify->OnSend(sock);
+		} //while (true) events 
+
+		//针对没有等待到的event检测是否已经关闭
 		lock.Lock();
-		MAP_SOCK_RTINFO::iterator itFind = m_mapSendingInfo.find(sock);
-		CHECK_OP(itFind != m_mapSendingInfo.end(), continue);
-		SockRuntimeInfo *pInfo = itFind->second;		
-		CHECK_OP(pInfo, continue);
-
-		DWORD dwBytesTrans = 0;
-		DWORD dwFlags = 0;
-		BOOL bResult = WSAGetOverlappedResult(sock, &pInfo->overlap, &dwBytesTrans, FALSE, &dwFlags);
-		if ( dwBytesTrans == 0 )
+		std::vector<SOCKET> vtNotifyClose;
+		MAP_SOCK_RTINFO::iterator itSendInfo = m_mapSendingInfo.begin();
+		for (; itSendInfo != m_mapSendingInfo.end(); ++itSendInfo)
 		{
-			//CHECK_OP(false, NOOP);
-			ClearSocketSendData(sock);
-			NotifySocketClosed(sock);
-			continue;
+			SOCKET sock = itSendInfo->first;
+			std::vector<SOCKET>::iterator itSock = std::find(vtWaited.begin(), vtWaited.end(), sock);
+			if (itSock == vtWaited.end())
+			{
+				WSAResetEvent(hEvtCheckClose);
+				WSAEventSelect(sock, hEvtCheckClose, FD_CLOSE);
+				DWORD dwRet = WaitForSingleObject(hEvtCheckClose, 0);
+				if (WAIT_OBJECT_0 == dwRet)
+				{
+					vtNotifyClose.push_back(sock);
+				}
+			}
 		}
-
-		VT_TRANS_DATA &vtFinishData = pInfo->vtDeliverData;
-		VT_TRANS_DATA::iterator itFinishData = vtFinishData.begin();
-		for ( ; itFinishData != vtFinishData.end(); ++itFinishData )
+		for (UINT i = 0; i < vtNotifyClose.size(); i++)
 		{
-			TransDataInfo *pData = *itFinishData;
-			CHECK_OP(pData, continue);
-			pData->bSendRecvFinish = TRUE;
-			pData->bToFree = TRUE;
+			ClearSocketSendData(vtNotifyClose[i]);
 		}
-		vtFinishData.clear();
-
-		//清理及通知		
-		FreeSendFinishBuf(sock);
 		lock.Unlock();
 
-		if ( m_pEvtNotify )
-			m_pEvtNotify->OnSend(sock);
-	}
+		for (UINT i = 0; i < vtNotifyClose.size(); i++)
+		{
+			NotifySocketClosed(vtNotifyClose[i], L" SendLoop Check Close Error -  event not waited");
+		}
+
+	}//while (true) begin
 }
 
 DWORD WINAPI CPluginNetwork::ThreadRecv(LPVOID lParam)
@@ -783,9 +885,10 @@ DWORD WINAPI CPluginNetwork::ThreadRecv(LPVOID lParam)
 void CPluginNetwork::RecvLoop()
 {
 	DWORD dwNextWaitExitTime = 0;
-	while ( true )
-	{		
-		if ( WaitForSingleObject(m_hEvtNotifyExit, dwNextWaitExitTime) == WAIT_OBJECT_0 )
+	WSAEVENT  hEvtCheckClose = WSACreateEvent();
+	while (true)
+	{
+		if (WaitForSingleObject(m_hEvtNotifyExit, dwNextWaitExitTime) == WAIT_OBJECT_0)
 		{
 			CloseHandle(m_hThreadRecv);
 			m_hThreadRecv = NULL;
@@ -798,32 +901,25 @@ void CPluginNetwork::RecvLoop()
 		//投递新的接收请求
 		CSingleLock lock(&m_csRecv, TRUE);
 		MAP_SOCK_RTINFO::iterator itRTInfo = m_mapRecvingInfo.begin();
-		for ( ; itRTInfo != m_mapRecvingInfo.end(); ++itRTInfo )
+		std::vector<SOCKET> vtSocketError;
+		for (; itRTInfo != m_mapRecvingInfo.end(); ++itRTInfo)
 		{
 			SOCKET sock = itRTInfo->first;
 			SockRuntimeInfo *pInfo = itRTInfo->second;
 			CHECK_OP(pInfo, continue);
 
-			if ( !pInfo->vtDeliverData.empty() )
+			if (!pInfo->vtDeliverData.empty())
 				continue;
-
-// 			WSACloseEvent(pInfo->hEventHandle);
-// 			pInfo->hEventHandle = NULL;
-
-// 			if ( pInfo->hEventHandle == NULL )
-// 			{
-// 				pInfo->hEventHandle = WSACreateEvent();
-// 				pInfo->overlap.hEvent = pInfo->hEventHandle;
-// 			}
 
 			TransDataInfo *pData = new TransDataInfo;
 			char *pBuf = new char[MIN_BUF_ALLOC_SIZE];
-			if ( pData == NULL || pBuf == NULL )
+			if (pData == NULL || pBuf == NULL)
 			{
 				delete pData;
 				delete[] pBuf;
+				theLog << "CPluginNetwork::RecvLoop - new TransDataInfo Error" << endLog;
 				continue;
-			}		
+			}
 
 			pInfo->vtDeliverData.push_back(pData);
 			m_mapRecvedData[sock].push_back(pData);
@@ -837,17 +933,19 @@ void CPluginNetwork::RecvLoop()
 
 			ZeroMemory(&pInfo->overlap, sizeof(pInfo->overlap));
 			pInfo->overlap.hEvent = pInfo->hEventHandle;
-			WSAResetEvent(pInfo->hEventHandle);			
+			WSAResetEvent(pInfo->hEventHandle);
 
 			DWORD dwFlags = 0;
 			DWORD dwRecvBytes = 0;
 			int nRet = WSARecv(sock, &pData->buffer, 1, NULL/*&dwRecvBytes*/, &dwFlags, &pInfo->overlap, NULL);
 			int nErr = WSAGetLastError();
-			if ( nRet == SOCKET_ERROR )
-			{				
-				if ( nErr != WSA_IO_PENDING )
+			if (nRet == SOCKET_ERROR)
+			{
+				if (nErr != WSA_IO_PENDING)
 				{
 					OutputDebugStringA("CPluginNetwork::RecvLoop -  nErr != WSA_IO_PENDING! \n");
+					WSASetEvent(pInfo->hEventHandle);
+					vtSocketError.push_back(sock);
 				}
 			}
 		}
@@ -856,113 +954,165 @@ void CPluginNetwork::RecvLoop()
 		std::vector<WSAEVENT> vtEvent;
 		std::vector<SOCKET> vtSocket;
 		itRTInfo = m_mapRecvingInfo.begin();
-		for ( ; itRTInfo != m_mapRecvingInfo.end(); ++itRTInfo )
+		for (; itRTInfo != m_mapRecvingInfo.end(); ++itRTInfo)
 		{
 			SOCKET sock = itRTInfo->first;
 			SockRuntimeInfo *pInfo = itRTInfo->second;
 			CHECK_OP(pInfo, continue);
-			if ( !pInfo->vtDeliverData.empty() )
+			if (!pInfo->vtDeliverData.empty())
 			{
 				vtEvent.push_back(pInfo->hEventHandle);
 				vtSocket.push_back(sock);
 			}
 		}
-
 		lock.Unlock();
 
-		if ( vtEvent.empty() )
-		{			
+		if (vtEvent.empty())
+		{
 			continue;
 		}
-		
 		dwNextWaitExitTime = 0;
-		CHECK_OP(vtEvent.size() == vtSocket.size(), NOOP);
-		DWORD dwRet = WSAWaitForMultipleEvents((DWORD)vtEvent.size(), _vect2Ptr(vtEvent), FALSE, TIMEOUT_MILISECONDS, FALSE);
-		if ( dwRet == WSA_WAIT_TIMEOUT )
+		std::vector<SOCKET>  vtWaited; //记录等待处理好的event 
+		//循环处理多个event
+		while (true)
 		{
-			continue;
-		}
-		else if ( dwRet == WSA_WAIT_FAILED )
-		{
-			continue;
-		}		
-		//切换线程
-		Sleep(0);
+			if (vtEvent.size() == 0)
+				break;
 
-		//处理接收到的
-		int nIndex = dwRet - WSA_WAIT_EVENT_0;
-		CHECK_OP(nIndex >= 0 && nIndex < _vectIntSize(vtSocket), continue);
-		SOCKET sock = vtSocket[nIndex];
-		WSAEVENT evt = vtEvent[nIndex];
-		WSAResetEvent(evt);
-
-		lock.Lock();
-		MAP_SOCK_RTINFO::iterator itFind = m_mapRecvingInfo.find(sock);
-		CHECK_OP(itFind != m_mapRecvingInfo.end(), continue);
-		SockRuntimeInfo *pInfo = itFind->second;		
-		CHECK_OP(pInfo, continue);
-
-		DWORD dwBytesTrans = 0;
-		DWORD dwFlags = 0;
-		BOOL bResult = WSAGetOverlappedResult(sock, &pInfo->overlap, &dwBytesTrans, FALSE, &dwFlags);
-		int nErr = WSAGetLastError();
-		if ( dwBytesTrans == 0 )
-		{
-			//CHECK_OP(!bResult, NOOP);
-			ClearSocketRecvData(sock);
-			pInfo = NULL;
-			lock.Unlock();
-		
-			NotifySocketClosed(sock);
-			continue;
-		}
-
-		//检测断开
-		WSAResetEvent(pInfo->hEventHandle);
-		WSAEventSelect(sock, pInfo->hEventHandle, FD_CLOSE);
-		DWORD dwCloseRet = WaitForSingleObject(pInfo->hEventHandle, 0);
-		bool bNoitfySocketClose = false;
-		if ( dwCloseRet == WAIT_OBJECT_0 )
-		{
-			ClearSocketRecvData(sock);
-
-			//ClearSocketRecvData调用后, pInfo指针已经野掉了
-			pInfo = NULL;  
-			bNoitfySocketClose = true;  //close涉及跨线程同步通知，放在最后执行比较好
-		}
-
-		//正常得到数据，标志数据状态
-		if (pInfo)
-		{
-			VT_TRANS_DATA &vtFinishData = pInfo->vtDeliverData;
-			if (vtFinishData.size() != 1)
+			CHECK_OP(vtEvent.size() == vtSocket.size(), NOOP);
+			DWORD dwRet = WSAWaitForMultipleEvents((DWORD)vtEvent.size(), _vect2Ptr(vtEvent), FALSE, TIMEOUT_MILISECONDS, FALSE);
+			if (dwRet == WSA_WAIT_TIMEOUT)
 			{
-				OutputDebugStringA("PluginNetork - Check Err vtFinishData.size() !\n");
+				break;
 			}
-			if (!vtFinishData.empty())
+			else if (dwRet == WSA_WAIT_FAILED)
 			{
-				TransDataInfo *pData = vtFinishData[0];
-				if (pData)
+				break;
+			}
+			//切换线程
+			Sleep(0);
+
+			//处理接收到的
+			int nIndex = dwRet - WSA_WAIT_EVENT_0;
+			CHECK_OP(nIndex >= 0 && nIndex < _vectIntSize(vtSocket), break);
+			SOCKET sock = vtSocket[nIndex];
+			WSAEVENT evt = vtEvent[nIndex];
+			//删掉当前处理过的
+			vtSocket.erase(vtSocket.begin() + nIndex);
+			vtEvent.erase(vtEvent.begin() + nIndex);
+			WSAResetEvent(evt);
+			vtWaited.push_back(sock);
+
+			lock.Lock();
+
+			SockRuntimeInfo *pInfo = NULL;
+			MAP_SOCK_RTINFO::iterator itFind = m_mapRecvingInfo.find(sock);
+			if (itFind != m_mapRecvingInfo.end())
+			{
+				pInfo = itFind->second;
+			}
+
+			DWORD dwBytesTrans = 0;
+			DWORD dwFlags = 0;
+			bool bBadSock = (std::find(vtSocketError.begin(), vtSocketError.end(), sock) != vtSocketError.end());
+			if (pInfo && !bBadSock)
+			{
+				WSAGetOverlappedResult(sock, &pInfo->overlap, &dwBytesTrans, FALSE, &dwFlags);
+			}
+			int nErr = WSAGetLastError();
+			if (dwBytesTrans == 0 || bBadSock)
+			{
+				ClearSocketRecvData(sock);
+				pInfo = NULL;
+				lock.Unlock();
+
+				CString strError;
+				strError.Format(_T("RecvLoop - BytesTrans=%d  badSocket=%d"), dwBytesTrans, (int)bBadSock);
+				NotifySocketClosed(sock, strError);
+				continue;
+			}
+
+			//检测断开
+			WSAResetEvent(pInfo->hEventHandle);
+			WSAEventSelect(sock, pInfo->hEventHandle, FD_CLOSE);
+			DWORD dwCloseRet = WaitForSingleObject(pInfo->hEventHandle, 0);
+			bool bNoitfySocketClose = false;
+			if (dwCloseRet == WAIT_OBJECT_0)
+			{
+				ClearSocketRecvData(sock);
+
+				//ClearSocketRecvData调用后, pInfo指针已经野掉了
+				pInfo = NULL;
+				bNoitfySocketClose = true;  //close涉及跨线程同步通知，放在最后执行比较好
+			}
+
+			//正常得到数据，标志数据状态
+			if (pInfo)
+			{
+				VT_TRANS_DATA &vtFinishData = pInfo->vtDeliverData;
+				if (vtFinishData.size() != 1)
 				{
-					pData->bSendRecvFinish = TRUE;
-					pData->buffer.len = dwBytesTrans;
+					OutputDebugStringA("PluginNetork - Check Err vtFinishData.size() !\n");
+					theLog << "CPluginNetwork::RecvLoop - Error vtDeliverData, socket=" << (UINT32)sock << " size=" << pInfo->vtDeliverData.size() << endLog;
 				}
-				vtFinishData.erase(vtFinishData.begin());
+				if (!vtFinishData.empty())
+				{
+					TransDataInfo *pData = vtFinishData[0];
+					if (pData)
+					{
+						pData->bSendRecvFinish = TRUE;
+						pData->buffer.len = dwBytesTrans;
+					}
+					vtFinishData.clear();
+				}
+			}
+			//////////////////////////////////////////////////////////////////////////
+
+			lock.Unlock();
+
+			if (bNoitfySocketClose)
+			{
+				//Notify涉及跨线程同步通知 
+				NotifySocketClosed(sock, L" RecvLoop Check Close Error -  event waited");
+			}
+			else
+			{
+				if (m_pEvtNotify)
+					m_pEvtNotify->OnReceive(sock);
+			}
+		} //while (true) event
+
+		//针对没有等待到的event检测是否已经关闭
+		lock.Lock();
+		std::vector<SOCKET> vtNotifyClose;
+		MAP_SOCK_RTINFO::iterator itRecvInfo = m_mapRecvingInfo.begin();
+		for (; itRecvInfo != m_mapRecvingInfo.end(); ++itRecvInfo)
+		{
+			SOCKET sock = itRecvInfo->first;
+			std::vector<SOCKET>::iterator itSock = std::find(vtWaited.begin(), vtWaited.end(), sock);
+			if (itSock == vtWaited.end())
+			{
+				WSAResetEvent(hEvtCheckClose);
+				WSAEventSelect(sock, hEvtCheckClose, FD_CLOSE);
+				DWORD dwRet = WaitForSingleObject(hEvtCheckClose, 0);
+				if (WAIT_OBJECT_0 == dwRet)
+				{
+					vtNotifyClose.push_back(sock);
+				}
 			}
 		}
-		//////////////////////////////////////////////////////////////////////////
-	
+		for (UINT i = 0; i < vtNotifyClose.size(); i++)
+		{
+			ClearSocketRecvData(vtNotifyClose[i]);
+		}
 		lock.Unlock();
 
-		if (bNoitfySocketClose)
+		for (UINT i = 0; i < vtNotifyClose.size(); i++)
 		{
-			//Notify涉及跨线程同步通知 
-			NotifySocketClosed(sock);
+			NotifySocketClosed(vtNotifyClose[i], L" RecvLoop Check Close Error -  event not waited");
 		}
-		else
-		{
-			if (m_pEvtNotify)
-				m_pEvtNotify->OnReceive(sock);
-		}
-	}
+	}// while (true) - begin 
+
+	WSACloseEvent(hEvtCheckClose);
+	hEvtCheckClose = NULL;
 }

@@ -17,6 +17,8 @@
 #define QUOTE_SERVER_TYPE	QuoteServer_PushKLData
 typedef CProtoPushKLData		CProtoQuote;
 
+#define  MsgEvent_Push_Triger_RTKLData_Error  400
+#define  Min_Tick_Interval_Req_RTKLData 5000  //5√Î 
 
 //////////////////////////////////////////////////////////////////////////
 
@@ -24,6 +26,8 @@ CPluginPushKLData::CPluginPushKLData()
 {	
 	m_pQuoteData = NULL;
 	m_pQuoteServer = NULL;
+
+
 }
 
 CPluginPushKLData::~CPluginPushKLData()
@@ -44,6 +48,8 @@ void CPluginPushKLData::Init(CPluginQuoteServer* pQuoteServer, IFTQuoteData*  pQ
 
 	m_pQuoteServer = pQuoteServer;
 	m_pQuoteData = pQuoteData;
+	m_MsgHandler.Create();
+	m_MsgHandler.SetEventInterface(this);
 }
 
 void CPluginPushKLData::Uninit()
@@ -105,7 +111,13 @@ void CPluginPushKLData::PushStockData(INT64 nStockID, SOCKET sock, StockSubType 
 		break;
 	}
 
-	if (m_pQuoteData->IsKLDataExist(nStockID, nKLType) )
+	if (!m_pQuoteData->IsKLDataExist(nStockID, nKLType))
+	{
+		//»›¥Ì¥¶¿Ì
+		m_setPushTrigerRTKLError.insert(std::make_pair(nStockID, nKLType));
+		m_MsgHandler.RaiseEvent(MsgEvent_Push_Triger_RTKLData_Error, 0, 0);
+	}
+	else
 	{
 		Quote_StockKLData* pQuoteKL = NULL;
 		int nCount = 0;
@@ -341,4 +353,52 @@ bool CPluginPushKLData::SetLastPushKL(INT64 ddwStockHash, SOCKET sock, StockSubT
 		}
 	}
 	return false;
+}
+
+void CPluginPushKLData::OnMsgEvent(int nEvent, WPARAM wParam, LPARAM lParam)
+{
+	if (nEvent == MsgEvent_Push_Triger_RTKLData_Error)
+	{
+		OnPushTrigerRTKLDataError();
+	}
+}
+
+void CPluginPushKLData::OnPushTrigerRTKLDataError()
+{
+	CHECK_RET(m_pQuoteServer, NORET);
+
+	if (m_setPushTrigerRTKLError.size() == 0)
+	{
+		return;
+	}
+	DWORD dwTick = GetTickCount();
+	if (0 == m_dwTickLastTrigerKLError)
+	{
+		m_dwTickLastTrigerKLError = dwTick;
+		return;
+	}
+	if (dwTick - Min_Tick_Interval_Req_RTKLData < Min_Tick_Interval_Req_RTKLData)
+	{
+		return;
+	}
+	
+	std::set<std::pair<INT64, int>> vtStock = m_setPushTrigerRTKLError;
+	m_setPushTrigerRTKLError.clear();
+	m_dwTickLastTrigerKLError = dwTick;
+
+	std::set<std::pair<INT64, int>>::iterator it = vtStock.begin();
+	for (; it != vtStock.end(); it++)
+	{
+		INT64 nStockID = it->first;
+		int nKLType = it->second;
+
+		StockMktCodeEx stMktCode;
+		if (IFTStockUtil::GetStockMktCode(nStockID, stMktCode))
+		{
+			std::string strCode = stMktCode.strCode;
+			DWORD dwCookie = 0;
+			m_pQuoteServer->QueryStockKLData(&dwCookie, strCode, stMktCode.eMarketType, QuoteServer_KLData, nKLType);
+		}	
+	}	
+	 
 }

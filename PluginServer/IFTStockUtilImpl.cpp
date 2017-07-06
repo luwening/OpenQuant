@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "IFTStockUtilImpl.h"
 
-#define  Max_Cache_TickCount  (3600*1000)
+#define  Max_Cache_TickCount  (12*3600*1000)
 
  
 //////////////////////////////////////////////////////////////////////////

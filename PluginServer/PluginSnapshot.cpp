@@ -234,7 +234,7 @@ void CPluginSnapshot::NotifySnapshotResult(DWORD dwCookie, PluginStockSnapshot *
 		snapDst.stWrtData.nEndtradeDate = snapSrc.stWrtData.nEndtradeDate;
 		
 		StockMktType eMkt = StockMkt_None; wchar_t szCode[16] = { 0 }, szStockName[128] = { 0 };
-		if (m_pQuoteData && snapDst.stWrtData.bDataValid)
+		if (m_pQuoteData && snapDst.stWrtData.bDataValid && snapSrc.stWrtData.nWarrantOwnerID != 0)
 		{
 			m_pQuoteData->GetStockInfoByHashVal(snapSrc.stWrtData.nWarrantOwnerID, eMkt, szCode, szStockName);
 		}
