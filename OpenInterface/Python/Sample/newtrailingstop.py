@@ -32,7 +32,7 @@ class TrailingStopHandler(StockQuoteHandlerBase):
             print('StockQuote error {}'.format(content))
             return ret,content
         if self.finished:
-            print('交易己被触发')
+            # print('交易己被触发')
             return ret,content
         ret,data=self.quote_ctx.get_global_state()
         if ret!=RET_OK:
@@ -105,6 +105,9 @@ def trailingstop(api_svr_ip='127.0.0.1',api_svr_port=11111,unlock_password="",co
         if qty<volume:
             print('qty lower than volume')
             raise Exception('持仓不足')
+    if volume<=0:
+        print('你没有持仓')
+        raise Exception('没有持仓')
     ret, data = quote_ctx.get_market_snapshot([code])
     if ret!=RET_OK:
         raise Exception('获取lot size失败')
@@ -166,12 +169,19 @@ def trailingstop(api_svr_ip='127.0.0.1',api_svr_port=11111,unlock_password="",co
                     raise Exception('获取订单状态失败')
                 status=data[data['orderid']==orderid].iloc[0]['status']
                 dealt_qty=data[data['orderid']==orderid].iloc[0]['dealt_qty']
+                order_price=data[data['orderid']==orderid].iloc[0]['price']
                 status=int(status)
                 dealt_qty=int(dealt_qty)
                 qty-=dealt_qty
                 if status==3:
-                    print('全部成交{}:股票代码{},成交总数{}'.format(status,code,volume))
-                    EmailNotification.sendemail(receiver,'全部成交','股票代码{}，成交总数{}'.format(code,volume))
+                    print('全部成交:股票代码{},成交总数{}，价格{}'.format(code,dealt_qty,order_price))
+                    EmailNotification.sendemail(receiver,'全部成交','股票代码{}，成交总数{}，价格{}'.format(code,dealt_qty,order_price))
+                elif status==2:
+                    print('部分成交:股票代码{}，成交总数{}，价格{}'.format(code,dealt_qty,order_price))
+                    EmailNotification.sendemail(receiver,'部分成交','股票代码{}，成交总数{}，价格{}'.format(code,dealt_qty,order_price))
+                    ret, data = trade_ctx.set_order_status(0, orderid=orderid)
+                    if ret != RET_OK:
+                        raise Exception('撤单失败')
                 else:
                     ret,data=trade_ctx.set_order_status(0,orderid=orderid)
                     if ret!=RET_OK:
@@ -183,9 +193,9 @@ def trailingstop(api_svr_ip='127.0.0.1',api_svr_port=11111,unlock_password="",co
                     sell_price=data['Bid'][0][0]
             # draw price and stop
             pricelist=trailing_stop_handler.pricelist
-            plt.plot(np.arange(pricelist),pricelist)
+            plt.plot(np.arange(len(pricelist)),pricelist)
             stop_list=trailing_stop_handler.stoplist
-            plt.plot(np.arange(stop_list),stop_list)
+            plt.plot(np.arange(len(stop_list)),stop_list)
             break
     quote_ctx.close()
     trade_ctx.close()
@@ -226,12 +236,12 @@ if __name__=='__main__':
     volume = 0
     how_to_sell = 0
     diff = 0.2
-    rest_time = 54651  # 每隔rest_time秒，会检查订单状态,需要>=2
+    rest_time = 2  # 每隔rest_time秒，会检查订单状态,需要>=2
     #
 
     # 邮件通知参数
     enable_email_notification = True
-    receiver = '1131848471@qq.com'
+    receiver = 'your receive email'
 
     trailingstop(api_svr_ip,api_svr_port,unlock_password,code,trade_env,method,drop,volume,how_to_sell,diff,
                  rest_time,enable_email_notification,receiver)

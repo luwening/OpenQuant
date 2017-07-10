@@ -16,14 +16,14 @@ def simple_sell(quote_ctx,trade_ctx,stock_code,trade_price,volume,trade_env):
                 continue
             elif lot_size<=0:
                 raise Exception('lot size error {}:{}'.format(lot_size,stock_code))
-            qty=floor(volume/lot_size)*lot_size
-            ret,data=trade_ctx.place_order(price=trade_price,qty=qty,strcode=stock_code,orderside=1,envtype=trade_env)
-            if ret!=RET_OK:
-                print('下单失败{}'.format(data))
-                return None
-            else:
-                print('下单成功')
-                return data
+        qty=floor(volume/lot_size)*lot_size
+        ret,data=trade_ctx.place_order(price=trade_price,qty=qty,strcode=stock_code,orderside=1,envtype=trade_env)
+        if ret!=RET_OK:
+            print('下单失败{}'.format(data))
+            return None
+        else:
+            print('下单成功')
+            return data
         return None
 
 def smart_sell(quote_ctx,trade_ctx,stock_code,volume,trade_env):
