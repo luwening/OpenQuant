@@ -179,13 +179,21 @@ def trailingstop(api_svr_ip='127.0.0.1',api_svr_port=11111,unlock_password="",co
                 elif status==2:
                     print('部分成交:股票代码{}，成交总数{}，价格{}'.format(code,dealt_qty,order_price))
                     EmailNotification.sendemail(receiver,'部分成交','股票代码{}，成交总数{}，价格{}'.format(code,dealt_qty,order_price))
-                    ret, data = trade_ctx.set_order_status(0, orderid=orderid)
-                    if ret != RET_OK:
-                        raise Exception('撤单失败')
+                    while True:
+                        ret, data = trade_ctx.set_order_status(0, orderid=orderid,envtype=trade_env)
+                        if ret != RET_OK:
+                            time.sleep(rest_time)
+                            continue
+                        else:
+                            break
                 else:
-                    ret,data=trade_ctx.set_order_status(0,orderid=orderid)
-                    if ret!=RET_OK:
-                        raise Exception('撤单失败')
+                    while True:
+                        ret, data = trade_ctx.set_order_status(0, orderid=orderid,envtype=trade_env)
+                        if ret != RET_OK:
+                            time.sleep(rest_time)
+                            continue
+                        else:
+                            break
                 if how_to_sell==0:
                     ret,data=quote_ctx.get_order_book(code)
                     if ret!=RET_OK:
