@@ -118,12 +118,12 @@ def trailingstop(api_svr_ip='127.0.0.1',api_svr_port=11111,unlock_password="",co
     if ret!=RET_OK:
         print('erorr {}:{}'.format(ret,data))
         raise Exception('订阅QUOTE错误')
+    ret, data = quote_ctx.subscribe(code, 'ORDER_BOOK')
+    if ret != RET_OK:
+        print('error {}:{}'.format(ret, data))
+        raise Exception('订阅orderbook失败')
     if diff!=0:
         if is_hk_trade:
-            ret,data=quote_ctx.subscribe(code,'ORDER_BOOK')
-            if ret!=RET_OK:
-                print('error {}:{}'.format(ret,data))
-                raise Exception('订阅orderbook失败')
             ret,data=quote_ctx.get_order_book(code)
             if ret!=RET_OK:
                 print("can't get orderbook".format(data))
