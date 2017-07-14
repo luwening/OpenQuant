@@ -285,7 +285,7 @@ interface IQuoteInfoCallback
 	virtual void  OnPushMarketNewTrade(StockMktType eMkt, INT64 ddwLastTradeStamp, INT64 ddwNewTradeStamp) = 0;
 
 	/**
-	* 心跳推送
+	* 维持push连接alive的心跳推送
 	*/
 	virtual void  OnPushHeartBeat(SOCKET sock, UINT64 nTimeStampNow) = 0;
 };
