@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
 
 #指定加载的openft api目录
-import path, sys
-folder = path.path(__file__).abspath()
-openft_folder = folder.parent.parent
-sys.path.append(openft_folder)
+import os, sys
+sys.path.append(os.path.abspath('../'))
 from openft.open_quant_context import *
 
 from time import  sleep

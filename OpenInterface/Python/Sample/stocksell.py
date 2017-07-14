@@ -1,7 +1,5 @@
-import path, sys
-folder = path.path(__file__).abspath()
-openft_folder = folder.parent.parent
-sys.path.append(openft_folder)
+import os, sys
+sys.path.append(os.path.abspath('../'))
 from openft.open_quant_context import *
 from math import floor
 
