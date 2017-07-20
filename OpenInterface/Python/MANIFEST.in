@@ -1,0 +1,3 @@
+include README.md
+recursive-include Sample/ *
+recursive-include 入门指引及接口文档/ *

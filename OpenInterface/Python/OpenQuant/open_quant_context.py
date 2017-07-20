@@ -724,7 +724,7 @@ class OpenContextBase(object):
                     self.get_global_state()
 
 class OpenQuoteContext(OpenContextBase):
-    def __init__(self, host = '127.0.0.1', port = 11111):
+    def __init__(self, host = '119.29.141.202', port = 11111):
         self._ctx_subscribe = set()
         super(OpenQuoteContext, self).__init__(host, port, True, True)
 
@@ -1206,7 +1206,7 @@ class OpenQuoteContext(OpenContextBase):
 class OpenHKTradeContext(OpenContextBase):
     cookie = 100000
 
-    def __init__(self, host="127.0.0.1", port=11111):
+    def __init__(self, host="119.29.141.202", port=11111):
         self._ctx_unlock = None
         super(OpenHKTradeContext, self).__init__(host, port, True, False)
 
@@ -1417,7 +1417,7 @@ class OpenHKTradeContext(OpenContextBase):
 class OpenUSTradeContext(OpenContextBase):
     cookie = 100000
 
-    def __init__(self, host="127.0.0.1", port=11111):
+    def __init__(self, host="119.29.141.202", port=11111):
         self._ctx_unlock = None
         super(OpenUSTradeContext, self).__init__(host, port, True, False)
 

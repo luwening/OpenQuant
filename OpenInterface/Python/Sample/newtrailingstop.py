@@ -1,6 +1,6 @@
 import os, sys
 sys.path.append(os.path.join(os.path.abspath(__file__),'../../'))
-from openft.open_quant_context import *
+from OpenQuant.open_quant_context import *
 from emailplugin import EmailNotification
 from stocksell import simple_sell,smart_sell
 import numpy as np
