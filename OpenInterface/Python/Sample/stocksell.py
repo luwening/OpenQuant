@@ -1,8 +1,6 @@
-import path, sys
-folder = path.path(__file__).abspath()
-openft_folder = folder.parent.parent
-sys.path.append(openft_folder)
-from openft.open_quant_context import *
+import os, sys
+sys.path.append(os.path.join(os.path.abspath(__file__),'../../'))
+from OpenQuant.open_quant_context import *
 from math import floor
 
 def simple_sell(quote_ctx,trade_ctx,stock_code,trade_price,volume,trade_env):

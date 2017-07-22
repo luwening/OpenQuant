@@ -1,8 +1,6 @@
-import path, sys
-folder = path.path(__file__).abspath()
-openft_folder = folder.parent.parent
-sys.path.append(openft_folder)
-from openft.open_quant_context import *
+import os, sys
+sys.path.append(os.path.join(os.path.abspath(__file__),'../../'))
+from OpenQuant.open_quant_context import *
 from emailplugin import EmailNotification
 from stocksell import simple_sell,smart_sell
 import numpy as np
@@ -118,12 +116,12 @@ def trailingstop(api_svr_ip='127.0.0.1',api_svr_port=11111,unlock_password="",co
     if ret!=RET_OK:
         print('erorr {}:{}'.format(ret,data))
         raise Exception('订阅QUOTE错误')
+    ret, data = quote_ctx.subscribe(code, 'ORDER_BOOK')
+    if ret != RET_OK:
+        print('error {}:{}'.format(ret, data))
+        raise Exception('订阅orderbook失败')
     if diff!=0:
         if is_hk_trade:
-            ret,data=quote_ctx.subscribe(code,'ORDER_BOOK')
-            if ret!=RET_OK:
-                print('error {}:{}'.format(ret,data))
-                raise Exception('订阅orderbook失败')
             ret,data=quote_ctx.get_order_book(code)
             if ret!=RET_OK:
                 print("can't get orderbook".format(data))

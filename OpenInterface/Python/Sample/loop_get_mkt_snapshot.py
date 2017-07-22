@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
 
 #指定加载的openft api目录
-import path, sys
-folder = path.path(__file__).abspath()
-openft_folder = folder.parent.parent
-sys.path.append(openft_folder)
-from openft.open_quant_context import *
+import os, sys
+sys.path.append(os.path.join(os.path.abspath(__file__),'../../'))
+from OpenQuant.open_quant_context import *
 
 from time import  sleep
 import threading
