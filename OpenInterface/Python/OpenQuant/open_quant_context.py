@@ -15,6 +15,7 @@ from time import sleep
 from abc import ABCMeta, abstractmethod
 from struct import pack
 
+
 class RspHandlerBase(object):
     def __init__(self):
         pass
@@ -116,8 +117,8 @@ class BrokerHandlerBase(RspHandlerBase):
         if ret_code == RET_ERROR:
             return ret_code, bid_content, ask_content
         else:
-            bid_list = ['bid_broker_id', 'bid_broker_name', 'bid_broker_pos']
-            ask_list = ['ask_broker_id', 'ask_broker_name', 'ask_broker_pos']
+            bid_list = ['code', 'bid_broker_id', 'bid_broker_name', 'bid_broker_pos']
+            ask_list = ['code', 'ask_broker_id', 'ask_broker_name', 'ask_broker_pos']
             bid_frame_table = pd.DataFrame(bid_content, columns=bid_list)
             ask_frame_table = pd.DataFrame(ask_content, columns=ask_list)
 
@@ -427,6 +428,7 @@ def _net_proc(async_ctx, req_queue):
 
         asyncore.loop(timeout=0.001, count=5)
 
+
 class OpenContextBase(object):
     metaclass__ = ABCMeta
 
@@ -636,7 +638,7 @@ class OpenContextBase(object):
             self._is_socket_reconnecting = True
             self._sync_query_lock.acquire()
 
-            #create async socket (for push data)
+            # create async socket (for push data)
             if self.__async_socket_enable:
                 if self._async_ctx is None:
                     self._handlers_ctx = HandlerContext()
@@ -657,7 +659,7 @@ class OpenContextBase(object):
             # notify reconnected
             self.on_api_socket_reconnected()
 
-            #run thread to check sync socket state
+            # run thread to check sync socket state
             if self.__sync_socket_enable:
                 self._thread_check_sync_sock = Thread(target=self._thread_check_sync_sock_fun)
                 self._thread_check_sync_sock.setDaemon(True)
@@ -716,12 +718,13 @@ class OpenContextBase(object):
                 return
             else:
                 sleep(0.1)
-            #send req loop per 10 seconds
-            cur_time = datetime.now().timestamp()
+            # send req loop per 10 seconds
+            cur_time = time.time()
             if (self._check_last_req_time is None) or (cur_time - self._check_last_req_time > 10):
                 self._check_last_req_time = cur_time
                 if self._thread_check_sync_sock is thread_handle:
                     self.get_global_state()
+
 
 class OpenQuoteContext(OpenContextBase):
     def __init__(self, host = '119.29.141.202', port = 11111):
@@ -978,8 +981,8 @@ class OpenQuoteContext(OpenContextBase):
         if ret_code == RET_ERROR:
             return ret_code, ERROR_STR_PREFIX
 
-        col_bid_list = ['bid_broker_id', 'bid_broker_name', 'bid_broker_pos']
-        col_ask_list = ['ask_broker_id', 'ask_broker_name', 'ask_broker_pos']
+        col_bid_list = ['code', 'bid_broker_id', 'bid_broker_name', 'bid_broker_pos']
+        col_ask_list = ['code', 'ask_broker_id', 'ask_broker_name', 'ask_broker_pos']
 
         bid_frame_table = pd.DataFrame(bid_list, columns=col_bid_list)
         sak_frame_table = pd.DataFrame(ask_list, columns=col_ask_list)
@@ -1417,7 +1420,7 @@ class OpenHKTradeContext(OpenContextBase):
 class OpenUSTradeContext(OpenContextBase):
     cookie = 100000
 
-    def __init__(self, host="119.29.141.202", port=11111):
+    def __init__(self, host="127.0.0.1", port=11111):
         self._ctx_unlock = None
         super(OpenUSTradeContext, self).__init__(host, port, True, False)
 
@@ -1428,7 +1431,7 @@ class OpenUSTradeContext(OpenContextBase):
         super(OpenUSTradeContext, self).close()
 
     def on_api_socket_reconnected(self):
-        #auto unlock
+        # auto unlock
         if self._ctx_unlock is not None:
             for i in range(3):
                 ret, data = self.unlock_trade(self._ctx_unlock)
@@ -1446,7 +1449,7 @@ class OpenUSTradeContext(OpenContextBase):
         if ret_code != RET_OK:
             return RET_ERROR, msg
 
-        #reconnected to auto unlock
+        # reconnected to auto unlock
         if RET_OK == ret_code:
             self._ctx_unlock = password
 
