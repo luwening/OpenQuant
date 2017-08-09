@@ -26,3 +26,4 @@
 *.sdf
 *.ipch
 
+.idea/

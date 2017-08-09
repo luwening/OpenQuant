@@ -457,7 +457,7 @@ class OpenContextBase(object):
         self._socket_reconnect_and_wait_ready()
 
     def __del__(self):
-       self._close()
+        self._close()
 
     @abstractmethod
     def close(self):
