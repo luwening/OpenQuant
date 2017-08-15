@@ -458,7 +458,7 @@ bool CPluginSetOrderStatus_US::IsNewStateNotNeedReq(Trade_Env eEnv, INT64 nSvrOr
 	switch (eNewStatus)
 	{
 	case Trade_SetOrderStatus_Cancel:
-		bRet = Trade_OrderStatus_Cancelled == eCurStatus || Trade_OrderStatus_Deleted == eCurStatus;
+		bRet = Trade_OrderStatus_Cancelled == eCurStatus || Trade_OrderStatus_Deleted == eCurStatus || Trade_OrderStatus_Processing == eCurStatus;
 		break;
 	case Trade_SetOrderStatus_Disable:
 	case Trade_SetOrderStatus_Enable:

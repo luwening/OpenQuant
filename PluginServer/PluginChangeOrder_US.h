@@ -64,6 +64,7 @@ private:
 
 private:
 	void DoClearReqInfo(SOCKET socket);
+	bool IsNewStateNotNeedReq(Trade_Env eEnv, INT64 nSvrOrderID, Trade_SetOrderStatus eNewStatus);
 
 protected:
 	CPluginUSTradeServer	*m_pTradeServer;
