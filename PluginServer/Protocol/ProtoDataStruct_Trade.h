@@ -240,6 +240,7 @@ struct	ChangeOrderReqBody
 {
 	int		nEnvType;
 	int		nCookie;
+	int     nChangeOrderStatus;
 	INT64	nSvrOrderID;
 	INT64	nLocalOrderID;
 	int		nPrice;

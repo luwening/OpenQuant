@@ -679,12 +679,14 @@ class BrokerQueueQuery:
         raw_broker_bid = rsp_data["BrokerBidArr"]
         bid_list = [{"bid_broker_id": record['BrokerID'],
                      "bid_broker_name": record['BrokerName'],
-                     "bid_broker_pos": record['BrokerPos']
+                     "bid_broker_pos": record['BrokerPos'],
+                     "code": merge_stock_str(int(rsp_data['Market']), rsp_data['StockCode'])
                      } for record in raw_broker_bid]
         raw_broker_ask = rsp_data["BrokerAskArr"]
         ask_list = [{"ask_broker_id": record['BrokerID'],
                      "ask_broker_name": record['BrokerName'],
                      "ask_broker_pos": record['BrokerPos'],
+                     "code": merge_stock_str(int(rsp_data['Market']), rsp_data['StockCode'])
                      } for record in raw_broker_ask]
 
         return RET_OK, bid_list, ask_list
@@ -1286,7 +1288,6 @@ class OrderBookQuery:
             order_book['Ask'].append(ask_record)
 
         return RET_OK, "", order_book
-
 
 
 class GlobalStateQuery:
